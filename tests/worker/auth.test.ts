@@ -39,12 +39,12 @@ describe("accessGuard", () => {
       const { publicKey, privateKey } = await generateKeyPair("RS256");
       const jwk = { ...(await exportJWK(publicKey)), kid: "k1", alg: "RS256", use: "sig" };
       const jwks = createLocalJWKSet({ keys: [jwk] });
-      const sign = (aud: string, iss = `https://${base.ACCESS_TEAM_DOMAIN}`) =>
+      const sign = (aud: string, iss = `https://${base.ACCESS_TEAM_DOMAIN}`, exp: string | number = "5m") =>
         new SignJWT({ email: "a@b.c" })
           .setProtectedHeader({ alg: "RS256", kid: "k1" })
           .setIssuer(iss)
           .setAudience(aud)
-          .setExpirationTime("5m")
+          .setExpirationTime(exp)
           .sign(privateKey);
       const a = new Hono<{ Bindings: Env }>();
       a.use("/api/*", accessGuard({ getJwks: () => jwks }));
@@ -67,6 +67,27 @@ describe("accessGuard", () => {
       const res = await a.request(
         "https://agenda.test/api/x",
         { headers: { "Cf-Access-Jwt-Assertion": await sign("outra") } },
+        prod,
+      );
+      expect(res.status).toBe(401);
+    });
+
+    it("rejeita issuer errado", async () => {
+      const { a, sign } = await setup();
+      const res = await a.request(
+        "https://agenda.test/api/x",
+        { headers: { "Cf-Access-Jwt-Assertion": await sign("aud123", "https://evil.cloudflareaccess.com") } },
+        prod,
+      );
+      expect(res.status).toBe(401);
+    });
+
+    it("rejeita token expirado", async () => {
+      const { a, sign } = await setup();
+      const expired = Math.floor(Date.now() / 1000) - 3600;
+      const res = await a.request(
+        "https://agenda.test/api/x",
+        { headers: { "Cf-Access-Jwt-Assertion": await sign("aud123", undefined, expired) } },
         prod,
       );
       expect(res.status).toBe(401);

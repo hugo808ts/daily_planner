@@ -94,6 +94,23 @@ describe("PATCH / DELETE", () => {
     expect(b.task.doneAt).toBeNull();
   });
 
+  it("done:true em tarefa já concluída mantém doneAt", async () => {
+    const { json } = await create({ title: "t", date: today() });
+    const id = json.task.id;
+    const a = (await (await call("PATCH", `/api/tasks/${id}`, { done: true })).json()) as any;
+    await new Promise((r) => setTimeout(r, 5));
+    const b = (await (await call("PATCH", `/api/tasks/${id}`, { done: true })).json()) as any;
+    expect(b.task.doneAt).toBe(a.task.doneAt);
+  });
+
+  it("PATCH muda a data", async () => {
+    const { json } = await create({ title: "t", date: today() });
+    const to = addDays(today(), 3);
+    const r = (await (await call("PATCH", `/api/tasks/${json.task.id}`, { date: to })).json()) as any;
+    expect(r.task.date).toBe(to);
+    expect((await week(to)).tasks.map((t: any) => t.id)).toContain(json.task.id);
+  });
+
   it("edita campos e limpa time/area com null", async () => {
     const { json } = await create({ title: "t", date: today(), time: "10:00", area: "work" });
     const r = (await (await call("PATCH", `/api/tasks/${json.task.id}`, { title: "novo", time: null, area: null })).json()) as any;
@@ -123,6 +140,14 @@ describe("POST /api/tasks/:id/move", () => {
     expect(r.copied).toBe(false);
     expect(r.task.id).toBe(json.task.id);
     expect(r.task.date).toBe(to);
+  });
+
+  it("atrasada de hoje (horário já passou): move sem copiar", async () => {
+    const { json } = await create({ title: "t", date: today(), time: "00:00" });
+    const to = addDays(today(), 1);
+    const r = (await (await post(`/api/tasks/${json.task.id}/move`, { date: to })).json()) as any;
+    expect(r.copied).toBe(false);
+    expect(r.task).toMatchObject({ id: json.task.id, date: to });
   });
 
   it("não feita de ontem: copia, original intacto", async () => {

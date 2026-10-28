@@ -97,7 +97,7 @@ taskRoutes.patch("/api/tasks/:id", async (c) => {
     date: p.date ?? task.date,
     time: p.time === undefined ? task.time : p.time,
     area: p.area === undefined ? task.area : p.area,
-    doneAt: p.done === undefined ? task.doneAt : p.done ? now : null,
+    doneAt: p.done === undefined ? task.doneAt : p.done ? (task.doneAt ?? now) : null,
     updatedAt: now,
   };
   await updateTask(c.env.DB, next);

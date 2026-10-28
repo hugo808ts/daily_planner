@@ -4,9 +4,10 @@ import { FOLDER_NAME_MAX, FOLDER_NAME_MIN, IDEA_BODY_MAX, IDEA_TITLE_MAX, IDEA_T
 import type { Folder, Idea } from "../../shared/types";
 import { readBody, type Ctx } from "../http";
 import type { Env } from "../index";
-import { fetchPreview } from "../preview";
+import { fetchPreview, safeThumb } from "../preview";
 
 const LINK_URL_MAX = 2048;
+const LINK_TITLE_MAX = 300;
 const EMOJI_MAX = 8;
 const SEARCH_MAX = 50;
 
@@ -73,7 +74,10 @@ const nameSchema = z
   .trim()
   .min(FOLDER_NAME_MIN, "Informe um nome.")
   .max(FOLDER_NAME_MAX, `O nome deve ter no máximo ${FOLDER_NAME_MAX} caracteres.`);
-const emojiSchema = z.string({ error: "Emoji inválido." }).max(EMOJI_MAX, "Emoji inválido.");
+const emojiSchema = z
+  .string({ error: "Emoji inválido." })
+  .max(EMOJI_MAX, "Emoji inválido.")
+  .transform((s) => s.trim() || null);
 const titleSchema = z
   .string({ error: "Título inválido." })
   .trim()
@@ -117,7 +121,7 @@ const ideaRestore = z.object({
     title: titleSchema,
     body: bodySchema,
     linkUrl: linkSchema.nullable(),
-    linkTitle: z.string({ error: "Valor inválido." }).nullable(),
+    linkTitle: z.string({ error: "Valor inválido." }).max(LINK_TITLE_MAX, "Título do link grande demais.").nullable(),
     linkThumb: z.string({ error: "Valor inválido." }).nullable(),
     pinned: z.boolean({ error: "Valor inválido." }),
     createdAt: idSchema,
@@ -132,8 +136,14 @@ export function createIdeaRoutes(fetcher: typeof fetch = (...a) => fetch(...a)) 
   const routes = new Hono<{ Bindings: Env }>();
 
   routes.get("/api/folders", async (c) => {
-    const { results } = await c.env.DB.prepare(`${FOLDER_SELECT} ORDER BY f.name COLLATE NOCASE, f.created_at`).all<FolderRow>();
-    return c.json({ folders: results.map(rowToFolder) });
+    const { results } = await c.env.DB.prepare(`${FOLDER_SELECT} ORDER BY f.created_at`).all<FolderRow>();
+    // SQLite has no unaccent; sort in JS by normalized name (stable, so created_at breaks ties).
+    const sorted = [...results].sort((a, b) => {
+      const x = normalize(a.name);
+      const y = normalize(b.name);
+      return x < y ? -1 : x > y ? 1 : 0;
+    });
+    return c.json({ folders: sorted.map(rowToFolder) });
   });
 
   routes.post("/api/folders", async (c) => {
@@ -200,8 +210,9 @@ export function createIdeaRoutes(fetcher: typeof fetch = (...a) => fetch(...a)) 
     const idea = body.data.idea;
     if (!(await folderExists(c.env.DB, idea.folderId))) return folderNotFound(c);
     if (await getIdea(c.env.DB, idea.id)) return c.json({ error: "Ideia já existe." }, 409);
-    await insertIdea(c.env.DB, idea);
-    return c.json({ idea }, 201);
+    const safe: Idea = { ...idea, linkThumb: safeThumb(idea.linkThumb) };
+    await insertIdea(c.env.DB, safe);
+    return c.json({ idea: safe }, 201);
   });
 
   routes.post("/api/ideas", async (c) => {

@@ -13,7 +13,7 @@ export function taskStatus(task: Task, now: Date = new Date()): TaskStatus {
 
 export function dayScore(
   tasks: Task[],
-  now?: Date,
+  now: Date = new Date(),
 ): { done: number; overdue: number; notDone: number; pending: number; total: number } {
   const s = { done: 0, overdue: 0, notDone: 0, pending: 0, total: tasks.length };
   for (const t of tasks) {

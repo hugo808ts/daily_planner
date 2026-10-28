@@ -12,7 +12,7 @@ const schema = z.object({
   text: z
     .string()
     .transform((s) => s.trim())
-    .pipe(z.string().min(1, "Escreva alguma coisa.").max(CAPTURE_TEXT_MAX, `Máximo de ${CAPTURE_TEXT_MAX} caracteres.`)),
+    .pipe(z.string().min(1, "Escreva alguma coisa.").max(CAPTURE_TEXT_MAX, `Use no máximo ${CAPTURE_TEXT_MAX} caracteres.`)),
 });
 
 /** IA, ou só as regras quando DEV=true e AI_MOCK=rules (testes E2E). Os dois flags juntos: nunca em produção. */
@@ -32,9 +32,11 @@ captureRoutes.post("/api/capture", async (c) => {
   const body = await readBody(c, schema);
   if (!body.ok) {
     const first = await body.res.clone().json<{ fields?: Record<string, string> }>();
-    return first.fields?.text === "Escreva alguma coisa." ? c.json({ error: "Escreva alguma coisa." }, 400) : body.res;
+    const msg = first.fields?.text;
+    if (!msg) return body.res;
+    return c.json(msg === "Escreva alguma coisa." ? { error: msg } : { error: msg, fields: { text: msg } }, 400);
   }
-  const { results } = await c.env.DB.prepare("SELECT id, name FROM folders ORDER BY name").all<{ id: string; name: string }>();
+  const { results } = await c.env.DB.prepare("SELECT id, name FROM folders ORDER BY name COLLATE NOCASE").all<{ id: string; name: string }>();
   return c.json({ result: await interpretCapture(c.env, body.data.text, todayISO(), results) });
 });
 
