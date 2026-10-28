@@ -37,3 +37,13 @@ export interface Idea {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CaptureResult {
+  kind: "task" | "idea";
+  title: string;
+  date: string | null;
+  time: string | null;
+  area: Area | null;
+  folderId: string | null;
+  source: "ai" | "rules";
+}
