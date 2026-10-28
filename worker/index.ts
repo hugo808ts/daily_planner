@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { accessGuard, sameOrigin } from "./auth";
 
 export type Env = {
   DB: D1Database;
@@ -11,6 +12,9 @@ export type Env = {
 };
 
 export const app = new Hono<{ Bindings: Env }>();
+
+app.use("/api/*", sameOrigin());
+app.use("/api/*", accessGuard());
 
 app.get("/api/health", (c) => c.json({ ok: true }));
 
