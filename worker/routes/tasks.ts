@@ -1,16 +1,14 @@
-import { Hono, type Context } from "hono";
+import { Hono } from "hono";
 import { z } from "zod";
 import { weekDays, weekStart } from "../../shared/dates";
 import { DAY_NOTE_MAX, TASK_TITLE_MAX, TASK_TITLE_MIN } from "../../shared/limits";
 import { taskStatus } from "../../shared/status";
 import type { Task } from "../../shared/types";
 import { getTask, insertTask, notesBetween, tasksBetween, updateTask } from "../db";
+import { badRequest, readBody, type Ctx } from "../http";
 import type { Env } from "../index";
 
-const MAX_BODY_BYTES = 64 * 1024;
 const NOT_FOUND = "Tarefa não encontrada.";
-
-type Ctx = Context<{ Bindings: Env }>;
 
 const isRealDate = (s: string): boolean => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
@@ -48,43 +46,6 @@ const noteSchema = z.object({
     .string({ error: "Texto inválido." })
     .max(DAY_NOTE_MAX, `A anotação deve ter no máximo ${DAY_NOTE_MAX} caracteres.`),
 });
-
-type Parsed<T> = { ok: true; data: T } | { ok: false; res: Response };
-
-function badRequest(c: Ctx, error: string, fields?: Record<string, string>): Response {
-  return c.json(fields ? { error, fields } : { error }, 400);
-}
-
-async function readBody<S extends z.ZodType>(c: Ctx, schema: S): Promise<Parsed<z.infer<S>>> {
-  const fail = (res: Response): Parsed<never> => ({ ok: false, res });
-  if (!(c.req.header("Content-Type") ?? "").toLowerCase().startsWith("application/json")) {
-    return fail(badRequest(c, "Envie o corpo como application/json."));
-  }
-  const declared = Number(c.req.header("Content-Length") ?? 0);
-  if (declared > MAX_BODY_BYTES) return fail(c.json({ error: "Corpo grande demais." }, 413));
-  const text = await c.req.text();
-  if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) {
-    return fail(c.json({ error: "Corpo grande demais." }, 413));
-  }
-  let raw: unknown;
-  try {
-    raw = JSON.parse(text);
-  } catch {
-    return fail(badRequest(c, "JSON inválido."));
-  }
-  const result = schema.safeParse(raw);
-  if (!result.success) return fail(validationError(c, result.error));
-  return { ok: true, data: result.data };
-}
-
-function validationError(c: Ctx, err: z.ZodError): Response {
-  const fields: Record<string, string> = {};
-  for (const issue of err.issues) {
-    const key = issue.path.join(".") || "body";
-    if (!(key in fields)) fields[key] = issue.message;
-  }
-  return badRequest(c, "Dados inválidos.", fields);
-}
 
 const notFound = (c: Ctx) => c.json({ error: NOT_FOUND }, 404);
 
