@@ -46,6 +46,22 @@ export interface NewIdea {
   linkUrl?: string | null;
 }
 
+export interface FolderPatch {
+  name?: string;
+  emoji?: string | null;
+}
+
+export interface IdeaPatch {
+  title?: string;
+  body?: string;
+  linkUrl?: string | null;
+  pinned?: boolean;
+  folderId?: string;
+}
+
+/** Resultado da busca: a ideia com o nome da pasta onde mora. */
+export type FoundIdea = Idea & { folderName: string };
+
 export interface MoveResult {
   task: Task;
   copied: boolean;
@@ -97,4 +113,18 @@ export const api = {
   folders: async () => (await json("GET", "/api/folders")).folders as Folder[],
   createFolder: async (input: NewFolder) => (await json("POST", "/api/folders", input)).folder as Folder,
   createIdea: async (input: NewIdea) => (await json("POST", "/api/ideas", input)).idea as Idea,
+  updateFolder: async (id: string, patch: FolderPatch) =>
+    (await json("PATCH", `/api/folders/${encodeURIComponent(id)}`, patch)).folder as Folder,
+  deleteFolder: async (id: string) => {
+    await json("DELETE", `/api/folders/${encodeURIComponent(id)}`);
+  },
+  ideas: async (folderId: string) =>
+    (await json("GET", `/api/folders/${encodeURIComponent(folderId)}/ideas`)).ideas as Idea[],
+  updateIdea: async (id: string, patch: IdeaPatch) =>
+    (await json("PATCH", `/api/ideas/${encodeURIComponent(id)}`, patch)).idea as Idea,
+  /** Devolve o registro apagado, para o Desfazer. */
+  deleteIdea: async (id: string) => (await json("DELETE", `/api/ideas/${encodeURIComponent(id)}`)).idea as Idea,
+  restoreIdea: async (idea: Idea) => (await json("POST", "/api/ideas/restore", { idea })).idea as Idea,
+  searchIdeas: async (q: string) =>
+    (await json("GET", `/api/ideas/search?q=${encodeURIComponent(q)}`)).ideas as FoundIdea[],
 };

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CAPTURE_TEXT_MAX } from "../../shared/limits";
-import type { CaptureResult, Task } from "../../shared/types";
+import type { CaptureResult, Idea, Task } from "../../shared/types";
 import { api, ApiError } from "../lib/api";
 import { ConfirmSheet, type SavedItem } from "./ConfirmSheet";
 import { Recorder } from "./Recorder";
@@ -9,6 +9,8 @@ import { showToast } from "./Toast";
 interface Props {
   /** Tarefa recém-criada, para a tela entrar com ela na semana visível. */
   onTaskSaved: (task: Task) => void;
+  /** Ideia recém-guardada, para a tela de Ideias mostrá-la sem recarregar. */
+  onIdeaSaved?: (idea: Idea) => void;
 }
 
 /**
@@ -36,7 +38,7 @@ function useKeyboardInset(): number {
 }
 
 /** Barra de captura rápida: escreve ou segura o microfone; a folha de confirmação mostra o que foi entendido. */
-export function CaptureBar({ onTaskSaved }: Props) {
+export function CaptureBar({ onTaskSaved, onIdeaSaved }: Props) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +90,7 @@ export function CaptureBar({ onTaskSaved }: Props) {
       onTaskSaved(item.task);
       showToast("Tarefa salva");
     } else {
+      onIdeaSaved?.(item.idea);
       showToast("Ideia guardada");
     }
   };

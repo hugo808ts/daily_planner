@@ -1,7 +1,8 @@
 import { useState } from "react";
-import type { Task } from "../shared/types";
+import type { Idea, Task } from "../shared/types";
 import { CaptureBar } from "./components/CaptureBar";
 import { Toast } from "./components/Toast";
+import { Ideas } from "./screens/Ideas";
 import { Today } from "./screens/Today";
 
 type Tab = "today" | "ideas";
@@ -13,27 +14,22 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "ideas", label: "Ideias", icon: "M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" },
 ];
 
-function IdeasSoon() {
-  return (
-    <div
-      className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 text-center"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5rem)" }}
-    >
-      <h1 className="font-display text-[28px] font-semibold">Ideias</h1>
-      <p className="mt-1 text-muted">Em breve.</p>
-    </div>
-  );
-}
-
 export default function App() {
   const [tab, setTab] = useState<Tab>("today");
   const [captured, setCaptured] = useState<Task | null>(null);
+  const [capturedIdea, setCapturedIdea] = useState<Idea | null>(null);
 
   return (
     <div className="safe-x min-h-dvh">
-      <main>{tab === "today" ? <Today captured={captured} /> : <IdeasSoon />}</main>
+      <main>
+        {tab === "today" ? (
+          <Today captured={captured} />
+        ) : (
+          <Ideas captured={capturedIdea} onTaskSaved={setCaptured} />
+        )}
+      </main>
 
-      <CaptureBar onTaskSaved={setCaptured} />
+      <CaptureBar onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />
 
       <nav
         aria-label="Seções"
