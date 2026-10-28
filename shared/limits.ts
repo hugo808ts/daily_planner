@@ -1,0 +1,12 @@
+export const CAPTURE_TEXT_MIN = 1;
+export const CAPTURE_TEXT_MAX = 500;
+export const AUDIO_MAX_SECONDS = 60;
+export const AUDIO_MAX_BYTES = 5 * 1024 * 1024;
+export const TASK_TITLE_MIN = 1;
+export const TASK_TITLE_MAX = 160;
+export const IDEA_TITLE_MIN = 1;
+export const IDEA_TITLE_MAX = 160;
+export const IDEA_BODY_MAX = 20_000;
+export const FOLDER_NAME_MIN = 1;
+export const FOLDER_NAME_MAX = 40;
+export const DAY_NOTE_MAX = 300;
