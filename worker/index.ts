@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { accessGuard, sameOrigin } from "./auth";
+import { taskRoutes } from "./routes/tasks";
 
 export type Env = {
   DB: D1Database;
@@ -17,5 +18,6 @@ app.use("/api/*", sameOrigin());
 app.use("/api/*", accessGuard());
 
 app.get("/api/health", (c) => c.json({ ok: true }));
+app.route("/", taskRoutes);
 
 export default { fetch: app.fetch };
