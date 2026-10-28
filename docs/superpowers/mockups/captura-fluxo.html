@@ -1,0 +1,110 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Geist:wght@400;500;600&display=swap');
+.phones{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.step{display:flex;flex-direction:column;align-items:center}
+.step .lbl{margin-top:12px;text-align:center;max-width:290px}
+.step .lbl h3{margin:0 0 4px}.step .lbl p{margin:0;font-size:13px;opacity:.75}
+.ph{width:290px;height:600px;border-radius:44px;padding:10px;background:#0d0d10;box-shadow:0 20px 50px -20px #0007}
+.scr{position:relative;width:100%;height:100%;border-radius:35px;overflow:hidden;font-family:Geist,system-ui,sans-serif;font-size:13px;line-height:1.4;background:#f3f1fa;color:#24203a}
+.isl{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:90px;height:26px;border-radius:20px;background:#000;z-index:5}
+.sb{display:flex;justify-content:space-between;padding:14px 26px 0;font-size:12px;font-weight:600}
+.body{padding:12px 18px 0}
+.disp{font-family:'Bricolage Grotesque',sans-serif}
+.week{display:flex;justify-content:space-between;margin:6px 0 14px}
+.d{width:32px;padding:6px 0;border-radius:12px;text-align:center;font-size:10px;color:#7d7898}
+.d b{display:block;font-size:14px;color:#24203a;font-weight:600}
+.d.on{background:#6d4aff;color:#e5ddff}.d.on b{color:#fff}
+h1{font-size:22px;margin:0 0 10px}
+.sheet{background:#fff;border-radius:18px;padding:4px 14px;box-shadow:0 1px 2px #24203a14}
+.li{padding:9px 0;border-bottom:1px solid #eeebf7;display:flex;gap:10px}.li:last-child{border:0}
+.chk{width:15px;height:15px;border-radius:5px;border:1.6px solid #24203a;opacity:.5;flex-shrink:0;margin-top:1px}
+.meta{font-size:10.5px;color:#8b86a6}
+.dim{position:absolute;inset:0;background:#24203a66;z-index:6}
+.kb{position:absolute;left:0;right:0;bottom:0;height:214px;background:#d4d2dc;z-index:7;padding:8px 4px}
+.kb .r{display:flex;gap:5px;justify-content:center;margin-bottom:9px}
+.kb .k{width:24px;height:36px;border-radius:6px;background:#fff;box-shadow:0 1px 0 #8884}
+.input{position:absolute;left:10px;right:10px;bottom:224px;z-index:8;background:#fff;border-radius:20px;padding:12px 12px 10px 14px;box-shadow:0 10px 30px -10px #24203a55}
+.input .txt{font-size:14px;min-height:40px}
+.input .txt i{display:inline-block;width:2px;height:16px;background:#6d4aff;vertical-align:-3px;margin-left:1px}
+.input .act{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.input .hint{font-size:11px;color:#8b86a6}
+.send{width:32px;height:32px;border-radius:50%;background:#6d4aff;color:#fff;display:grid;place-items:center;font-weight:700}
+.bs{position:absolute;left:0;right:0;bottom:0;z-index:8;background:#fff;border-radius:26px 26px 0 0;padding:10px 18px 30px;box-shadow:0 -10px 30px -10px #24203a44}
+.grab{width:36px;height:4px;border-radius:2px;background:#d9d5e8;margin:0 auto 12px}
+.said{font-size:12px;color:#8b86a6;font-style:italic;margin-bottom:10px}
+.kind{display:inline-flex;gap:6px;align-items:center;font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:#ece7ff;color:#4b2fd6;margin-bottom:8px}
+.kind.idea{background:#fff3c4;color:#7a5a00}
+.ttl{font-size:17px;font-weight:600;margin-bottom:12px;line-height:1.3}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.chip{display:inline-flex;gap:5px;align-items:center;border:1px solid #e3def3;border-radius:12px;padding:7px 10px;font-size:12px}
+.chip b{font-weight:600}
+.chip .ed{opacity:.4;font-size:10px;margin-left:2px}
+.btns{display:flex;gap:8px}
+.btn{flex:1;text-align:center;padding:11px;border-radius:14px;font-weight:600;font-size:13px}
+.btn.p{background:#6d4aff;color:#fff}.btn.s{background:#f3f1fa;color:#24203a}
+.rec{display:flex;align-items:center;gap:10px;background:#f3f1fa;border-radius:14px;padding:9px 12px;margin-bottom:12px;font-size:12px}
+.wave{flex:1;display:flex;gap:2px;align-items:center;height:20px}
+.wave span{width:3px;border-radius:2px;background:#6d4aff}
+</style>
+
+<h2>Captura rápida: escrever ou falar, conferir, salvar</h2>
+<p class="subtitle">No estilo B que você escolheu. A IA lê a mensagem e mostra o que entendeu antes de salvar: tipo (tarefa ou ideia), dia, área, horário. Qualquer pedaço é tocável para corrigir.</p>
+
+<div class="phones">
+
+<div class="step">
+ <div class="ph"><div class="scr"><div class="isl"></div>
+  <div class="sb"><span>15:40</span><span>●●● 5G</span></div>
+  <div class="body">
+   <div class="week"><div class="d">seg<b>26</b></div><div class="d">ter<b>27</b></div><div class="d on">qua<b>28</b></div><div class="d">qui<b>29</b></div><div class="d">sex<b>30</b></div><div class="d">sáb<b>31</b></div><div class="d">dom<b>1</b></div></div>
+   <h1 class="disp">Hoje</h1>
+   <div class="sheet"><div class="li"><div class="chk"></div><div>Estudar Cálculo, cap. 4<div class="meta">Faculdade · 14h</div></div></div><div class="li"><div class="chk"></div><div>Jantar com a namorada<div class="meta">Pessoal · 20h</div></div></div></div>
+  </div>
+  <div class="dim"></div>
+  <div class="input"><div class="txt">amanhã no trabalho tenho que apresentar o relatório pro gerente às 10<i></i></div>
+   <div class="act"><span class="hint">🎙 segure para falar</span><div class="send">↑</div></div></div>
+  <div class="kb"><div class="r"><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div></div><div class="r"><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div></div><div class="r"><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div><div class="k"></div></div></div>
+ </div></div>
+ <div class="lbl"><h3>1 · Escreve do seu jeito</h3><p>Toca na barra de baixo e escreve normal, como numa mensagem. Ou segura o microfone e fala.</p></div>
+</div>
+
+<div class="step">
+ <div class="ph"><div class="scr"><div class="isl"></div>
+  <div class="sb"><span>15:40</span><span>●●● 5G</span></div>
+  <div class="body">
+   <div class="week"><div class="d">seg<b>26</b></div><div class="d">ter<b>27</b></div><div class="d on">qua<b>28</b></div><div class="d">qui<b>29</b></div><div class="d">sex<b>30</b></div><div class="d">sáb<b>31</b></div><div class="d">dom<b>1</b></div></div>
+   <h1 class="disp">Hoje</h1>
+  </div>
+  <div class="dim"></div>
+  <div class="bs"><div class="grab"></div>
+   <div class="said">"amanhã no trabalho tenho que apresentar o relatório pro gerente às 10"</div>
+   <div class="kind">✓ Tarefa</div>
+   <div class="ttl">Apresentar o relatório pro gerente</div>
+   <div class="chips"><span class="chip">📅 <b>Amanhã</b>, qui 29<span class="ed">✎</span></span><span class="chip">🕙 <b>10:00</b><span class="ed">✎</span></span><span class="chip">💼 <b>Trabalho</b><span class="ed">✎</span></span></div>
+   <div class="btns"><div class="btn s">Editar</div><div class="btn p">Salvar</div></div>
+  </div>
+ </div></div>
+ <div class="lbl"><h3>2 · Confere o que ele entendeu</h3><p>Ele separa o título, o dia, a hora e a área. Se algo estiver errado, toca no pedaço e troca. Salvar põe na quinta.</p></div>
+</div>
+
+<div class="step">
+ <div class="ph"><div class="scr"><div class="isl"></div>
+  <div class="sb"><span>22:15</span><span>●●● 5G</span></div>
+  <div class="body">
+   <div class="week"><div class="d">seg<b>26</b></div><div class="d">ter<b>27</b></div><div class="d on">qua<b>28</b></div><div class="d">qui<b>29</b></div><div class="d">sex<b>30</b></div><div class="d">sáb<b>31</b></div><div class="d">dom<b>1</b></div></div>
+   <h1 class="disp">Hoje</h1>
+  </div>
+  <div class="dim"></div>
+  <div class="bs"><div class="grab"></div>
+   <div class="rec">🎙<div class="wave"><span style="height:6px"></span><span style="height:14px"></span><span style="height:9px"></span><span style="height:18px"></span><span style="height:11px"></span><span style="height:16px"></span><span style="height:7px"></span><span style="height:13px"></span><span style="height:19px"></span><span style="height:8px"></span><span style="height:12px"></span><span style="height:5px"></span><span style="height:15px"></span><span style="height:10px"></span><span style="height:17px"></span><span style="height:6px"></span></div><span>0:09</span></div>
+   <div class="said">"ideia: vi um vídeo sobre fazer revisão espaçada pra estudar, testar isso nas provas de cálculo"</div>
+   <div class="kind idea">💡 Ideia</div>
+   <div class="ttl">Testar revisão espaçada para as provas de Cálculo</div>
+   <div class="chips"><span class="chip">🗂 Caixa: <b>Estudos</b><span class="ed">✎</span></span><span class="chip">🔗 <b>Sem data</b><span class="ed">✎</span></span></div>
+   <div class="btns"><div class="btn s">Editar</div><div class="btn p">Guardar</div></div>
+  </div>
+ </div></div>
+ <div class="lbl"><h3>3 · Ou guarda como ideia</h3><p>Por áudio: ele transcreve, percebe que é uma ideia (não tarefa) e sugere a caixa. Ideias não vão para nenhum dia.</p></div>
+</div>
+
+</div>

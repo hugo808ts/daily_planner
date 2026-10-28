@@ -1,0 +1,142 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Geist:wght@400;500;600&display=swap');
+.phones{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.step{display:flex;flex-direction:column;align-items:center}
+.step .lbl{margin-top:12px;text-align:center;max-width:290px}
+.step .lbl h3{margin:0 0 4px}.step .lbl p{margin:0;font-size:13px;opacity:.75}
+.ph{width:290px;height:600px;border-radius:44px;padding:10px;background:#0d0d10;box-shadow:0 20px 50px -20px #0007}
+.scr{position:relative;width:100%;height:100%;border-radius:35px;overflow:hidden;font-family:Geist,system-ui,sans-serif;font-size:13px;line-height:1.4;background:#f3f1fa;color:#24203a}
+.isl{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:90px;height:26px;border-radius:20px;background:#000;z-index:5}
+.sb{display:flex;justify-content:space-between;padding:14px 26px 0;font-size:12px;font-weight:600}
+.body{padding:10px 18px 0}
+.disp{font-family:'Bricolage Grotesque',sans-serif}
+.week{display:flex;justify-content:space-between;margin:6px 0 12px}
+.d{width:32px;padding:5px 0 6px;border-radius:12px;text-align:center;font-size:10px;color:#7d7898}
+.d b{display:block;font-size:14px;color:#24203a;font-weight:600}
+.d.on{background:#6d4aff;color:#e5ddff}.d.on b{color:#fff}
+.d .m{display:flex;gap:2px;justify-content:center;margin-top:3px}.d .m i{width:4px;height:4px;border-radius:50%}
+.g{background:#6d4aff}.r{background:#e5484d}.n{background:#cfc8ea}
+.on .g{background:#fff}.on .r{background:#ffb4b6}
+h1{font-size:22px;margin:0}
+.hrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.score{font-size:12px;color:#5b5675}.score b{color:#24203a}.score .bad{color:#c62a2f;font-weight:600}
+.seg{display:flex;gap:3px;margin:4px 0 12px}.seg span{flex:1;height:6px;border-radius:3px}
+.sheet{background:#fff;border-radius:18px;padding:2px 14px;box-shadow:0 1px 2px #24203a14}
+.li{padding:9px 0;border-bottom:1px solid #eeebf7;display:flex;gap:10px;align-items:flex-start}.li:last-child{border:0}
+.chk{width:15px;height:15px;border-radius:5px;border:1.6px solid #24203a;opacity:.5;flex-shrink:0;margin-top:1px}
+.ok .chk{background:#6d4aff;border-color:#6d4aff;opacity:1;position:relative}
+.ok .chk:after{content:'✓';color:#fff;font-size:10px;position:absolute;left:2px;top:-1px}
+.ok .t{text-decoration:line-through;opacity:.45}
+.late{margin:0 -14px;padding:9px 14px;background:#fff1f1}
+.late .chk{border-color:#e5484d;opacity:1}
+.late .t{color:#b4232a;font-weight:500}
+.meta{font-size:10.5px;color:#8b86a6}
+.late .meta{color:#c62a2f}
+.cap{position:absolute;left:10px;right:10px;bottom:24px;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:22px;background:#24203a;color:#fff}
+.cap span{flex:1;opacity:.6}.mic{width:32px;height:32px;border-radius:50%;background:#6d4aff;display:grid;place-items:center}
+.home{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:110px;height:4px;border-radius:3px;background:#24203a}
+/* report */
+.rep h1{font-size:24px;margin:2px 0 2px}.rep .sub{color:#7d7898;font-size:12px;margin-bottom:12px}
+.big{display:flex;gap:8px;margin-bottom:12px}
+.big div{flex:1;background:#fff;border-radius:16px;padding:10px 12px}
+.big b{display:block;font-family:'Bricolage Grotesque',sans-serif;font-size:28px;line-height:1.1}
+.big .x b{color:#c62a2f}
+.big small{font-size:11px;color:#7d7898}
+.box{background:#fff;border-radius:16px;padding:11px 12px;margin-bottom:10px}
+.box h4{margin:0 0 8px;font-size:12px;font-weight:600}
+.bars{display:flex;gap:6px;align-items:flex-end;height:64px}
+.bars .c{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;color:#7d7898}
+.bars .st{width:100%;display:flex;flex-direction:column-reverse;border-radius:5px;overflow:hidden}
+.ar{display:flex;align-items:center;gap:8px;font-size:11.5px;margin:5px 0}
+.ar .tr{flex:1;height:6px;border-radius:3px;background:#eeebf7;overflow:hidden;display:flex}
+.miss{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid #f1eef9;font-size:12px}
+.miss:first-of-type{border:0}
+.miss small{display:block;color:#8b86a6;font-size:10.5px}
+.mv{font-size:11px;font-weight:600;color:#6d4aff;background:#ece7ff;padding:5px 9px;border-radius:9px;white-space:nowrap}
+.banner{background:#24203a;color:#fff;border-radius:16px;padding:11px 13px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;font-size:12.5px}
+.banner b{font-weight:600}.banner span{background:#6d4aff;border-radius:9px;padding:5px 9px;font-size:11px;font-weight:600}
+</style>
+
+<h2>Placar do dia e relatório da semana</h2>
+<p class="subtitle">Simples, sem pontos nem medalhas: só o que você fez, o que passou do horário e um resumo no fim da semana.</p>
+
+<div class="phones">
+
+<div class="step">
+ <div class="ph"><div class="scr"><div class="isl"></div>
+  <div class="sb"><span>21:30</span><span>●●● 5G</span></div>
+  <div class="body">
+   <div class="week">
+    <div class="d">seg<b>26</b><div class="m"><i class="g"></i><i class="g"></i><i class="g"></i></div></div>
+    <div class="d">ter<b>27</b><div class="m"><i class="g"></i><i class="g"></i><i class="r"></i></div></div>
+    <div class="d on">qua<b>28</b><div class="m"><i class="g"></i><i class="g"></i><i class="r"></i></div></div>
+    <div class="d">qui<b>29</b><div class="m"><i class="n"></i><i class="n"></i></div></div>
+    <div class="d">sex<b>30</b><div class="m"><i class="n"></i></div></div>
+    <div class="d">sáb<b>31</b></div><div class="d">dom<b>1</b></div>
+   </div>
+   <div class="hrow"><h1 class="disp">Hoje</h1><div class="score"><b>3</b> feitas · <span class="bad">2 atrasadas</span></div></div>
+   <div class="seg"><span class="g"></span><span class="g"></span><span class="g"></span><span class="r"></span><span class="r"></span></div>
+   <div class="sheet">
+    <div class="li ok"><div class="chk"></div><div><div class="t">Responder e-mail do fornecedor</div><div class="meta">Trabalho</div></div></div>
+    <div class="li ok"><div class="chk"></div><div><div class="t">Fechar relatório de vendas</div><div class="meta">Trabalho · 9h</div></div></div>
+    <div class="li late"><div class="chk"></div><div><div class="t">Estudar Cálculo, cap. 4</div><div class="meta">Faculdade · 14h · passou do horário</div></div></div>
+    <div class="li late"><div class="chk"></div><div><div class="t">Entregar atividade de Estatística</div><div class="meta">Faculdade · 18h · passou do horário</div></div></div>
+    <div class="li ok"><div class="chk"></div><div><div class="t">Jantar com a namorada</div><div class="meta">Pessoal · 20h</div></div></div>
+   </div>
+  </div>
+  <div class="cap"><span>Anotar algo…</span><div class="mic">🎙</div></div><div class="home"></div>
+ </div></div>
+ <div class="lbl"><h3>1 · O dia em vermelho e roxo</h3><p>Passou do horário sem marcar? Fica vermelho. O placar no topo e os pontinhos da semana mostram como foi cada dia.</p></div>
+</div>
+
+<div class="step">
+ <div class="ph"><div class="scr"><div class="isl"></div>
+  <div class="sb"><span>8:05</span><span>●●● 5G</span></div>
+  <div class="body">
+   <div class="banner"><b>📊 Sua semana fechou</b><span>Ver resumo</span></div>
+   <div class="week">
+    <div class="d on">seg<b>2</b></div><div class="d">ter<b>3</b></div><div class="d">qua<b>4</b></div><div class="d">qui<b>5</b></div><div class="d">sex<b>6</b></div><div class="d">sáb<b>7</b></div><div class="d">dom<b>8</b></div>
+   </div>
+   <div class="hrow"><h1 class="disp">Hoje</h1><div class="score">0 de 4</div></div>
+   <div class="seg"><span class="n"></span><span class="n"></span><span class="n"></span><span class="n"></span></div>
+   <div class="sheet">
+    <div class="li"><div class="chk"></div><div><div class="t">Planejar a semana</div><div class="meta">Pessoal · 8h30</div></div></div>
+    <div class="li"><div class="chk"></div><div><div class="t">Reunião de equipe</div><div class="meta">Trabalho · 10h</div></div></div>
+    <div class="li"><div class="chk"></div><div><div class="t">Estudar Cálculo, cap. 4</div><div class="meta">Faculdade · veio da semana passada</div></div></div>
+    <div class="li"><div class="chk"></div><div><div class="t">Academia</div><div class="meta">Pessoal · 19h</div></div></div>
+   </div>
+  </div>
+  <div class="cap"><span>Anotar algo…</span><div class="mic">🎙</div></div><div class="home"></div>
+ </div></div>
+ <div class="lbl"><h3>2 · Segunda de manhã: aviso</h3><p>Ao abrir na segunda, um cartão avisa que a semana anterior fechou. Um toque abre o resumo.</p></div>
+</div>
+
+<div class="step">
+ <div class="ph"><div class="scr"><div class="isl"></div>
+  <div class="sb"><span>8:06</span><span>●●● 5G</span></div>
+  <div class="body rep">
+   <div class="meta">‹ voltar</div>
+   <h1 class="disp">Sua semana</h1><div class="sub">26 out a 1 nov</div>
+   <div class="big"><div><b>14</b><small>feitas</small></div><div class="x"><b>5</b><small>não feitas</small></div><div><b>74%</b><small>do planejado</small></div></div>
+   <div class="box"><h4>Dia a dia</h4>
+    <div class="bars">
+     <div class="c"><div class="st" style="height:40px"><i style="flex:3;background:#6d4aff"></i></div>seg</div>
+     <div class="c"><div class="st" style="height:40px"><i style="flex:2;background:#6d4aff"></i><i style="flex:1;background:#e5484d"></i></div>ter</div>
+     <div class="c"><div class="st" style="height:56px"><i style="flex:3;background:#6d4aff"></i><i style="flex:2;background:#e5484d"></i></div>qua</div>
+     <div class="c"><div class="st" style="height:28px"><i style="flex:2;background:#6d4aff"></i></div>qui</div>
+     <div class="c"><div class="st" style="height:44px"><i style="flex:2;background:#6d4aff"></i><i style="flex:1;background:#e5484d"></i></div>sex</div>
+     <div class="c"><div class="st" style="height:20px"><i style="flex:1;background:#6d4aff"></i><i style="flex:1;background:#e5484d"></i></div>sáb</div>
+     <div class="c"><div class="st" style="height:14px"><i style="flex:1;background:#6d4aff"></i></div>dom</div>
+    </div></div>
+   <div class="box"><h4>Não feitas (5)</h4>
+    <div class="miss"><div>Estudar Cálculo, cap. 4<small>qua · Faculdade</small></div><span class="mv">→ esta semana</span></div>
+    <div class="miss"><div>Atividade de Estatística<small>qua · Faculdade</small></div><span class="mv">→ esta semana</span></div>
+    <div class="miss"><div>Ligar para o banco<small>ter · Pessoal</small></div><span class="mv">→ esta semana</span></div>
+   </div>
+  </div>
+  <div class="home"></div>
+ </div></div>
+ <div class="lbl"><h3>3 · O resumo da semana</h3><p>Feitas, não feitas e a porcentagem do que você planejou. Barras por dia e a lista do que ficou, com um toque para trazer cada uma para a semana nova.</p></div>
+</div>
+
+</div>

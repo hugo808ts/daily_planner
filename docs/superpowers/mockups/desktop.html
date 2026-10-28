@@ -1,0 +1,125 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Geist:wght@400;500;600&display=swap');
+.win{margin:18px auto 0;max-width:1180px;border-radius:14px;overflow:hidden;box-shadow:0 30px 70px -30px #0009;border:1px solid #0003}
+.win{min-width:1180px;zoom:.62}
+@media (min-width:1500px){.win{zoom:1}}
+@media (min-width:1100px) and (max-width:1499px){.win{zoom:.85}}
+.chrome{height:34px;background:#e6e3ef;display:flex;align-items:center;gap:7px;padding:0 14px}
+.chrome i{width:11px;height:11px;border-radius:50%;background:#c9c4d9}
+.chrome .url{margin-left:18px;background:#fff;border-radius:7px;padding:3px 12px;font:12px Geist,sans-serif;color:#7d7898;flex:0 0 300px}
+.app{display:grid;grid-template-columns:340px 220px 1fr;height:640px;background:#f3f1fa;color:#24203a;font-family:Geist,system-ui,sans-serif;font-size:13px;line-height:1.45}
+.disp{font-family:'Bricolage Grotesque',sans-serif}
+.day{padding:18px 18px 0;border-right:1px solid #e4dff2;position:relative;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:14px}
+.brand span{width:22px;height:22px;border-radius:7px;background:#6d4aff}
+.week{display:flex;justify-content:space-between;margin-bottom:14px}
+.d{width:38px;padding:5px 0 6px;border-radius:12px;text-align:center;font-size:10.5px;color:#7d7898}
+.d b{display:block;font-size:15px;color:#24203a;font-weight:600}
+.d.on{background:#6d4aff;color:#e5ddff}.d.on b{color:#fff}
+.d .m{display:flex;gap:2px;justify-content:center;margin-top:3px}.d .m i{width:4px;height:4px;border-radius:50%}
+.g{background:#6d4aff}.r{background:#e5484d}.n{background:#cfc8ea}.on .g{background:#fff}
+.hrow{display:flex;justify-content:space-between;align-items:baseline}
+h1{font-size:24px;margin:0}
+.score{font-size:12px;color:#5b5675}.score b{color:#24203a}
+.segb{display:flex;gap:3px;margin:6px 0 12px}.segb span{flex:1;height:6px;border-radius:3px}
+.sheet{background:#fff;border-radius:16px;padding:2px 14px}
+.li{padding:9px 0;border-bottom:1px solid #eeebf7;display:flex;gap:10px}.li:last-child{border:0}
+.chk{width:15px;height:15px;border-radius:5px;border:1.6px solid #24203a;opacity:.5;flex-shrink:0;margin-top:2px}
+.ok .chk{background:#6d4aff;border-color:#6d4aff;opacity:1}
+.ok .t{text-decoration:line-through;opacity:.45}
+.meta{font-size:10.5px;color:#8b86a6}
+.tag{font-size:10px;padding:1px 6px;border-radius:6px;margin-right:4px}
+.tw{background:#e8f0ff;color:#173a7a}.te{background:#e6f6ee;color:#0f5a3a}.tp{background:#fdeaf0;color:#86213f}
+.pinned{margin-top:10px;background:#fff6c9;border-radius:12px;padding:9px 12px;font-size:12px;color:#4d4520}
+.cap{margin-top:auto;margin-bottom:16px;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:16px;background:#24203a;color:#fff}
+.cap span{flex:1;opacity:.6}.cap kbd{font:11px Geist;opacity:.5;border:1px solid #fff4;border-radius:5px;padding:1px 5px}
+.mic{width:30px;height:30px;border-radius:50%;background:#6d4aff;display:grid;place-items:center}
+.folders{padding:18px 10px;border-right:1px solid #e4dff2;background:#efecf8}
+.folders h3{font-size:12px;color:#8b86a6;font-weight:500;margin:0 8px 8px}
+.fd{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:10px;margin-bottom:2px}
+.fd small{margin-left:auto;color:#9a95b3;font-size:11px}
+.fd.on{background:#fff;font-weight:600;box-shadow:0 1px 2px #24203a14}
+.fd.new{color:#7d7898}
+.search{background:#fff;border-radius:10px;padding:7px 10px;color:#9a95b3;font-size:12px;margin:0 2px 12px}
+.notes{display:grid;grid-template-columns:260px 1fr;min-width:0}
+.list{border-right:1px solid #e4dff2;padding:18px 12px;overflow:hidden}
+.list h2{font-size:18px;margin:0 0 12px 4px}
+.nc{background:#fff;border-radius:12px;padding:9px 11px;margin-bottom:8px;border:1.5px solid transparent}
+.nc.on{border-color:#6d4aff}
+.nc b{display:block;font-weight:600;font-size:12.5px}
+.nc p{margin:2px 0 0;font-size:11.5px;color:#6b6685;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nc .ft{font-size:10px;color:#9a95b3;margin-top:4px}
+.editor{background:#fff;padding:26px 34px;position:relative}
+.editor h2{font-size:26px;line-height:1.15;margin:0 0 4px}
+.editor .when{font-size:11.5px;color:#9a95b3;margin-bottom:16px}
+.link{display:flex;gap:12px;align-items:center;background:#f3f1fa;border-radius:12px;padding:8px;margin-bottom:18px;max-width:420px}
+.thumb{width:44px;height:58px;border-radius:8px;background:linear-gradient(160deg,#25f4ee,#000 55%,#fe2c55);display:grid;place-items:center;color:#fff}
+.link b{font-size:12.5px;display:block}.link small{font-size:11px;color:#9a95b3}
+.txt{font-size:14px;line-height:1.7;color:#3b3654;max-width:620px}
+.txt p{margin:0 0 12px}
+.txt .cur{display:inline-block;width:2px;height:17px;background:#6d4aff;vertical-align:-3px}
+.acts{display:flex;gap:8px;justify-content:flex-end;margin:-8px -12px 14px}
+.ab{padding:8px 12px;border-radius:10px;font-weight:600;font-size:12px}
+.ab.s{background:#f3f1fa}.ab.p{background:#24203a;color:#fff}
+</style>
+
+<h2>No computador: o dia de um lado, as ideias do outro</h2>
+<p class="subtitle">Mesmo app, tela maior. O Hoje fica fixo à esquerda; o resto da tela é das Ideias, com espaço para escrever com calma. No celular continua tudo em duas abas.</p>
+
+<div class="win">
+ <div class="chrome"><i></i><i></i><i></i><div class="url">🔒 agenda.seunome.workers.dev</div></div>
+ <div class="app">
+  <div class="day">
+   <div class="brand"><span></span>Agenda</div>
+   <div class="week">
+    <div class="d">seg<b>26</b><div class="m"><i class="g"></i><i class="g"></i><i class="g"></i></div></div>
+    <div class="d">ter<b>27</b><div class="m"><i class="g"></i><i class="g"></i><i class="r"></i></div></div>
+    <div class="d on">qua<b>28</b><div class="m"><i class="g"></i><i class="g"></i></div></div>
+    <div class="d">qui<b>29</b><div class="m"><i class="n"></i><i class="n"></i></div></div>
+    <div class="d">sex<b>30</b><div class="m"><i class="n"></i></div></div>
+    <div class="d">sáb<b>31</b></div><div class="d">dom<b>1</b></div>
+   </div>
+   <div class="hrow"><h1 class="disp">Hoje</h1><div class="score"><b>2</b> de 5 feitas</div></div>
+   <div class="segb"><span class="g"></span><span class="g"></span><span class="n"></span><span class="n"></span><span class="n"></span></div>
+   <div class="sheet">
+    <div class="li ok"><div class="chk"></div><div><div class="t">Responder e-mail do fornecedor</div><div class="meta"><span class="tag tw">Trabalho</span></div></div></div>
+    <div class="li ok"><div class="chk"></div><div><div class="t">Fechar relatório de vendas</div><div class="meta"><span class="tag tw">Trabalho</span>9h</div></div></div>
+    <div class="li"><div class="chk"></div><div><div class="t">Estudar Cálculo, cap. 4</div><div class="meta"><span class="tag te">Faculdade</span>14h</div></div></div>
+    <div class="li"><div class="chk"></div><div><div class="t">Entregar atividade de Estatística</div><div class="meta"><span class="tag te">Faculdade</span>18h</div></div></div>
+    <div class="li"><div class="chk"></div><div><div class="t">Jantar com a namorada</div><div class="meta"><span class="tag tp">Pessoal</span>20h</div></div></div>
+   </div>
+   <div class="pinned">📌 Levar o carregador do notebook</div>
+   <div class="cap"><span>Anotar algo…</span><kbd>Ctrl K</kbd><div class="mic">🎙</div></div>
+  </div>
+
+  <div class="folders">
+   <div class="search">🔍 Buscar ideias</div>
+   <h3>Pastas</h3>
+   <div class="fd">💡 Ideias soltas<small>7</small></div>
+   <div class="fd on">🎬 Vídeos TikTok<small>4</small></div>
+   <div class="fd">📚 Estudos<small>3</small></div>
+   <div class="fd">🖥 Projetos no PC<small>2</small></div>
+   <div class="fd new">+ Nova pasta</div>
+  </div>
+
+  <div class="notes">
+   <div class="list">
+    <h2 class="disp">🎬 Vídeos TikTok</h2>
+    <div class="nc on"><b>📌 Revisão espaçada para estudar</b><p>Testar nas provas de Cálculo: revisar no dia 1, 3, 7…</p><div class="ft">♪ tiktok.com</div></div>
+    <div class="nc"><b>Receita de marmita da semana</b><p>Frango, arroz integral e legumes.</p><div class="ft">♪ tiktok.com · há 3 dias</div></div>
+    <div class="nc"><b>Montar um setup de mesa melhor</b><p>Suporte de monitor e luminária.</p><div class="ft">♪ tiktok.com · há 1 semana</div></div>
+    <div class="nc"><b>Trilha para fazer no feriado</b><p>—</p><div class="ft">♪ tiktok.com · há 2 semanas</div></div>
+   </div>
+   <div class="editor">
+    <div class="acts"><div class="ab s">📅 Virar tarefa</div><div class="ab p">✓ Resolvida</div></div>
+    <h2 class="disp">Revisão espaçada para estudar</h2>
+    <div class="when">Criada em 28 out · salva automaticamente</div>
+    <div class="link"><div class="thumb">▶</div><div><b>Como estudar 3x menos e lembrar mais</b><small>@estudacomigo · tiktok.com · abrir ↗</small></div></div>
+    <div class="txt">
+     <p>Revisar o conteúdo no dia 1, 3, 7 e 14 depois da aula. Parece que fixa muito mais do que estudar tudo na véspera.</p>
+     <p>Testar nas provas de Cálculo e ver se funciona. Começar pelo capítulo 4, que é o próximo da lista<span class="cur"></span></p>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>

@@ -1,0 +1,144 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Geist:wght@400;500;600&display=swap');
+.phones{display:flex;gap:28px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.ph{width:300px;height:620px;border-radius:44px;padding:10px;background:#0d0d10;box-shadow:0 20px 50px -20px #0007;flex-shrink:0}
+.scr{position:relative;width:100%;height:100%;border-radius:35px;overflow:hidden;font-family:Geist,system-ui,sans-serif;font-size:13px;line-height:1.4}
+.isl{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:92px;height:26px;border-radius:20px;background:#000;z-index:5}
+.sb{display:flex;justify-content:space-between;padding:14px 26px 0;font-size:12px;font-weight:600}
+.body{padding:14px 18px 0}
+.disp{font-family:'Bricolage Grotesque',sans-serif}
+.cap{position:absolute;left:12px;right:12px;bottom:26px;display:flex;gap:8px;align-items:center;padding:8px 8px 8px 14px;border-radius:22px}
+.cap span{flex:1;opacity:.6}
+.mic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:15px}
+.tabs{position:absolute;left:0;right:0;bottom:0;height:20px}
+.home{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:110px;height:4px;border-radius:3px}
+.chk{width:16px;height:16px;border-radius:5px;border:1.6px solid currentColor;flex-shrink:0;opacity:.55;margin-top:1px}
+.done .chk{opacity:1}
+.done .t{text-decoration:line-through;opacity:.45}
+.row{display:flex;gap:10px;align-items:flex-start}
+.choice-label{margin-top:14px;text-align:center}
+.choice-label h3{margin:0 0 4px}
+.choice-label p{margin:0;font-size:13px;opacity:.75;max-width:300px}
+.card.pick{background:transparent;border:0;box-shadow:none;cursor:pointer;padding:6px;border-radius:52px}
+.card.pick.selected .ph{outline:4px solid #6d4aff;outline-offset:4px}
+
+/* A — linha do dia */
+.a .scr{background:#f6f7f9;color:#1c1b22}
+.a .date{font-size:12px;color:#6b6f80;margin-top:6px}
+.a h1{font-size:34px;line-height:1;margin:4px 0 14px;letter-spacing:-.02em}
+.a .per{font-size:11.5px;font-weight:600;color:#8a8ea0;margin:14px 0 6px;display:flex;align-items:center;gap:8px}
+.a .per:after{content:'';flex:1;height:1px;background:#e3e5ec}
+.a .it{display:flex;gap:10px;padding:8px 0}
+.a .tm{width:38px;font-size:11.5px;color:#8a8ea0;padding-top:1px;flex-shrink:0}
+.a .bar{width:3px;border-radius:2px;flex-shrink:0}
+.a .t{font-weight:500}
+.a .s{font-size:11.5px;color:#7a7e90}
+.a .cap{background:#fff;box-shadow:0 6px 20px -6px #1c1b2230}
+.a .mic{background:#f5b700;color:#1c1b22}
+.a .home{background:#1c1b22}
+
+/* B — folha do dia */
+.b .scr{background:#f3f1fa;color:#24203a}
+.b .week{display:flex;justify-content:space-between;margin:8px 0 16px}
+.b .d{width:34px;padding:6px 0;border-radius:12px;text-align:center;font-size:10.5px;color:#7d7898}
+.b .d b{display:block;font-size:15px;color:#24203a;font-weight:600}
+.b .d.on{background:#6d4aff;color:#e5ddff}.b .d.on b{color:#fff}
+.b .d i{display:block;width:4px;height:4px;border-radius:50%;background:#b8acf5;margin:3px auto 0}
+.b h1{font-size:24px;margin:0 0 2px;letter-spacing:-.01em}
+.b .sub{color:#7d7898;font-size:12px;margin-bottom:12px}
+.b .sheet{background:#fff;border-radius:20px;padding:6px 14px;box-shadow:0 1px 2px #24203a14}
+.b .li{padding:10px 0;border-bottom:1px solid #eeebf7}
+.b .li:last-child{border:0}
+.b .meta{font-size:11px;color:#8b86a6;margin-top:2px}
+.b .note{margin-top:12px;background:#fff6c9;border-radius:14px;padding:10px 12px;font-size:12.5px;color:#4d4520}
+.b .cap{background:#24203a;color:#fff}
+.b .mic{background:#6d4aff;color:#fff}
+.b .home{background:#24203a}
+
+/* C — áreas */
+.c .scr{background:#fff;color:#15171c}
+.c .hd{display:flex;justify-content:space-between;align-items:flex-end;margin:6px 0 14px}
+.c h1{font-size:28px;margin:0;line-height:1}
+.c .date{font-size:12px;color:#7a7f8c}
+.c .ring{width:46px;height:46px;border-radius:50%;background:conic-gradient(#15171c 0 40%,#eceef2 0);display:grid;place-items:center}
+.c .ring b{width:36px;height:36px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:11px}
+.c .area{border-radius:18px;padding:11px 13px;margin-bottom:9px}
+.c .area h4{margin:0 0 6px;font-size:12px;display:flex;justify-content:space-between;font-weight:600}
+.c .area .row{padding:4px 0;font-size:12.5px}
+.c .w{background:#e8f0ff;color:#173a7a}.c .e{background:#e6f6ee;color:#0f5a3a}.c .p{background:#fdeaf0;color:#86213f}
+.c .cap{background:#f1f2f5}
+.c .mic{background:#15171c;color:#fff}
+.c .home{background:#15171c}
+</style>
+
+<h2>Tela "Hoje" no iPhone: qual direção te agrada mais?</h2>
+<p class="subtitle">Mesmo conteúdo nas três (uma quarta-feira sua), organizado de jeitos diferentes. A barra de baixo é a captura rápida: escrever ou tocar no microfone. Clique para escolher, ou diga o que misturar.</p>
+
+<div class="phones cards">
+
+<div class="card pick a" data-choice="a" onclick="toggleSelect(this)">
+ <div class="ph"><div class="scr"><div class="isl"></div>
+  <div class="sb"><span>7:12</span><span>●●● 5G</span></div>
+  <div class="body">
+   <div class="date">Quarta, 28 de outubro</div>
+   <h1 class="disp">Bom dia</h1>
+   <div class="per">Manhã</div>
+   <div class="it"><div class="tm">09:00</div><div class="bar" style="background:#4b7bec"></div><div><div class="t">Fechar relatório de vendas</div><div class="s">Trabalho · importante</div></div></div>
+   <div class="it"><div class="tm">—</div><div class="bar" style="background:#4b7bec"></div><div><div class="t">Responder e-mail do fornecedor</div><div class="s">Trabalho</div></div></div>
+   <div class="per">Tarde</div>
+   <div class="it"><div class="tm">14:00</div><div class="bar" style="background:#20bf6b"></div><div><div class="t">Estudar Cálculo, cap. 4</div><div class="s">Faculdade</div></div></div>
+   <div class="it"><div class="tm">—</div><div class="bar" style="background:#20bf6b"></div><div><div class="t">Entregar atividade de Estatística</div><div class="s">Faculdade · até 23h59</div></div></div>
+   <div class="per">Noite</div>
+   <div class="it"><div class="tm">20:00</div><div class="bar" style="background:#eb3b5a"></div><div><div class="t">Jantar com a namorada</div><div class="s">Pessoal</div></div></div>
+  </div>
+  <div class="cap"><span>O que tem pra fazer?</span><div class="mic">🎙</div></div>
+  <div class="home"></div>
+ </div></div>
+ <div class="choice-label"><h3>A · Linha do dia</h3><p>O dia dividido em manhã, tarde e noite, com horário quando houver. Bom para enxergar o ritmo do dia.</p></div>
+</div>
+
+<div class="card pick b" data-choice="b" onclick="toggleSelect(this)">
+ <div class="ph"><div class="scr"><div class="isl"></div>
+  <div class="sb"><span>7:12</span><span>●●● 5G</span></div>
+  <div class="body">
+   <div class="week">
+    <div class="d">seg<b>26</b></div><div class="d">ter<b>27</b><i></i></div><div class="d on">qua<b>28</b></div><div class="d">qui<b>29</b><i></i></div><div class="d">sex<b>30</b><i></i></div><div class="d">sáb<b>31</b></div><div class="d">dom<b>1</b></div>
+   </div>
+   <h1 class="disp">Hoje</h1>
+   <div class="sub">5 coisas · 1 feita</div>
+   <div class="sheet">
+    <div class="li row done"><div class="chk"></div><div><div class="t">Responder e-mail do fornecedor</div><div class="meta">Trabalho</div></div></div>
+    <div class="li row"><div class="chk"></div><div><div class="t">Fechar relatório de vendas</div><div class="meta">Trabalho · 9h</div></div></div>
+    <div class="li row"><div class="chk"></div><div><div class="t">Estudar Cálculo, cap. 4</div><div class="meta">Faculdade · 14h</div></div></div>
+    <div class="li row"><div class="chk"></div><div><div class="t">Entregar atividade de Estatística</div><div class="meta">Faculdade</div></div></div>
+    <div class="li row"><div class="chk"></div><div><div class="t">Jantar com a namorada</div><div class="meta">Pessoal · 20h</div></div></div>
+   </div>
+   <div class="note">📌 Levar o carregador do notebook</div>
+  </div>
+  <div class="cap"><span>Anotar algo…</span><div class="mic">🎙</div></div>
+  <div class="home"></div>
+ </div></div>
+ <div class="choice-label"><h3>B · Folha do dia</h3><p>A semana numa faixa no topo (toque para trocar de dia) e o dia como uma lista para ir riscando. Mais parecido com um caderno.</p></div>
+</div>
+
+<div class="card pick c" data-choice="c" onclick="toggleSelect(this)">
+ <div class="ph"><div class="scr"><div class="isl"></div>
+  <div class="sb"><span>7:12</span><span>●●● 5G</span></div>
+  <div class="body">
+   <div class="hd"><div><div class="date">Quarta, 28 out</div><h1 class="disp">Seu dia</h1></div><div class="ring"><b>2/5</b></div></div>
+   <div class="area w"><h4><span>💼 Trabalho</span><span>2</span></h4>
+    <div class="row"><div class="chk"></div><span>Fechar relatório de vendas · 9h</span></div>
+    <div class="row done"><div class="chk"></div><span class="t">E-mail do fornecedor</span></div></div>
+   <div class="area e"><h4><span>📚 Faculdade</span><span>2</span></h4>
+    <div class="row"><div class="chk"></div><span>Estudar Cálculo, cap. 4 · 14h</span></div>
+    <div class="row done"><div class="chk"></div><span class="t">Atividade de Estatística</span></div></div>
+   <div class="area p"><h4><span>❤️ Pessoal</span><span>1</span></h4>
+    <div class="row"><div class="chk"></div><span>Jantar com a namorada · 20h</span></div></div>
+  </div>
+  <div class="cap"><span>Escreva ou fale…</span><div class="mic">🎙</div></div>
+  <div class="home"></div>
+ </div></div>
+ <div class="choice-label"><h3>C · Por área da vida</h3><p>Tarefas agrupadas em Trabalho, Faculdade e Pessoal, com o progresso do dia no canto. Bom para separar os papéis.</p></div>
+</div>
+
+</div>
