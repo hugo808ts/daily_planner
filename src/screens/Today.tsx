@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatDayTitle, todayISO, weekDays, weekStart } from "../../shared/dates";
 import type { Task } from "../../shared/types";
 import { DayNote } from "../components/DayNote";
@@ -14,7 +14,12 @@ import { useWeek } from "../lib/useWeek";
 
 const errorMessage = (e: unknown) => (e instanceof ApiError ? e.message : "Algo deu errado. Tente de novo.");
 
-export function Today() {
+interface Props {
+  /** Tarefa criada pela captura rápida, para entrar na semana sem recarregar. */
+  captured?: Task | null;
+}
+
+export function Today({ captured }: Props) {
   const now = useNow(60_000); // estados (atrasada, não feita) recalculados a cada minuto
   const today = todayISO(now);
   const days = weekDays(weekStart(today));
@@ -22,6 +27,10 @@ export function Today() {
   const selected = picked && days.includes(picked) ? picked : today;
   const { data, error, reload, setTask, removeTask, setNote } = useWeek(days[0]);
   const [editing, setEditing] = useState<Task | null>(null);
+
+  useEffect(() => {
+    if (captured) setTask(captured);
+  }, [captured, setTask]);
 
   const tasks = data?.tasks ?? [];
   const dayTasks = tasks.filter((t) => t.date === selected);
@@ -81,7 +90,7 @@ export function Today() {
       className="mx-auto w-full max-w-md px-4"
       style={{
         paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6.5rem)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5.5rem)",
       }}
     >
       <WeekStrip days={days} today={today} selected={selected} tasks={tasks} now={now} onSelect={setPicked} />

@@ -14,6 +14,8 @@
   --dot: #cfc8ea;
   --danger-ink: #b4232a;
   --note-ink: #4d4520;
+  /* Altura da barra de abas (sem a área segura); a captura fica logo acima. */
+  --tabbar-h: 57px;
   color-scheme: light dark;
 }
 

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import type { Task } from "../shared/types";
+import { CaptureBar } from "./components/CaptureBar";
 import { Toast } from "./components/Toast";
 import { Today } from "./screens/Today";
 
@@ -15,7 +17,7 @@ function IdeasSoon() {
   return (
     <div
       className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 text-center"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 5rem)" }}
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5rem)" }}
     >
       <h1 className="font-display text-[28px] font-semibold">Ideias</h1>
       <p className="mt-1 text-muted">Em breve.</p>
@@ -25,10 +27,13 @@ function IdeasSoon() {
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("today");
+  const [captured, setCaptured] = useState<Task | null>(null);
 
   return (
     <div className="safe-x min-h-dvh">
-      <main>{tab === "today" ? <Today /> : <IdeasSoon />}</main>
+      <main>{tab === "today" ? <Today captured={captured} /> : <IdeasSoon />}</main>
+
+      <CaptureBar onTaskSaved={setCaptured} />
 
       <nav
         aria-label="Seções"

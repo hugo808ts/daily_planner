@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { todayISO } from "../../shared/dates";
 import { AUDIO_MAX_BYTES } from "../../shared/limits";
 import { app, type Env } from "../../worker/index";
+import { interpretCapture } from "../../worker/routes/capture";
 
 const BASE = "https://agenda.test";
 const today = todayISO();
@@ -63,6 +64,22 @@ describe("POST /api/capture", () => {
   it("título vazio cai para regras", async () => {
     const res = await capture(aiReturns({ kind: "task", title: "   ", date: null, time: null, area: null, folderId: null }), "comprar pão");
     expect((await j(res)).result.source).toBe("rules");
+  });
+
+  it("AI_MOCK=rules com DEV=true pula a IA e usa as regras", async () => {
+    const run = vi.fn();
+    const r = (await j(await capture({ DB: env.DB, DEV: "true", AI_MOCK: "rules", AI: { run } } as unknown as Env, "comprar pão"))).result;
+    expect(r).toMatchObject({ title: "Comprar pão", source: "rules" });
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it("AI_MOCK sem DEV=true não desliga a IA", async () => {
+    const run = vi.fn().mockResolvedValue({
+      response: { kind: "task", title: "Da IA", date: today, time: null, area: null, folderId: null },
+    });
+    const r = await interpretCapture({ DB: env.DB, AI_MOCK: "rules", AI: { run } } as unknown as Env, "comprar pão", today, []);
+    expect(r.source).toBe("ai");
+    expect(run).toHaveBeenCalledOnce();
   });
 
   it("texto vazio ou longo demais dá 400", async () => {

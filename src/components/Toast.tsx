@@ -49,7 +49,7 @@ export function Toast() {
       role="status"
       aria-live="polite"
       className="pointer-events-none fixed inset-x-0 z-50 flex justify-center px-4"
-      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)" }}
+      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 4.75rem)" }}
     >
       {toast && (
         <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl bg-ink py-1.5 pr-1.5 pl-4 text-sm text-bg shadow-lg">

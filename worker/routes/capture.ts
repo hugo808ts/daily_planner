@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { TRANSCRIBE_MODEL, interpret, toBase64 } from "../ai";
 import { todayISO } from "../../shared/dates";
+import { parseCapture } from "../../shared/rules";
+import type { CaptureResult, Folder } from "../../shared/types";
 import { AUDIO_MAX_BYTES, CAPTURE_TEXT_MAX } from "../../shared/limits";
 import { readBody } from "../http";
 import type { Env } from "../index";
@@ -13,6 +15,17 @@ const schema = z.object({
     .pipe(z.string().min(1, "Escreva alguma coisa.").max(CAPTURE_TEXT_MAX, `Máximo de ${CAPTURE_TEXT_MAX} caracteres.`)),
 });
 
+/** IA, ou só as regras quando DEV=true e AI_MOCK=rules (testes E2E). Os dois flags juntos: nunca em produção. */
+export async function interpretCapture(
+  env: Env,
+  text: string,
+  today: string,
+  folders: Pick<Folder, "id" | "name">[],
+): Promise<CaptureResult> {
+  if (env.DEV === "true" && env.AI_MOCK === "rules") return parseCapture(text, today, folders);
+  return interpret(env, text, today, folders);
+}
+
 export const captureRoutes = new Hono<{ Bindings: Env }>();
 
 captureRoutes.post("/api/capture", async (c) => {
@@ -22,7 +35,7 @@ captureRoutes.post("/api/capture", async (c) => {
     return first.fields?.text === "Escreva alguma coisa." ? c.json({ error: "Escreva alguma coisa." }, 400) : body.res;
   }
   const { results } = await c.env.DB.prepare("SELECT id, name FROM folders ORDER BY name").all<{ id: string; name: string }>();
-  return c.json({ result: await interpret(c.env, body.data.text, todayISO(), results) });
+  return c.json({ result: await interpretCapture(c.env, body.data.text, todayISO(), results) });
 });
 
 captureRoutes.post("/api/transcribe", async (c) => {

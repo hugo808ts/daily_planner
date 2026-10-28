@@ -1,4 +1,4 @@
-import type { Area, DayNote, Task } from "../../shared/types";
+import type { Area, CaptureResult, DayNote, Folder, Idea, Task } from "../../shared/types";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -34,18 +34,33 @@ export interface TaskPatch {
   done?: boolean;
 }
 
+export interface NewFolder {
+  name: string;
+  emoji?: string | null;
+}
+
+export interface NewIdea {
+  folderId: string;
+  title: string;
+  body?: string;
+  linkUrl?: string | null;
+}
+
 export interface MoveResult {
   task: Task;
   copied: boolean;
 }
 
+/** Corpo em JSON, ou um Blob enviado como está (com o tipo dele). */
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response;
+  const blob = body instanceof Blob ? body : null;
   try {
     res = await fetch(path, {
       method,
-      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers:
+        body === undefined ? undefined : { "Content-Type": blob ? blob.type || "application/octet-stream" : "application/json" },
+      body: body === undefined ? undefined : blob ?? JSON.stringify(body),
     });
   } catch {
     throw new ApiError("Sem conexão. Verifique a internet e tente de novo.", 0);
@@ -77,4 +92,9 @@ export const api = {
     request<MoveResult>("POST", `/api/tasks/${encodeURIComponent(id)}/move`, { date }),
   saveDayNote: async (date: string, text: string) =>
     (await json("PUT", `/api/day-notes/${encodeURIComponent(date)}`, { text })).note as DayNote | null,
+  capture: async (text: string) => (await json("POST", "/api/capture", { text })).result as CaptureResult,
+  transcribe: async (audio: Blob) => (await json("POST", "/api/transcribe", audio)).text as string,
+  folders: async () => (await json("GET", "/api/folders")).folders as Folder[],
+  createFolder: async (input: NewFolder) => (await json("POST", "/api/folders", input)).folder as Folder,
+  createIdea: async (input: NewIdea) => (await json("POST", "/api/ideas", input)).idea as Idea,
 };
