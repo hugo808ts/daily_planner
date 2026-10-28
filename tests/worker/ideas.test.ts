@@ -43,6 +43,22 @@ describe("folders", () => {
     expect((await call("PATCH", "/api/folders/nope", { name: "x" })).status).toBe(404);
   });
 
+  it("ordena sem considerar acentos nem caixa", async () => {
+    for (const n of ["Zeta", "Água", "Beta", "abacate"]) await folder(n);
+    const all = await j(await call("GET", "/api/folders"));
+    expect(all.folders.map((f: any) => f.name)).toEqual(["abacate", "Água", "Beta", "Zeta"]);
+  });
+
+  it("emoji vazio ou só espaços vira null", async () => {
+    const a = (await j(await call("POST", "/api/folders", { name: "A", emoji: "" }))).folder;
+    const b = (await j(await call("POST", "/api/folders", { name: "B", emoji: "  " }))).folder;
+    expect(a.emoji).toBeNull();
+    expect(b.emoji).toBeNull();
+    const c = (await j(await call("POST", "/api/folders", { name: "C", emoji: "📚" }))).folder;
+    const p = (await j(await call("PATCH", `/api/folders/${c.id}`, { emoji: " " }))).folder;
+    expect(p.emoji).toBeNull();
+  });
+
   it("valida nome e emoji", async () => {
     expect((await call("POST", "/api/folders", { name: "  " })).status).toBe(400);
     expect((await call("POST", "/api/folders", { name: "x".repeat(41) })).status).toBe(400);
@@ -120,6 +136,20 @@ describe("ideas", () => {
     expect(restored.status).toBe(201);
     expect((await j(restored)).idea).toEqual(before);
     expect((await list(f.id))[0]).toEqual(before);
+  });
+
+  it("restore descarta linkThumb inseguro e rejeita linkTitle longo", async () => {
+    const f = await folder();
+    const i = (await idea({ folderId: f.id, title: "x" })).json.idea;
+    const base = { ...i, id: "r1" };
+    const bad = await call("POST", "/api/ideas/restore", { idea: { ...base, linkThumb: "http://x.com/a.jpg" } });
+    expect((await j(bad)).idea.linkThumb).toBeNull();
+    const long = await call("POST", "/api/ideas/restore", { idea: { ...base, id: "r2", linkThumb: "https://x.com/" + "a".repeat(2048) } });
+    expect((await j(long)).idea.linkThumb).toBeNull();
+    const good = await call("POST", "/api/ideas/restore", { idea: { ...base, id: "r3", linkThumb: "https://x.com/a.jpg" } });
+    expect((await j(good)).idea.linkThumb).toBe("https://x.com/a.jpg");
+    const title = await call("POST", "/api/ideas/restore", { idea: { ...base, id: "r4", linkTitle: "t".repeat(301) } });
+    expect(title.status).toBe(400);
   });
 
   it("restore: id existente -> 409, pasta sumiu -> 404, forma inválida -> 400", async () => {

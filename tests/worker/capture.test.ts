@@ -87,7 +87,20 @@ describe("POST /api/capture", () => {
     const a = await capture(e, "   ");
     expect(a.status).toBe(400);
     expect(await j(a)).toEqual({ error: "Escreva alguma coisa." });
-    expect((await capture(e, "a".repeat(501))).status).toBe(400);
+    const long = await capture(e, "a".repeat(501));
+    expect(long.status).toBe(400);
+    expect(await j(long)).toEqual({
+      error: "Use no máximo 500 caracteres.",
+      fields: { text: "Use no máximo 500 caracteres." },
+    });
+  });
+
+  it("resposta da IA sem response ou com JSON malformado cai para regras com 200", async () => {
+    for (const e of [withAI(vi.fn().mockResolvedValue({ response: undefined })), withAI(vi.fn().mockResolvedValue({ response: "{nope" }))]) {
+      const res = await capture(e, "comprar pão");
+      expect(res.status).toBe(200);
+      expect((await j(res)).result.source).toBe("rules");
+    }
   });
 });
 

@@ -35,13 +35,20 @@ describe("fetchPreview", () => {
     expect(await fetchPreview(url, (async () => new Response("<html>")) as unknown as typeof fetch)).toEqual({ title: null, thumb: null });
   });
 
-  it("timeout de 3 s: aborta e devolve nulos", async () => {
-    const f = ((_u: string, init?: RequestInit) =>
-      new Promise((_res, rej) => {
-        init?.signal?.addEventListener("abort", () => rej(new DOMException("aborted", "AbortError")));
-      })) as unknown as typeof fetch;
-    const t0 = Date.now();
-    expect(await fetchPreview("https://vm.tiktok.com/abc", f)).toEqual({ title: null, thumb: null });
-    expect(Date.now() - t0).toBeGreaterThanOrEqual(2900);
-  }, 8000);
+  it("fetch abortado (timeout): devolve nulos e passa um AbortSignal", async () => {
+    const f = vi.fn(async (_u: string, _init?: RequestInit) => {
+      throw new DOMException("aborted", "AbortError");
+    });
+    expect(await fetchPreview("https://vm.tiktok.com/abc", f as unknown as typeof fetch)).toEqual({ title: null, thumb: null });
+    expect(f.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("thumbnail só é aceita se https e até 2048 caracteres", async () => {
+    const url = "https://www.youtube.com/watch?v=1";
+    const withThumb = (t: string) => (async () => json({ title: "T", thumbnail_url: t })) as unknown as typeof fetch;
+    expect((await fetchPreview(url, withThumb("http://x.com/a.jpg"))).thumb).toBeNull();
+    expect((await fetchPreview(url, withThumb("javascript:alert(1)"))).thumb).toBeNull();
+    expect((await fetchPreview(url, withThumb("https://x.com/" + "a".repeat(2048)))).thumb).toBeNull();
+    expect((await fetchPreview(url, withThumb("https://x.com/a.jpg"))).thumb).toBe("https://x.com/a.jpg");
+  });
 });

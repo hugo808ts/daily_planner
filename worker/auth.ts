@@ -27,6 +27,7 @@ export function accessGuard(options: Options = {}): MiddlewareHandler<{ Bindings
       await jwtVerify(token, getJwks(env.ACCESS_TEAM_DOMAIN), {
         issuer: `https://${env.ACCESS_TEAM_DOMAIN}`,
         audience: env.ACCESS_AUD,
+        algorithms: ["RS256"],
       });
     } catch {
       return unauthorized();

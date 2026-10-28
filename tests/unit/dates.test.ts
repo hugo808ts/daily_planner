@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { addDays, formatDayTitle, isSunday, todayISO, weekDays, weekStart, weekdayShort } from "../../shared/dates";
+import { addDays, formatDayTitle, isSunday, nowParts, todayISO, weekDays, weekStart, weekdayShort } from "../../shared/dates";
 
 describe("dates", () => {
+  it("handles year/month boundaries and São Paulo midnight", () => {
+    expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
+    expect(weekStart("2027-01-01")).toBe("2026-12-28");
+    expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
+    expect(todayISO(new Date("2026-10-28T03:00:00Z"))).toBe("2026-10-28");
+    expect(nowParts(new Date("2026-10-28T03:00:00Z")).time).toBe("00:00");
+  });
   it("todayISO handles UTC rollover", () => {
     expect(todayISO(new Date("2026-10-29T02:30:00Z"))).toBe("2026-10-28");
   });

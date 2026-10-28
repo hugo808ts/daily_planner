@@ -21,6 +21,18 @@ function oembedUrl(url: string): string | null {
 
 const str = (v: unknown): string | null => (typeof v === "string" && v ? v : null);
 
+export const THUMB_MAX = 2048;
+
+/** Only https URLs up to THUMB_MAX chars are kept as thumbnails. */
+export function safeThumb(v: unknown): string | null {
+  if (typeof v !== "string" || v.length > THUMB_MAX) return null;
+  try {
+    return new URL(v).protocol === "https:" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Best effort: never throws; any failure yields nulls. */
 export async function fetchPreview(url: string, fetcher: typeof fetch = fetch): Promise<Preview> {
   const target = oembedUrl(url);
@@ -29,7 +41,7 @@ export async function fetchPreview(url: string, fetcher: typeof fetch = fetch): 
     const res = await fetcher(target, { signal: AbortSignal.timeout(TIMEOUT_MS) });
     if (!res.ok) return NONE;
     const data = (await res.json()) as { title?: unknown; thumbnail_url?: unknown };
-    return { title: str(data.title), thumb: str(data.thumbnail_url) };
+    return { title: str(data.title), thumb: safeThumb(data.thumbnail_url) };
   } catch {
     return NONE;
   }
