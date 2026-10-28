@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { accessGuard, sameOrigin } from "./auth";
+import { captureRoutes } from "./routes/capture";
 import { ideaRoutes } from "./routes/ideas";
 import { taskRoutes } from "./routes/tasks";
 
@@ -21,5 +22,6 @@ app.use("/api/*", accessGuard());
 app.get("/api/health", (c) => c.json({ ok: true }));
 app.route("/", taskRoutes);
 app.route("/", ideaRoutes);
+app.route("/", captureRoutes);
 
 export default { fetch: app.fetch };
