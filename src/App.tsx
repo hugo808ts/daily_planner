@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Task } from "../shared/types";
 import { CaptureBar } from "./components/CaptureBar";
 import { Toast } from "./components/Toast";
+import { Report } from "./screens/Report";
 import { Today } from "./screens/Today";
 
 type Tab = "today" | "ideas";
@@ -28,10 +29,12 @@ function IdeasSoon() {
 export default function App() {
   const [tab, setTab] = useState<Tab>("today");
   const [captured, setCaptured] = useState<Task | null>(null);
+  const [reportStart, setReportStart] = useState<string | null>(null);
+  const [todayKey, setTodayKey] = useState(0);
 
   return (
     <div className="safe-x min-h-dvh">
-      <main>{tab === "today" ? <Today captured={captured} /> : <IdeasSoon />}</main>
+      <main>{tab === "today" ? <Today key={todayKey} captured={captured} onOpenReport={setReportStart} /> : <IdeasSoon />}</main>
 
       <CaptureBar onTaskSaved={setCaptured} />
 
@@ -69,6 +72,10 @@ export default function App() {
           })}
         </div>
       </nav>
+
+      {reportStart && (
+        <Report start={reportStart} onClose={() => setReportStart(null)} onMoved={() => setTodayKey((k) => k + 1)} />
+      )}
 
       <Toast />
     </div>

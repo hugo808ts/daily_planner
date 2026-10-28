@@ -1,4 +1,4 @@
-import type { Area, CaptureResult, DayNote, Folder, Idea, Task } from "../../shared/types";
+import type { Area, CaptureResult, DayNote, Folder, Idea, Task, WeekReport } from "../../shared/types";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -82,6 +82,8 @@ const json = (method: string, path: string, body?: unknown) => request<Record<st
 
 export const api = {
   week: (start: string) => request<WeekData>("GET", `/api/week?start=${encodeURIComponent(start)}`),
+  report: async (start: string) =>
+    (await json("GET", `/api/report?start=${encodeURIComponent(start)}`)).report as WeekReport,
   createTask: async (input: NewTask) => (await json("POST", "/api/tasks", input)).task as Task,
   updateTask: async (id: string, patch: TaskPatch) =>
     (await json("PATCH", `/api/tasks/${encodeURIComponent(id)}`, patch)).task as Task,

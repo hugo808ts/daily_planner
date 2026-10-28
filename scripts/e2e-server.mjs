@@ -3,7 +3,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { rmSync } from "node:fs";
 
-const port = process.argv[2] ?? "5199";
+const port = process.argv[2] ?? process.env.E2E_PORT ?? "5199";
 const persistDir = ".wrangler/e2e";
 
 rmSync(persistDir, { recursive: true, force: true });

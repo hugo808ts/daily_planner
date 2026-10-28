@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { accessGuard, sameOrigin } from "./auth";
 import { captureRoutes } from "./routes/capture";
 import { ideaRoutes } from "./routes/ideas";
+import { reportRoutes } from "./routes/report";
 import { taskRoutes } from "./routes/tasks";
 
 export type Env = {
@@ -23,5 +24,6 @@ app.get("/api/health", (c) => c.json({ ok: true }));
 app.route("/", taskRoutes);
 app.route("/", ideaRoutes);
 app.route("/", captureRoutes);
+app.route("/", reportRoutes);
 
 export default { fetch: app.fetch };
