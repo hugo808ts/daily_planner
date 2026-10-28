@@ -47,6 +47,10 @@ describe("parseCapture", () => {
     expect(parse("na próxima segunda-feira reunião").date).toBe("2026-11-02");
     expect(parse("sabado academia").date).toBe("2026-10-31");
   });
+  it("removes weekday prefixes from the title", () => {
+    expect(parse("na próxima segunda-feira reunião").title).toBe("Reunião");
+    expect(parse("nesta sexta estudar").title).toBe("Estudar");
+  });
   it("parses dia N", () => {
     expect(parse("dia 5 entregar trabalho")).toMatchObject({ date: "2026-11-05", title: "Entregar trabalho" });
     expect(parse("dia 30 pagar conta").date).toBe("2026-10-30");

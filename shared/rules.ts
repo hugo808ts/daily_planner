@@ -63,7 +63,7 @@ function parseDate(n: string, today: string, spans: Span[]): string | null {
   if (m) return take(m, today);
 
   m = new RegExp(
-    `(?<![a-z0-9])(?:(?:na|no|nesta|neste)\s+)?(?:(?:proxima|proximo)\s+)?(${WEEKDAYS.slice(1).concat(WEEKDAYS[0]).join("|")})(?:-feira)?(?![a-z0-9])`,
+    String.raw`(?<![a-z0-9])(?:(?:na|no|nesta|neste)\s+)?(?:(?:proxima|proximo)\s+)?(${WEEKDAYS.slice(1).concat(WEEKDAYS[0]).join("|")})(?:-feira)?(?![a-z0-9])`,
   ).exec(n);
   if (m) {
     const dow = new Date(`${today}T12:00:00Z`).getUTCDay();
