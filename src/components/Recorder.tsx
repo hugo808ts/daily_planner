@@ -234,7 +234,7 @@ export function Recorder({ disabled, onText }: Props) {
         onContextMenu={(e) => e.preventDefault()}
         style={{ touchAction: "none", WebkitTouchCallout: "none" }}
         className={`grid size-11 shrink-0 place-items-center rounded-full transition-[background-color,transform] duration-150 disabled:opacity-50 ${
-          phase === "recording" ? "scale-110 bg-danger text-white" : "text-accent active:bg-accent/10"
+          phase === "recording" ? "scale-110 bg-danger-fill text-on-accent" : "text-accent active:bg-accent/10"
         }`}
       >
         <svg viewBox="0 0 24 24" className="size-6" aria-hidden>

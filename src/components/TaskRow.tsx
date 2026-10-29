@@ -38,11 +38,11 @@ export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
       >
         <span
           className={`grid size-5 place-items-center rounded-md border-[1.6px] transition-[background-color,border-color,transform] duration-150 group-active:scale-90 ${
-            done ? "border-accent bg-accent" : bad ? "border-danger" : "border-ink/45"
+            done ? "border-accent-fill bg-accent-fill" : bad ? "border-danger" : "border-ink/45"
           }`}
         >
           {done && (
-            <svg viewBox="0 0 16 16" className="size-3.5 text-white" aria-hidden>
+            <svg viewBox="0 0 16 16" className="size-3.5 text-on-accent" aria-hidden>
               <path
                 d="M3.5 8.5l3 3 6-7"
                 fill="none"

@@ -62,7 +62,7 @@ export function AskSheet({ question, detail, confirmLabel, onConfirm, onClose }:
             disabled={busy}
             aria-busy={busy || undefined}
             onClick={() => void confirm()}
-            className="flex-1 rounded-2xl bg-danger font-semibold text-white active:opacity-85 disabled:opacity-60"
+            className="flex-1 rounded-2xl bg-danger-fill font-semibold text-on-accent active:opacity-85 disabled:opacity-60"
           >
             {confirmLabel}
           </button>

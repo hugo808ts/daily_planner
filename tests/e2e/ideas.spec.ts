@@ -6,7 +6,8 @@ import { shortDay } from "../../src/lib/format";
 // então este começa apagando todas para ver a tela de primeira visita.
 const TODAY = todayISO();
 const TOMORROW = addDays(TODAY, 1);
-const OTHER = weekDays(weekStart(TODAY)).find((d) => d > TOMORROW) ?? addDays(TODAY, 2);
+// Outro dia da semana visível (nem hoje nem amanhã): existe em qualquer dia da semana.
+const OTHER = weekDays(weekStart(TODAY)).find((d) => d !== TODAY && d !== TOMORROW)!;
 
 const TIKTOK = "https://www.tiktok.com/@estudacomigo/video/7312345678901234567";
 
@@ -59,7 +60,7 @@ test("pastas: primeira visita, criar com emoji e renomear", async ({ page }) => 
     await expect(page.getByRole("button", { name: "Abrir pasta Vídeos TikTok" })).toBeVisible();
   });
 
-  await page.screenshot({ path: "test-results/ideas-folders-390x844.png" });
+  await page.screenshot({ path: "test-results/ideas-folders-390x844.png", animations: "disabled", scale: "css" });
 });
 
 test("ideias: link, fixar, autosalvar, resolver e desfazer", async ({ page, request }) => {
@@ -90,7 +91,7 @@ test("ideias: link, fixar, autosalvar, resolver e desfazer", async ({ page, requ
     await expect(cards(page).nth(1)).toContainText("Receita de marmita da semana");
   });
 
-  await page.screenshot({ path: "test-results/ideas-list-390x844.png" });
+  await page.screenshot({ path: "test-results/ideas-list-390x844.png", animations: "disabled", scale: "css" });
 
   await test.step("o editor salva sozinho 800 ms depois de parar de digitar", async () => {
     await card(page, "Receita de marmita da semana").getByRole("button", { name: /Receita de marmita/ }).click();
@@ -104,7 +105,7 @@ test("ideias: link, fixar, autosalvar, resolver e desfazer", async ({ page, requ
     await expect(page.getByLabel("Texto")).toHaveValue("Frango, arroz integral e legumes. Fazer no domingo.");
   });
 
-  await page.screenshot({ path: "test-results/ideas-editor-390x844.png" });
+  await page.screenshot({ path: "test-results/ideas-editor-390x844.png", animations: "disabled", scale: "css" });
 
   await test.step("Resolvida pede confirmação, apaga e oferece Desfazer", async () => {
     await page.getByRole("button", { name: "✓ Resolvida" }).click();

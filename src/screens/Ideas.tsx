@@ -18,6 +18,27 @@ interface Props {
   captured?: Idea | null;
   /** Tarefa criada por "Virar tarefa". */
   onTaskSaved?: (task: Task) => void;
+  /** Computador: pastas | lista | editor lado a lado, cada coluna com rolagem própria. */
+  wide?: boolean;
+}
+
+const MOBILE_PAD = {
+  paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
+  paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5.5rem)",
+};
+
+function EmptyPane({ icon, title, text }: { icon: string; title: string; text: string }) {
+  return (
+    <div className="grid h-full place-items-center px-6 text-center">
+      <div>
+        <p aria-hidden className="text-3xl opacity-70">
+          {icon}
+        </p>
+        <p className="mt-2 font-display text-lg font-semibold">{title}</p>
+        <p className="mx-auto mt-1 max-w-[32ch] text-sm text-muted">{text}</p>
+      </div>
+    </div>
+  );
 }
 
 /** Sessão aberta do editor; `key` não muda quando uma ideia nova é criada (o foco fica onde está). */
@@ -27,7 +48,7 @@ type Editing = { key: string; idea: Idea | null };
  * Ideias. No celular, uma tela por vez (pastas → lista → editor), escolhida pelo estado
  * `folderId` / `editing`; no computador as três podem ficar lado a lado com o mesmo estado.
  */
-export function Ideas({ captured, onTaskSaved }: Props) {
+export function Ideas({ captured, onTaskSaved, wide = false }: Props) {
   const now = useNow(60_000);
   const { folders, error: foldersError, reload: reloadFolders, setFolders } = useFolders();
   const [folderId, setFolderId] = useState<string | null>(null);
@@ -40,8 +61,8 @@ export function Ideas({ captured, onTaskSaved }: Props) {
   const view = editing ? "editor" : folderId ? "list" : "folders";
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [view]);
+    if (!wide) window.scrollTo(0, 0);
+  }, [view, wide]);
 
   // Pasta apagada (em outro aparelho, por exemplo): volta para a lista de pastas.
   useEffect(() => {
@@ -110,75 +131,118 @@ export function Ideas({ captured, onTaskSaved }: Props) {
     }
   };
 
-  return (
-    <div
-      className="mx-auto w-full max-w-md px-4"
-      style={{
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5.5rem)",
+  const editor = (fid: string, ed: Editing) => (
+    <IdeaEditor
+      key={ed.key}
+      folderId={fid}
+      folderName={folder?.name ?? "Ideias"}
+      idea={ed.idea}
+      wide={wide}
+      onBack={wide ? undefined : () => setEditing(null)}
+      onSaved={onIdeaSaved}
+      onResolved={onResolved}
+      onTurnIntoTask={setConverting}
+    />
+  );
+
+  const list = (f: Folder) => (
+    <IdeaList
+      folder={f}
+      ideas={ideas}
+      error={ideasError}
+      now={now}
+      wide={wide}
+      selectedId={wide ? (editing?.idea?.id ?? null) : null}
+      onReload={() => void reloadIdeas()}
+      onBack={wide ? undefined : () => setFolderId(null)}
+      onOpen={openIdea}
+      onNew={() => setEditing({ key: `new-${Date.now()}`, idea: null })}
+      onTogglePin={(i) => void togglePin(i)}
+    />
+  );
+
+  const grid = (
+    <FolderGrid
+      folders={folders}
+      error={foldersError}
+      query={query}
+      sidebar={wide}
+      selectedId={wide ? folderId : null}
+      onQuery={setQuery}
+      onReload={() => void reloadFolders()}
+      onOpenFolder={(f) => {
+        setFolderId(f.id);
+        setEditing(null);
       }}
-    >
+      onOpenIdea={openIdea}
+      onFolderSaved={(f) => setFolders((list) => [...(list ?? []).filter((x) => x.id !== f.id), f].sort(byName))}
+      onFolderDeleted={(id) => {
+        setFolders((list) => list?.filter((f) => f.id !== id) ?? list);
+        if (folderId === id) setFolderId(null);
+      }}
+    />
+  );
+
+  const sheet = converting && (
+    <ConfirmSheet
+      initial={{
+        kind: "task",
+        title: converting.title,
+        date: todayISO(),
+        time: null,
+        area: null,
+        folderId: null,
+        source: "rules",
+      }}
+      onClose={() => setConverting(null)}
+      onSaved={onConverted}
+    />
+  );
+
+  if (wide) {
+    return (
+      <div className="grid h-dvh grid-cols-[240px_300px_minmax(0,1fr)]">
+        <div data-testid="folders-pane" className="pane border-r border-line bg-ink/[0.025] px-3 pt-[18px] pb-6">
+          {grid}
+        </div>
+        <div data-testid="list-pane" className="pane border-r border-line px-3 pt-[18px] pb-6">
+          {folderId && folder ? (
+            list(folder)
+          ) : (
+            <EmptyPane icon="🗂" title="Escolha uma pasta" text="As ideias da pasta aparecem aqui, as fixadas primeiro." />
+          )}
+        </div>
+        <div data-testid="editor-pane" className="pane bg-surface px-10 pt-7 pb-10">
+          {editing && folderId ? (
+            <div className="mx-auto max-w-[680px]">{editor(folderId, editing)}</div>
+          ) : (
+            <EmptyPane
+              icon="✍️"
+              title="Escolha uma ideia"
+              text={folder ? "Ou crie uma nova com o + da lista. Tudo salva sozinho." : "Abra uma pasta à esquerda para ver e escrever ideias."}
+            />
+          )}
+        </div>
+        {sheet}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-md px-4" style={MOBILE_PAD}>
       {view === "editor" && editing && folderId ? (
-        <IdeaEditor
-          key={editing.key}
-          folderId={folderId}
-          folderName={folder?.name ?? "Ideias"}
-          idea={editing.idea}
-          onBack={() => setEditing(null)}
-          onSaved={onIdeaSaved}
-          onResolved={onResolved}
-          onTurnIntoTask={setConverting}
-        />
+        editor(folderId, editing)
       ) : view === "list" && folderId ? (
         folder ? (
-          <IdeaList
-            folder={folder}
-            ideas={ideas}
-            error={ideasError}
-            now={now}
-            onReload={() => void reloadIdeas()}
-            onBack={() => setFolderId(null)}
-            onOpen={openIdea}
-            onNew={() => setEditing({ key: `new-${Date.now()}`, idea: null })}
-            onTogglePin={(i) => void togglePin(i)}
-          />
+          list(folder)
         ) : (
           <div aria-busy="true" aria-label="Carregando" className="h-40" />
         )
       ) : (
-        <FolderGrid
-          folders={folders}
-          error={foldersError}
-          query={query}
-          onQuery={setQuery}
-          onReload={() => void reloadFolders()}
-          onOpenFolder={(f) => setFolderId(f.id)}
-          onOpenIdea={openIdea}
-          onFolderSaved={(f) =>
-            setFolders((list) => [...(list ?? []).filter((x) => x.id !== f.id), f].sort(byName))
-          }
-          onFolderDeleted={(id) => {
-            setFolders((list) => list?.filter((f) => f.id !== id) ?? list);
-            if (folderId === id) setFolderId(null);
-          }}
-        />
+        grid
       )}
 
-      {converting && (
-        <ConfirmSheet
-          initial={{
-            kind: "task",
-            title: converting.title,
-            date: todayISO(),
-            time: null,
-            area: null,
-            folderId: null,
-            source: "rules",
-          }}
-          onClose={() => setConverting(null)}
-          onSaved={onConverted}
-        />
-      )}
+      {sheet}
     </div>
   );
 }

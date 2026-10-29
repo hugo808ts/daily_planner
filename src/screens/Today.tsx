@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDayTitle, todayISO, weekDays, weekStart } from "../../shared/dates";
 import type { Task } from "../../shared/types";
 import { DayNote } from "../components/DayNote";
@@ -17,9 +17,16 @@ const errorMessage = (e: unknown) => (e instanceof ApiError ? e.message : "Algo 
 interface Props {
   /** Tarefa criada pela captura rápida, para entrar na semana sem recarregar. */
   captured?: Task | null;
+  /** Computador: coluna fixa à esquerda, sem barra de abas nem captura flutuante embaixo. */
+  wide?: boolean;
 }
 
-export function Today({ captured }: Props) {
+const MOBILE_PAD = {
+  paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
+  paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5.5rem)",
+};
+
+export function Today({ captured, wide = false }: Props) {
   const now = useNow(60_000); // estados (atrasada, não feita) recalculados a cada minuto
   const today = todayISO(now);
   const days = weekDays(weekStart(today));
@@ -27,6 +34,8 @@ export function Today({ captured }: Props) {
   const selected = picked && days.includes(picked) ? picked : today;
   const { data, error, reload, setTask, removeTask, setNote } = useWeek(days[0]);
   const [editing, setEditing] = useState<Task | null>(null);
+  /** Tarefas com PATCH de feita/não feita em andamento: toques repetidos são ignorados. */
+  const toggling = useRef(new Set<string>());
 
   useEffect(() => {
     if (captured) setTask(captured);
@@ -39,13 +48,17 @@ export function Today({ captured }: Props) {
   const relative = title === "Hoje" || title === "Amanhã" || title === "Ontem";
 
   const toggle = async (task: Task) => {
+    if (toggling.current.has(task.id)) return;
+    toggling.current.add(task.id);
     const done = !task.doneAt;
     setTask({ ...task, doneAt: done ? new Date().toISOString() : null });
     try {
       setTask(await api.updateTask(task.id, { done }));
     } catch (e) {
-      setTask(task);
+      setTask(task); // volta ao estado de antes do toque
       showToast(errorMessage(e));
+    } finally {
+      toggling.current.delete(task.id);
     }
   };
 
@@ -86,13 +99,7 @@ export function Today({ captured }: Props) {
   };
 
   return (
-    <div
-      className="mx-auto w-full max-w-md px-4"
-      style={{
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5.5rem)",
-      }}
-    >
+    <div className={wide ? "px-[18px] pt-4 pb-2" : "mx-auto w-full max-w-md px-4"} style={wide ? undefined : MOBILE_PAD}>
       <WeekStrip days={days} today={today} selected={selected} tasks={tasks} now={now} onSelect={setPicked} />
 
       <header className="mt-5 mb-3">

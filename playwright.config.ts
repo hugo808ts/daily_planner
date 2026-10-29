@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 5199;
+// E2E_PORT permite rodar duas cópias do projeto ao mesmo tempo (ex.: outra branch).
+const PORT = Number(process.env.E2E_PORT ?? 5199);
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -16,6 +17,7 @@ export default defineConfig({
   projects: [
     {
       name: "mobile",
+      testIgnore: /layout\.spec\.ts/,
       use: {
         browserName: "chromium",
         viewport: { width: 390, height: 844 },
@@ -23,6 +25,15 @@ export default defineConfig({
         isMobile: true,
         hasTouch: true,
         userAgent: devices["iPhone 13"].userAgent,
+      },
+    },
+    {
+      // Layout do computador; o próprio arquivo troca para celular onde precisa comparar.
+      name: "desktop",
+      testMatch: /layout\.spec\.ts/,
+      use: {
+        browserName: "chromium",
+        viewport: { width: 1440, height: 900 },
       },
     },
   ],

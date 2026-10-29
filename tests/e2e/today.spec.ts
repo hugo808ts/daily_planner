@@ -1,12 +1,19 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { addDays, todayISO, weekStart } from "../../shared/dates";
+import { dayNumber, shortDay } from "../../src/lib/format";
 
-// Relógio do navegador fixo numa quarta-feira, 15h em São Paulo. O servidor usa a hora
-// real, mas para ele as datas abaixo já ficaram no passado, então "ontem" é não feita
-// nos dois lados.
-const NOW = new Date("2026-10-28T15:00:00-03:00");
-const TODAY = "2026-10-28"; // qua
-const YESTERDAY = "2026-10-27"; // ter
-const TOMORROW = "2026-10-29"; // qui
+// Relógio do navegador fixo na quarta-feira da semana PASSADA (em relação à data real de
+// São Paulo), às 15h. O servidor usa a hora real, então para ele todas as datas abaixo já
+// passaram: "ontem" é não feita nos dois lados, em qualquer dia em que o teste rodar.
+const TODAY = addDays(weekStart(todayISO()), -5); // qua da semana passada
+const NOW = new Date(`${TODAY}T15:00:00-03:00`);
+const YESTERDAY = addDays(TODAY, -1); // ter
+const TOMORROW = addDays(TODAY, 1); // qui
+const FRIDAY = addDays(TODAY, 2); // sex
+const MONDAY = addDays(TODAY, -2);
+const SUNDAY = addDays(TODAY, 4);
+const dayButton = (page: Page, weekday: string) =>
+  page.getByRole("navigation", { name: "Dias da semana" }).getByRole("button", { name: new RegExp(`^${weekday}`) });
 
 type Seed = { title: string; date: string; time?: string; area?: string };
 
@@ -38,13 +45,13 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
     const days = week.getByRole("button");
     await expect(days).toHaveCount(7);
     await expect(days.first()).toContainText("seg");
-    await expect(days.first()).toContainText("26");
+    await expect(days.first()).toContainText(String(dayNumber(MONDAY)));
     await expect(days.last()).toContainText("dom");
-    await expect(days.last()).toContainText("1");
+    await expect(days.last()).toContainText(String(dayNumber(SUNDAY)));
     const today = week.locator('[aria-current="date"]');
     await expect(today).toHaveCount(1);
     await expect(today).toContainText("qua");
-    await expect(today).toContainText("28");
+    await expect(today).toContainText(String(dayNumber(TODAY)));
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hoje");
   });
 
@@ -65,14 +72,14 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
   });
 
   await test.step("tocar em outro dia mostra as tarefas dele", async () => {
-    await page.getByRole("button", { name: /qui.*29/ }).click();
+    await dayButton(page, "qui").click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Amanhã");
     await expect(row(page, "Reunião de equipe")).toBeVisible();
     await expect(row(page, "Jantar com a namorada")).toHaveCount(0);
   });
 
   await test.step("levar tarefa não feita de ontem para sexta cria cópia 'veio de ter'", async () => {
-    await page.getByRole("button", { name: /ter.*27/ }).click();
+    await dayButton(page, "ter").click();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ontem");
     const missed = row(page, "Entregar atividade de Estatística");
     await expect(missed).toHaveAttribute("data-status", "not_done");
@@ -84,18 +91,18 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
     // Tarefa não feita: a data não se edita no formulário, só pela ação de levar.
     await expect(sheet.getByLabel("Dia")).toHaveCount(0);
     await sheet.getByRole("button", { name: "Levar para outro dia" }).click();
-    await sheet.getByRole("button", { name: "sex 30" }).click();
+    await sheet.getByRole("button", { name: shortDay(FRIDAY) }).click();
     await expect(sheet).toBeHidden();
 
     await expect(row(page, "Entregar atividade de Estatística")).toHaveAttribute("data-status", "not_done");
-    await page.getByRole("button", { name: /sex.*30/ }).click();
+    await dayButton(page, "sex").click();
     const copy = row(page, "Entregar atividade de Estatística");
     await expect(copy).toHaveAttribute("data-status", "pending");
     await expect(copy).toContainText("veio de ter");
   });
 
   await test.step("anotação do dia é salva", async () => {
-    await page.getByRole("button", { name: /qua.*28/ }).click();
+    await dayButton(page, "qua").click();
     await page.getByRole("button", { name: "Fixar uma anotação" }).click();
     await page.getByRole("textbox", { name: "Anotação do dia" }).fill("Levar o carregador do notebook");
     await page.getByRole("button", { name: "Salvar anotação" }).click();
@@ -110,5 +117,64 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
     await expect(row(page, "Jantar com a namorada")).toHaveAttribute("data-status", "overdue");
   });
 
-  await page.screenshot({ path: "test-results/today-390x844.png" });
+  await page.screenshot({ path: "test-results/today-390x844.png", animations: "disabled", scale: "css" });
+});
+
+test("Outra data: só leva ao tocar em Mover", async ({ page, request }) => {
+  const task = await seed(request, { title: "Comprar presente", date: TOMORROW });
+  await page.clock.install({ time: NOW });
+  await page.goto("/");
+  await dayButton(page, "qui").click();
+  await row(page, "Comprar presente").getByRole("button", { name: /Comprar presente/ }).click();
+  const sheet = page.getByRole("dialog");
+  await sheet.getByRole("button", { name: "Levar para outro dia" }).click();
+
+  const move = sheet.getByRole("button", { name: "Mover", exact: true });
+  await expect(move).toBeDisabled();
+  await sheet.getByLabel("Outra data").fill(SUNDAY);
+  // Escolher a data não move nada ainda.
+  await page.waitForTimeout(300);
+  await expect(sheet).toBeVisible();
+  const before = await (await request.get(`/api/week?start=${weekStart(TODAY)}`)).json();
+  expect(before.tasks.find((t: { id: string }) => t.id === task.id)).toMatchObject({ date: TOMORROW });
+
+  await move.click();
+  await expect(sheet).toBeHidden();
+  // Para o servidor (relógio real) a tarefa já passou, então vira cópia; o importante é ter movido só agora.
+  await expect(page.getByRole("status")).toContainText(/(Levada|Cópia criada) para domingo/);
+  await dayButton(page, "dom").click();
+  await expect(row(page, "Comprar presente")).toBeVisible();
+});
+
+test("marcar como feita ignora toques enquanto salva e volta ao estado anterior se falhar", async ({ page, request }) => {
+  await seed(request, { title: "Pagar boleto", date: TODAY });
+  await page.clock.install({ time: NOW });
+
+  let patches = 0;
+  let fail = false;
+  await page.route("**/api/tasks/*", async (route) => {
+    if (route.request().method() !== "PATCH") return route.fallback();
+    patches++;
+    await new Promise((r) => setTimeout(r, 600));
+    if (fail) return route.fulfill({ status: 500, json: { error: "Falhou." } });
+    return route.fallback();
+  });
+  await page.goto("/");
+
+  const box = page.getByRole("checkbox", { name: "Marcar como feita: Pagar boleto" });
+  await box.click();
+  await box.click(); // segundo toque com o PATCH ainda no ar: ignorado
+  await box.click();
+  await expect(box).toHaveAttribute("aria-checked", "true");
+  await expect.poll(() => patches).toBe(1);
+  await page.waitForTimeout(800);
+  expect(patches).toBe(1);
+  await expect(box).toHaveAttribute("aria-checked", "true");
+
+  fail = true;
+  await box.click();
+  await expect(box).toHaveAttribute("aria-checked", "false"); // otimista
+  await expect(page.getByRole("status")).toContainText("Falhou.");
+  await expect(box).toHaveAttribute("aria-checked", "true"); // volta ao de antes do toque
+  expect(patches).toBe(2);
 });

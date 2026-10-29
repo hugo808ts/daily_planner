@@ -6,8 +6,9 @@ import { shortDay } from "../../src/lib/format";
 // Servidor e navegador usam o relógio real, então as datas são calculadas a partir de hoje.
 const TODAY = todayISO();
 const TOMORROW = addDays(TODAY, 1);
-// Um dia futuro da semana visível depois de amanhã (para editar o chip de data).
-const OTHER = weekDays(weekStart(TODAY)).find((d) => d > TOMORROW) ?? addDays(TODAY, 2);
+// Outro dia da semana visível (nem hoje nem amanhã), para editar o chip de data e depois
+// achar a tarefa na faixa da semana. Existe em qualquer dia da semana, inclusive sáb e dom.
+const OTHER = weekDays(weekStart(TODAY)).find((d) => d !== TODAY && d !== TOMORROW)!;
 
 const RELATORIO = "amanhã no trabalho tenho que apresentar o relatório pro gerente às 10";
 
@@ -30,7 +31,6 @@ test("tarefa: escreve, confere os chips, troca o dia e salva", async ({ page }) 
   await test.step("enviar abre a folha com o que foi entendido", async () => {
     await field(page).fill(RELATORIO);
     await expect(send(page)).toBeEnabled();
-    await page.screenshot({ path: "test-results/capture-bar-390x844.png" });
     await send(page).click();
     const s = sheet(page);
     await expect(s).toBeVisible();
@@ -41,9 +41,6 @@ test("tarefa: escreve, confere os chips, troca o dia e salva", async ({ page }) 
     await expect(s.getByRole("button", { name: /^Horário:/ })).toContainText("10:00");
     await expect(s.getByRole("button", { name: /^Área:/ })).toContainText("Trabalho");
   });
-
-  await page.waitForTimeout(300); // fim da animação de entrada da folha
-  await page.screenshot({ path: "test-results/capture-sheet-390x844.png" });
 
   await test.step("editar o chip de data e salvar põe a tarefa naquele dia", async () => {
     const s = sheet(page);
@@ -108,6 +105,53 @@ test("trocar o tipo para ideia mostra a pasta e '+ Nova pasta'", async ({ page }
   await expect(field(page)).toHaveValue("ligar pro dentista sexta");
 });
 
+test("enquanto salva, Esc e toque fora não fecham a folha", async ({ page }) => {
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  await page.route("**/api/tasks", async (route) => {
+    if (route.request().method() !== "POST") return route.fallback();
+    await held;
+    return route.fallback();
+  });
+  await page.goto("/");
+  await field(page).fill("ligar pro dentista sexta");
+  await send(page).click();
+  const s = sheet(page);
+  await s.getByRole("button", { name: "Salvar", exact: true }).click();
+  await expect(s.getByRole("button", { name: "Salvar", exact: true })).toBeDisabled();
+
+  await page.keyboard.press("Escape");
+  await page.mouse.click(195, 20); // fundo, acima da folha
+  await expect(s).toBeVisible();
+
+  release();
+  await expect(s).toBeHidden();
+  await expect(page.getByRole("status")).toContainText("Tarefa salva");
+});
+
+test("falha ao carregar pastas mostra o erro com 'Tentar de novo', não 'Crie sua primeira pasta'", async ({ page }) => {
+  let fail = true;
+  await page.route("**/api/folders", (route) =>
+    fail ? route.fulfill({ status: 500, json: { error: "Falhou." } }) : route.fallback(),
+  );
+  await page.goto("/");
+  await field(page).fill("ideia: assistir documentário sobre abelhas");
+  await send(page).click();
+  const s = sheet(page);
+  await expect(s).toContainText("💡 Ideia");
+  await expect(s.getByRole("alert")).toContainText("Não foi possível carregar as pastas.");
+  await expect(s).not.toContainText("Crie sua primeira pasta");
+  await expect(s.getByRole("button", { name: "Guardar", exact: true })).toBeDisabled();
+
+  fail = false;
+  await s.getByRole("button", { name: "Tentar de novo" }).click();
+  await expect(s.getByRole("alert")).toHaveCount(0);
+  await expect(s.getByRole("button", { name: /^Pasta:/ })).toBeVisible();
+  await expect(s.getByRole("button", { name: "Guardar", exact: true })).toBeEnabled();
+  await page.keyboard.press("Escape");
+  await expect(s).toBeHidden();
+});
+
 test("Ctrl+K foca o campo de captura", async ({ page }) => {
   await page.goto("/");
   await expect(field(page)).not.toBeFocused();
@@ -149,6 +193,10 @@ async function fakeMic(page: Page, deny = false) {
       }
     }
     (window as any).MediaRecorder = FakeRecorder;
+    // Sem medidor de nível: criar um AudioContext "a frio" pode levar centenas de ms no
+    // Chromium de teste, o que fazia o toque curto passar de 500 ms (teste instável).
+    (window as any).AudioContext = undefined;
+    (window as any).webkitAudioContext = undefined;
   }, deny);
 }
 
@@ -172,15 +220,23 @@ test("voz: segurar o microfone transcreve e abre a confirmação", async ({ page
   await page.goto("/");
 
   await test.step("toque curto (< 0,5 s) é descartado", async () => {
-    // Dentro da página para o tempo não depender da latência do Playwright:
-    // solta 50 ms depois de a gravação começar.
+    // Dentro da página e sem temporizadores: solta no mesmo instante em que o indicador de
+    // gravação aparece (MutationObserver). Com setTimeout, uma máquina ocupada podia atrasar o
+    // "soltar" além dos 500 ms e o toque curto virava gravação (teste instável).
     await page.evaluate(async () => {
       const mic = document.querySelector<HTMLButtonElement>('[aria-label="Segure para falar"]')!;
       const opts = { bubbles: true, pointerId: 1, pointerType: "touch", isPrimary: true, button: 0 };
+      const released = new Promise<void>((resolve) => {
+        const obs = new MutationObserver(() => {
+          if (!document.querySelector('[data-testid="recorder"]')) return;
+          obs.disconnect();
+          mic.dispatchEvent(new PointerEvent("pointerup", opts));
+          resolve();
+        });
+        obs.observe(document.body, { childList: true, subtree: true });
+      });
       mic.dispatchEvent(new PointerEvent("pointerdown", opts));
-      while (!document.querySelector('[data-testid="recorder"]')) await new Promise((r) => setTimeout(r, 10));
-      await new Promise((r) => setTimeout(r, 50));
-      mic.dispatchEvent(new PointerEvent("pointerup", opts));
+      await released;
     });
     await expect(page.getByTestId("recorder")).toHaveCount(0);
     await page.waitForTimeout(300);

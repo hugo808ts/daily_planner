@@ -15,8 +15,8 @@ interface Props {
 }
 
 function dotClass(status: TaskStatus, on: boolean): string {
-  if (status === "done") return on ? "bg-white" : "bg-accent";
-  if (status === "pending") return on ? "bg-white/45" : "bg-dot";
+  if (status === "done") return on ? "bg-on-accent" : "bg-accent";
+  if (status === "pending") return on ? "bg-on-accent/45" : "bg-dot";
   return on ? "bg-[#ffb4b6]" : "bg-danger";
 }
 
@@ -38,13 +38,13 @@ export function WeekStrip({ days, today, selected, tasks, now, onSelect }: Props
             aria-current={isToday ? "date" : undefined}
             aria-pressed={on}
             className={[
-              "flex w-11 flex-col items-center rounded-2xl pt-1.5 pb-2 text-[11px] leading-tight transition-colors duration-150",
-              on ? "bg-accent text-white/80" : "text-muted active:bg-ink/5",
+              "flex max-w-11 min-w-0 flex-1 flex-col items-center rounded-2xl pt-1.5 pb-2 text-[11px] leading-tight transition-colors duration-150",
+              on ? "bg-accent-fill text-on-accent/80" : "text-muted active:bg-ink/5",
               isToday && !on ? "ring-1 ring-accent/50 ring-inset" : "",
             ].join(" ")}
           >
             <span>{weekdayShort(date)}</span>
-            <span className={`text-base font-semibold ${on ? "text-white" : "text-ink"}`}>{dayNumber(date)}</span>
+            <span className={`text-base font-semibold ${on ? "text-on-accent" : "text-ink"}`}>{dayNumber(date)}</span>
             <span aria-hidden className="mt-1 flex h-1 gap-0.5">
               {statuses.slice(0, MAX_DOTS).map((s, i) => (
                 <i key={i} className={`size-1 rounded-full ${dotClass(s, on)}`} />

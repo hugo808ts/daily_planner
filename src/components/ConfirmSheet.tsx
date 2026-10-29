@@ -62,6 +62,8 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
   const [area, setArea] = useState<Area | null>(initial.area);
   const [folderId, setFolderId] = useState(initial.folderId);
   const [folders, setFolders] = useState<Folder[] | null>(null);
+  const [foldersError, setFoldersError] = useState(false);
+  const [foldersTry, setFoldersTry] = useState(0);
   const [newFolder, setNewFolder] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [folderEmoji, setFolderEmoji] = useState("");
@@ -81,16 +83,23 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
     if (d && !d.open) d.showModal();
   }, []);
 
+  // Falha ao carregar não é "sem pastas": mostra o erro com "Tentar de novo".
   useEffect(() => {
     let alive = true;
+    setFoldersError(false);
     api
       .folders()
       .then((list) => alive && setFolders(list))
-      .catch(() => alive && setFolders([]));
+      .catch(() => alive && setFoldersError(true));
     return () => {
       alive = false;
     };
-  }, []);
+  }, [foldersTry]);
+
+  /** Enquanto salva, Esc e toque fora não fecham (o pedido já foi enviado). */
+  const close = () => {
+    if (!busy) onClose();
+  };
 
   const fail = (e: unknown) => {
     if (e instanceof ApiError) {
@@ -168,10 +177,10 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
       aria-labelledby="confirm-sheet-title"
       onCancel={(e) => {
         e.preventDefault();
-        onClose();
+        close();
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) close();
       }}
     >
       <form
@@ -265,6 +274,17 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
                 )}
               </Chip>
             </>
+          ) : foldersError ? (
+            <div role="alert" className="flex w-full items-center justify-between gap-2 rounded-xl bg-danger/10 py-1 pr-1 pl-3 text-sm text-danger-ink">
+              <span>Não foi possível carregar as pastas.</span>
+              <button
+                type="button"
+                onClick={() => setFoldersTry((n) => n + 1)}
+                className="shrink-0 rounded-xl px-3 font-semibold active:bg-danger/10"
+              >
+                Tentar de novo
+              </button>
+            </div>
           ) : (
             !noFolders && (
               <Chip
@@ -451,7 +471,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
           <button
             type="submit"
             disabled={busy || (!isTask && folders === null)}
-            className="flex-1 rounded-2xl bg-accent font-semibold text-white active:opacity-85 disabled:opacity-60"
+            className="flex-1 rounded-2xl bg-accent-fill font-semibold text-on-accent active:opacity-85 disabled:opacity-60"
           >
             {isTask ? "Salvar" : "Guardar"}
           </button>

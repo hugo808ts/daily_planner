@@ -86,7 +86,7 @@ export function DayNote({ date, note, onSaved }: Props) {
           <span className="mr-auto text-xs tabular-nums opacity-60">
             {text.length}/{DAY_NOTE_MAX}
           </span>
-          <button type="button" onClick={() => setEditing(false)} className="rounded-xl px-3 text-sm active:bg-black/5">
+          <button type="button" onClick={() => setEditing(false)} className="rounded-xl px-3 text-sm active:bg-ink/5">
             Cancelar
           </button>
           <button

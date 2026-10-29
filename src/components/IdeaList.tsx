@@ -8,10 +8,14 @@ interface Props {
   error: string | null;
   now: Date;
   onReload: () => void;
-  onBack: () => void;
+  /** Sem voltar no computador: as colunas já mostram onde se está. */
+  onBack?: () => void;
   onOpen: (idea: Idea) => void;
   onNew: () => void;
   onTogglePin: (idea: Idea) => void;
+  /** Computador: o + fica no topo da coluna (não no canto da janela) e a ideia aberta fica marcada. */
+  wide?: boolean;
+  selectedId?: string | null;
 }
 
 const hostIcon = (host: string) => (host.includes("tiktok") ? "♪" : host.includes("youtu") ? "▶" : "🔗");
@@ -45,16 +49,37 @@ export function BackButton({ label, onClick }: { label: string; onClick: () => v
 }
 
 /** Ideias de uma pasta: fixadas no topo, depois da mais recente para a mais antiga. */
-export function IdeaList({ folder, ideas, error, now, onReload, onBack, onOpen, onNew, onTogglePin }: Props) {
+export function IdeaList(props: Props) {
+  const { folder, ideas, error, now, onReload, onBack, onOpen, onNew, onTogglePin, wide = false, selectedId = null } = props;
+  const plus = (
+    <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
+      <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" />
+    </svg>
+  );
   return (
     <section aria-labelledby="idea-list-title">
-      <BackButton label="Ideias" onClick={onBack} />
-      <header className="mt-1 mb-3">
-        <h1 id="idea-list-title" className="font-display text-[28px] leading-tight font-semibold tracking-[-0.01em] break-words">
-          {folder.emoji && <span aria-hidden>{folder.emoji} </span>}
-          {folder.name}
-        </h1>
-        {ideas && <p className="text-sm text-muted">{ideaCount(ideas.length)}</p>}
+      {onBack && <BackButton label="Ideias" onClick={onBack} />}
+      <header className={wide ? "mb-3 flex items-start justify-between gap-2 pl-1" : "mt-1 mb-3"}>
+        <div className="min-w-0">
+          <h1
+            id="idea-list-title"
+            className={`font-display leading-tight font-semibold tracking-[-0.01em] break-words ${wide ? "text-xl" : "text-[28px]"}`}
+          >
+            {folder.emoji && <span aria-hidden>{folder.emoji} </span>}
+            {folder.name}
+          </h1>
+          {ideas && <p className="text-sm text-muted">{ideaCount(ideas.length)}</p>}
+        </div>
+        {wide && (
+          <button
+            type="button"
+            aria-label="Nova ideia"
+            onClick={onNew}
+            className="grid size-10 min-h-10 min-w-10 shrink-0 place-items-center rounded-xl bg-accent-fill text-on-accent active:opacity-85"
+          >
+            {plus}
+          </button>
+        )}
       </header>
 
       {error && !ideas ? (
@@ -73,18 +98,24 @@ export function IdeaList({ folder, ideas, error, now, onReload, onBack, onOpen, 
       ) : ideas.length === 0 ? (
         <div className="rounded-[20px] bg-surface px-5 py-7 text-center">
           <p className="font-semibold">Nenhuma ideia aqui ainda</p>
-          <p className="mt-1 text-sm text-muted">Toque em + para escrever a primeira, ou use a captura aí embaixo.</p>
+          <p className="mt-1 text-sm text-muted">
+            {wide ? "Clique em + para escrever a primeira, ou use a captura do Hoje." : "Toque em + para escrever a primeira, ou use a captura aí embaixo."}
+          </p>
         </div>
       ) : (
         <ul aria-label="Ideias da pasta" className="space-y-2">
           {ideas.map((idea) => {
             const thumb = safeThumb(idea.linkThumb);
+            const on = idea.id === selectedId;
             return (
               <li key={idea.id} className="relative">
                 <button
                   type="button"
+                  aria-current={on ? "true" : undefined}
                   onClick={() => onOpen(idea)}
-                  className="flex w-full gap-3 rounded-2xl bg-surface py-3 pr-12 pl-4 text-left transition-colors duration-150 active:bg-surface/70"
+                  className={`flex w-full gap-3 rounded-2xl border-[1.5px] bg-surface py-3 pr-12 pl-4 text-left transition-colors duration-150 active:bg-surface/70 ${
+                    on ? "border-accent" : "border-transparent"
+                  }`}
                 >
                   {thumb && (
                     <img
@@ -125,17 +156,17 @@ export function IdeaList({ folder, ideas, error, now, onReload, onBack, onOpen, 
         </ul>
       )}
 
-      <button
-        type="button"
-        aria-label="Nova ideia"
-        onClick={onNew}
-        className="fixed right-4 z-30 grid size-14 place-items-center rounded-full bg-accent text-white shadow-[0_10px_24px_-8px_var(--accent)] active:opacity-85"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5rem)" }}
-      >
-        <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
-          <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" />
-        </svg>
-      </button>
+      {!wide && (
+        <button
+          type="button"
+          aria-label="Nova ideia"
+          onClick={onNew}
+          className="fixed right-4 z-30 grid size-14 place-items-center rounded-full bg-accent-fill text-on-accent shadow-[0_10px_24px_-8px_var(--accent)] active:opacity-85"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5rem)" }}
+        >
+          {plus}
+        </button>
+      )}
     </section>
   );
 }

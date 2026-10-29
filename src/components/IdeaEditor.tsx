@@ -15,7 +15,10 @@ interface Props {
   folderName: string;
   /** null = ideia nova (só é criada quando o título deixa de estar vazio). */
   idea: Idea | null;
-  onBack: () => void;
+  /** Sem voltar no computador (a lista fica ao lado). */
+  onBack?: () => void;
+  /** Computador: coluna larga; ações no topo, texto direto na página. */
+  wide?: boolean;
   onSaved: (idea: Idea, created: boolean) => void;
   onResolved: (deleted: Idea) => void;
   onTurnIntoTask: (idea: Idea) => void;
@@ -62,7 +65,7 @@ function useAutosize(ref: RefObject<HTMLTextAreaElement | null>, value: string) 
 type SaveState = "idle" | "dirty" | "saved" | "error";
 
 /** Editor de uma ideia: salva sozinho (800 ms depois de parar de digitar, ao sair do campo e ao voltar). */
-export function IdeaEditor({ folderId, folderName, idea, onBack, onSaved, onResolved, onTurnIntoTask }: Props) {
+export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, onSaved, onResolved, onTurnIntoTask }: Props) {
   const [draft, setDraft] = useState<Draft>({
     title: idea?.title ?? "",
     body: idea?.body ?? "",
@@ -152,7 +155,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, onSaved, onReso
 
   const back = () => {
     void flush();
-    onBack();
+    onBack?.();
   };
 
   // Na mesma fila dos salvamentos, para dois PATCH nunca se cruzarem.
@@ -203,10 +206,33 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, onSaved, onReso
           ? "Salvo"
           : "Escreva um título para salvar";
 
+  const actions = (
+    <div className={wide ? "flex shrink-0 gap-2" : "mt-5 flex gap-2"}>
+      <button
+        type="button"
+        disabled={!saved}
+        onClick={() => void turnIntoTask()}
+        className={`rounded-2xl font-semibold text-ink disabled:opacity-50 ${
+          wide ? "bg-bg px-4 text-sm active:bg-ink/10" : "flex-1 bg-surface py-3 active:bg-surface/70"
+        }`}
+      >
+        📅 Virar tarefa
+      </button>
+      <button
+        type="button"
+        disabled={!saved}
+        onClick={() => setAsking(true)}
+        className={`rounded-2xl bg-ink font-semibold text-bg active:opacity-85 disabled:opacity-50 ${wide ? "px-4 text-sm" : "flex-1 py-3"}`}
+      >
+        ✓ Resolvida
+      </button>
+    </div>
+  );
+
   return (
     <section aria-label="Editor da ideia">
       <div className="flex items-center justify-between gap-2">
-        <BackButton label={folderName} onClick={back} />
+        {onBack ? <BackButton label={folderName} onClick={back} /> : <span className="truncate text-sm text-muted">{folderName}</span>}
         <div className="flex shrink-0 items-center gap-1">
           <span data-testid="save-state" aria-live="polite" className="text-xs text-muted">
             {status}
@@ -233,6 +259,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, onSaved, onReso
           >
             <span aria-hidden>📌</span>
           </button>
+          {wide && actions}
         </div>
       </div>
 
@@ -257,7 +284,9 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, onSaved, onReso
           }
         }}
         onBlur={() => void flush()}
-        className="mt-2 block w-full resize-none overflow-hidden bg-transparent font-display text-[24px] leading-tight font-semibold text-ink placeholder:text-muted/70 focus:outline-none"
+        className={`mt-2 block w-full resize-none overflow-hidden bg-transparent font-display leading-tight font-semibold text-ink placeholder:text-muted/70 focus:outline-none ${
+          wide ? "text-[30px]" : "text-[24px]"
+        }`}
       />
       {fields.title && <p className="text-sm text-danger-ink">{fields.title}</p>}
       {saved && <p className="mt-1 text-xs text-muted">Criada em {dayMonth(saved.createdAt)}</p>}
@@ -281,7 +310,9 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, onSaved, onReso
             if (n && n !== draft.link) change({ link: n });
             void flush();
           }}
-          className="block min-h-11 w-full rounded-xl border border-line bg-surface px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none aria-invalid:border-danger"
+          className={`block min-h-11 w-full rounded-xl border border-line px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none aria-invalid:border-danger ${
+            wide ? "max-w-[460px] bg-bg" : "bg-surface"
+          }`}
         />
         {linkError && (
           <p id="idea-link-error" className="mt-1 text-sm text-danger-ink">
@@ -293,7 +324,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, onSaved, onReso
             href={preview.linkUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 flex gap-3 rounded-2xl bg-surface p-2 active:bg-surface/70"
+            className={`mt-2 flex gap-3 rounded-2xl p-2 ${wide ? "max-w-[460px] bg-bg active:bg-ink/10" : "bg-surface active:bg-surface/70"}`}
           >
             {thumb ? (
               <img
@@ -328,7 +359,11 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, onSaved, onReso
         placeholder="Escreva à vontade…"
         onChange={(e) => change({ body: e.target.value })}
         onBlur={() => void flush()}
-        className="mt-4 block min-h-40 w-full resize-none overflow-hidden rounded-2xl bg-surface px-4 py-3 leading-relaxed text-ink placeholder:text-muted focus:outline-2 focus:outline-accent/40"
+        className={`mt-4 block w-full resize-none overflow-hidden text-ink placeholder:text-muted ${
+          wide
+            ? "min-h-[50dvh] bg-transparent px-0 py-1 text-[16px] leading-[1.7] focus:outline-none"
+            : "min-h-40 rounded-2xl bg-surface px-4 py-3 leading-relaxed focus:outline-2 focus:outline-accent/40"
+        }`}
       />
       {fields.body && <p className="mt-1 text-sm text-danger-ink">{fields.body}</p>}
 
@@ -352,24 +387,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, onSaved, onReso
         </div>
       )}
 
-      <div className="mt-5 flex gap-2">
-        <button
-          type="button"
-          disabled={!saved}
-          onClick={() => void turnIntoTask()}
-          className="flex-1 rounded-2xl bg-surface py-3 font-semibold text-ink active:bg-surface/70 disabled:opacity-50"
-        >
-          📅 Virar tarefa
-        </button>
-        <button
-          type="button"
-          disabled={!saved}
-          onClick={() => setAsking(true)}
-          className="flex-1 rounded-2xl bg-ink py-3 font-semibold text-bg active:opacity-85 disabled:opacity-50"
-        >
-          ✓ Resolvida
-        </button>
-      </div>
+      {!wide && actions}
 
       {asking && (
         <AskSheet

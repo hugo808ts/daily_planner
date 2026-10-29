@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Idea, Task } from "../shared/types";
 import { CaptureBar } from "./components/CaptureBar";
 import { Toast } from "./components/Toast";
+import { useWide } from "./lib/useWide";
 import { Ideas } from "./screens/Ideas";
 import { Today } from "./screens/Today";
 
@@ -18,6 +19,29 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("today");
   const [captured, setCaptured] = useState<Task | null>(null);
   const [capturedIdea, setCapturedIdea] = useState<Idea | null>(null);
+  const wide = useWide();
+
+  if (wide) {
+    // Computador: o dia fixo à esquerda (com a captura embaixo) e as Ideias no resto da tela.
+    return (
+      <div className="safe-x grid h-dvh grid-cols-[340px_minmax(0,1fr)] overflow-hidden">
+        <aside data-testid="today-pane" aria-label="Dia" className="pane flex h-dvh flex-col border-r border-line">
+          <div className="flex items-center gap-2 px-[18px] pt-[18px] font-semibold">
+            <span aria-hidden className="size-[22px] rounded-[7px] bg-accent-fill" />
+            Agenda
+          </div>
+          <div className="flex-1">
+            <Today captured={captured} wide />
+          </div>
+          <CaptureBar inline onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />
+        </aside>
+        <main className="min-w-0">
+          <Ideas wide captured={capturedIdea} onTaskSaved={setCaptured} />
+        </main>
+        <Toast />
+      </div>
+    );
+  }
 
   return (
     <div className="safe-x min-h-dvh">

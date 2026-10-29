@@ -36,6 +36,8 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
   const [area, setArea] = useState<Area | null>(task.area);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  /** "Outra data": só move ao tocar em Mover (o seletor de data dispara onChange a cada giro da roda). */
+  const [other, setOther] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string>>({});
 
@@ -164,14 +166,25 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
             <label htmlFor="move-other" className={`${LABEL} mt-4`}>
               Outra data
             </label>
-            <input
-              id="move-other"
-              type="date"
-              min={today}
-              disabled={busy}
-              onChange={(e) => void move(e.target.value)}
-              className={FIELD}
-            />
+            <div className="flex gap-2">
+              <input
+                id="move-other"
+                type="date"
+                min={today}
+                value={other}
+                disabled={busy}
+                onChange={(e) => setOther(e.target.value)}
+                className={`${FIELD} min-w-0 flex-1`}
+              />
+              <button
+                type="button"
+                disabled={busy || !other || other === task.date}
+                onClick={() => void move(other)}
+                className="shrink-0 rounded-xl bg-accent-fill px-4 text-sm font-semibold text-on-accent active:opacity-85 disabled:opacity-40"
+              >
+                Mover
+              </button>
+            </div>
           </div>
         ) : (
           <form
@@ -270,7 +283,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-2xl bg-accent font-semibold text-white active:opacity-85 disabled:opacity-60"
+              className="w-full rounded-2xl bg-accent-fill font-semibold text-on-accent active:opacity-85 disabled:opacity-60"
             >
               Salvar
             </button>
@@ -290,7 +303,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
                 disabled={busy}
                 onClick={() => void remove()}
                 className={`flex-1 rounded-2xl text-sm font-semibold transition-colors duration-150 ${
-                  confirmDelete ? "bg-danger text-white" : "bg-danger/10 text-danger-ink active:bg-danger/20"
+                  confirmDelete ? "bg-danger-fill text-on-accent" : "bg-danger/10 text-danger-ink active:bg-danger/20"
                 }`}
               >
                 {confirmDelete ? "Confirmar exclusão" : "Excluir"}

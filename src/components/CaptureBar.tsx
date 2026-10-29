@@ -11,7 +11,11 @@ interface Props {
   onTaskSaved: (task: Task) => void;
   /** Ideia recém-guardada, para a tela de Ideias mostrá-la sem recarregar. */
   onIdeaSaved?: (idea: Idea) => void;
+  /** Computador: fica no pé da coluna do Hoje (sticky), em vez de flutuar sobre a barra de abas. */
+  inline?: boolean;
 }
+
+const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
 /**
  * Altura do teclado virtual. No iOS um elemento `fixed; bottom: 0` fica atrás do teclado,
@@ -38,7 +42,7 @@ function useKeyboardInset(): number {
 }
 
 /** Barra de captura rápida: escreve ou segura o microfone; a folha de confirmação mostra o que foi entendido. */
-export function CaptureBar({ onTaskSaved, onIdeaSaved }: Props) {
+export function CaptureBar({ onTaskSaved, onIdeaSaved, inline = false }: Props) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,19 +104,27 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved }: Props) {
   return (
     <>
       <div
-        className="pointer-events-none fixed inset-x-0 z-30 px-3"
-        style={{
-          bottom: keyboard
-            ? `${keyboard + 8}px`
-            : "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 0.5rem)",
-        }}
+        className={
+          inline
+            ? "sticky bottom-0 z-10 bg-linear-to-t from-bg from-70% to-transparent px-[18px] pt-4 pb-4"
+            : "pointer-events-none fixed inset-x-0 z-30 px-3"
+        }
+        style={
+          inline
+            ? undefined
+            : {
+                bottom: keyboard
+                  ? `${keyboard + 8}px`
+                  : "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 0.5rem)",
+              }
+        }
       >
         <form
           onSubmit={(e) => {
             e.preventDefault();
             void submit();
           }}
-          className="pointer-events-auto relative mx-auto flex max-w-md items-end gap-1 rounded-[22px] border border-line bg-surface py-1 pr-1 pl-4 shadow-[0_10px_30px_-12px_rgb(36_32_58/0.35)]"
+          className={`pointer-events-auto relative mx-auto flex items-end gap-1 rounded-[22px] border border-line bg-surface py-1 pr-1 pl-4 shadow-[0_10px_30px_-12px_rgb(36_32_58/0.35)] ${inline ? "" : "max-w-md"}`}
         >
           <label htmlFor="capture-input" className="sr-only">
             Captura rápida
@@ -123,7 +135,7 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved }: Props) {
             rows={1}
             value={text}
             maxLength={CAPTURE_TEXT_MAX}
-            placeholder="Escreva uma tarefa ou ideia…"
+            placeholder={inline ? "Anotar algo…" : "Escreva uma tarefa ou ideia…"}
             enterKeyHint="send"
             autoComplete="off"
             aria-invalid={error ? true : undefined}
@@ -140,6 +152,14 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved }: Props) {
             }}
             className="max-h-[116px] min-w-0 flex-1 resize-none self-center bg-transparent py-2.5 leading-6 text-ink placeholder:text-muted focus:outline-none"
           />
+          {inline && empty && (
+            <kbd
+              aria-hidden
+              className="mr-1 shrink-0 self-center rounded-md border border-line px-1.5 py-px font-sans text-[11px] whitespace-nowrap text-muted"
+            >
+              {isMac() ? "⌘ K" : "Ctrl K"}
+            </kbd>
+          )}
           <Recorder
             disabled={busy}
             onText={(t) => {
@@ -152,7 +172,7 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved }: Props) {
             aria-label="Enviar"
             aria-busy={busy || undefined}
             disabled={empty || busy}
-            className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-white transition-opacity duration-150 active:opacity-85 disabled:bg-ink/10 disabled:text-muted"
+            className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-fill text-on-accent transition-opacity duration-150 active:opacity-85 disabled:bg-ink/10 disabled:text-muted"
           >
             {busy ? (
               <span aria-hidden className="size-5 rounded-full border-2 border-current border-t-transparent motion-safe:animate-spin" />
@@ -164,7 +184,7 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved }: Props) {
           </button>
         </form>
         {error && (
-          <p id="capture-error" role="alert" className="pointer-events-auto mx-auto mt-1 max-w-md px-4 text-sm text-danger-ink">
+          <p id="capture-error" role="alert" className={`pointer-events-auto mx-auto mt-1 px-4 text-sm text-danger-ink ${inline ? "" : "max-w-md"}`}>
             {error}
           </p>
         )}

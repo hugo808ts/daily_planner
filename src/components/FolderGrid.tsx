@@ -30,25 +30,36 @@ interface Props {
   onOpenIdea: (idea: FoundIdea) => void;
   onFolderSaved: (folder: Folder) => void;
   onFolderDeleted: (id: string) => void;
+  /** Computador: coluna estreita com a lista de pastas (em vez da grade). */
+  sidebar?: boolean;
+  /** Pasta aberta na coluna ao lado (só no computador). */
+  selectedId?: string | null;
 }
 
 /** Tela inicial das Ideias: busca em todas as pastas e a grade de pastas. */
 export function FolderGrid(props: Props) {
-  const { folders, error, query, onQuery, onReload, onOpenFolder } = props;
+  const { folders, error, query, onQuery, onReload, onOpenFolder, sidebar = false, selectedId = null } = props;
   const [sheet, setSheet] = useState<{ folder: Folder | null } | null>(null);
   const searching = query.trim().length > 0;
 
   return (
     <section aria-labelledby="ideas-title">
-      <header className="mb-3 flex items-center justify-between gap-3">
-        <h1 id="ideas-title" className="font-display text-[28px] leading-tight font-semibold tracking-[-0.01em]">
+      <header className={`flex items-center justify-between gap-3 ${sidebar ? "mb-2 pl-1" : "mb-3"}`}>
+        <h1
+          id="ideas-title"
+          className={
+            sidebar
+              ? "font-display text-xl leading-tight font-semibold"
+              : "font-display text-[28px] leading-tight font-semibold tracking-[-0.01em]"
+          }
+        >
           Ideias
         </h1>
         <button
           type="button"
           aria-label="Nova pasta"
           onClick={() => setSheet({ folder: null })}
-          className="grid size-11 place-items-center rounded-2xl bg-ink text-bg active:opacity-85"
+          className={`grid place-items-center bg-ink text-bg active:opacity-85 ${sidebar ? "size-9 min-h-9 min-w-9 rounded-xl" : "size-11 rounded-2xl"}`}
         >
           <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
             <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" />
@@ -56,7 +67,7 @@ export function FolderGrid(props: Props) {
         </button>
       </header>
 
-      <div className="relative mb-4">
+      <div className={`relative ${sidebar ? "mb-3" : "mb-4"}`}>
         <label htmlFor="ideas-search" className="sr-only">
           Buscar em todas as ideias
         </label>
@@ -69,7 +80,7 @@ export function FolderGrid(props: Props) {
           value={query}
           enterKeyHint="search"
           autoComplete="off"
-          placeholder="Buscar em todas as ideias"
+          placeholder={sidebar ? "Buscar ideias" : "Buscar em todas as ideias"}
           onChange={(e) => onQuery(e.target.value)}
           className="block min-h-11 w-full rounded-2xl bg-surface py-2.5 pr-3 pl-10 text-ink placeholder:text-muted focus:outline-2 focus:outline-accent"
         />
@@ -100,11 +111,61 @@ export function FolderGrid(props: Props) {
           <button
             type="button"
             onClick={() => setSheet({ folder: null })}
-            className="mt-4 rounded-2xl bg-accent px-5 font-semibold text-white active:opacity-85"
+            className="mt-4 rounded-2xl bg-accent-fill px-5 font-semibold text-on-accent active:opacity-85"
           >
             Nova pasta
           </button>
         </div>
+      ) : sidebar ? (
+        <>
+          <h2 className="mx-2 mb-1.5 text-xs font-medium text-muted">Pastas</h2>
+          <ul aria-label="Pastas" className="space-y-0.5">
+            {folders.map((f) => {
+              const on = f.id === selectedId;
+              return (
+                <li key={f.id} className="group relative">
+                  <button
+                    type="button"
+                    aria-label={`Abrir pasta ${f.name}, ${ideaCount(f.openCount)}`}
+                    aria-current={on ? "true" : undefined}
+                    onClick={() => onOpenFolder(f)}
+                    className={`flex w-full items-center gap-2 rounded-xl py-1.5 pr-10 pl-2 text-left text-[14px] transition-colors duration-150 ${
+                      on ? "bg-surface font-semibold shadow-[0_1px_2px_rgb(36_32_58/0.08)]" : "hover:bg-ink/[0.04] active:bg-ink/[0.06]"
+                    }`}
+                  >
+                    <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-lg text-[15px]" style={{ background: folderTint(f.id) }}>
+                      {f.emoji || "🗂"}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                  </button>
+                  <span aria-hidden className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-muted tabular-nums group-hover:opacity-0 group-focus-within:opacity-0 pointer-coarse:hidden">
+                    {f.openCount}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`Editar pasta ${f.name}`}
+                    onClick={() => setSheet({ folder: f })}
+                    className="absolute top-1/2 right-0.5 grid size-9 min-h-9 min-w-9 -translate-y-1/2 place-items-center rounded-lg text-muted opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 active:bg-ink/5"
+                  >
+                    <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
+                      <path d="M6 12h.01M12 12h.01M18 12h.01" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </li>
+              );
+            })}
+            <li>
+              <button
+                type="button"
+                onClick={() => setSheet({ folder: null })}
+                className="flex w-full items-center gap-2 rounded-xl py-1.5 pl-2 text-left text-[14px] text-muted hover:bg-ink/[0.04] active:bg-ink/[0.06]"
+              >
+                <span aria-hidden className="grid size-7 place-items-center">+</span>
+                Nova pasta
+              </button>
+            </li>
+          </ul>
+        </>
       ) : (
         <ul aria-label="Pastas" className="grid grid-cols-2 gap-2.5">
           {folders.map((f) => (
@@ -351,7 +412,7 @@ function FolderSheet({ folder, onClose, onSaved, onDeleted }: SheetProps) {
           <button
             type="submit"
             disabled={busy}
-            className="flex-1 rounded-2xl bg-accent font-semibold text-white active:opacity-85 disabled:opacity-60"
+            className="flex-1 rounded-2xl bg-accent-fill font-semibold text-on-accent active:opacity-85 disabled:opacity-60"
           >
             {folder ? "Salvar" : "Criar pasta"}
           </button>
