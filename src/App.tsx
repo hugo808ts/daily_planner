@@ -4,6 +4,7 @@ import { CaptureBar } from "./components/CaptureBar";
 import { Toast } from "./components/Toast";
 import { useWide } from "./lib/useWide";
 import { Ideas } from "./screens/Ideas";
+import { Report } from "./screens/Report";
 import { Today } from "./screens/Today";
 
 type Tab = "today" | "ideas";
@@ -19,6 +20,8 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("today");
   const [captured, setCaptured] = useState<Task | null>(null);
   const [capturedIdea, setCapturedIdea] = useState<Idea | null>(null);
+  const [reportStart, setReportStart] = useState<string | null>(null);
+  const [todayKey, setTodayKey] = useState(0);
   const wide = useWide();
 
   if (wide) {
@@ -31,13 +34,16 @@ export default function App() {
             Agenda
           </div>
           <div className="flex-1">
-            <Today captured={captured} wide />
+            <Today key={todayKey} captured={captured} onOpenReport={setReportStart} wide />
           </div>
           <CaptureBar inline onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />
         </aside>
         <main className="min-w-0">
           <Ideas wide captured={capturedIdea} onTaskSaved={setCaptured} />
         </main>
+        {reportStart && (
+          <Report start={reportStart} onClose={() => setReportStart(null)} onMoved={() => setTodayKey((k) => k + 1)} />
+        )}
         <Toast />
       </div>
     );
@@ -47,7 +53,7 @@ export default function App() {
     <div className="safe-x min-h-dvh">
       <main>
         {tab === "today" ? (
-          <Today captured={captured} />
+          <Today key={todayKey} captured={captured} onOpenReport={setReportStart} />
         ) : (
           <Ideas captured={capturedIdea} onTaskSaved={setCaptured} />
         )}
@@ -89,6 +95,10 @@ export default function App() {
           })}
         </div>
       </nav>
+
+      {reportStart && (
+        <Report start={reportStart} onClose={() => setReportStart(null)} onMoved={() => setTodayKey((k) => k + 1)} />
+      )}
 
       <Toast />
     </div>

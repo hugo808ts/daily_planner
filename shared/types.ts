@@ -47,3 +47,13 @@ export interface CaptureResult {
   folderId: string | null;
   source: "ai" | "rules";
 }
+
+export interface WeekReport {
+  start: string;
+  end: string;
+  done: number;
+  notDone: number;
+  percent: number;
+  perDay: { date: string; done: number; notDone: number }[];
+  notDoneTasks: Task[];
+}

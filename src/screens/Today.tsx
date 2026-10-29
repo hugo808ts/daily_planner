@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { formatDayTitle, todayISO, weekDays, weekStart } from "../../shared/dates";
+import { formatDayTitle, isSunday, todayISO, weekDays, weekStart } from "../../shared/dates";
 import type { Task } from "../../shared/types";
+import { SundayCard } from "../components/SundayCard";
 import { DayNote } from "../components/DayNote";
 import { ScoreBar, ScoreText } from "../components/ScoreBar";
 import { TaskList } from "../components/TaskList";
@@ -15,6 +16,8 @@ import { useWeek } from "../lib/useWeek";
 const errorMessage = (e: unknown) => (e instanceof ApiError ? e.message : "Algo deu errado. Tente de novo.");
 
 interface Props {
+  /** Abre o resumo da semana que começou em `start`. */
+  onOpenReport?: (start: string) => void;
   /** Tarefa criada pela captura rápida, para entrar na semana sem recarregar. */
   captured?: Task | null;
   /** Computador: coluna fixa à esquerda, sem barra de abas nem captura flutuante embaixo. */
@@ -26,7 +29,7 @@ const MOBILE_PAD = {
   paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5.5rem)",
 };
 
-export function Today({ captured, wide = false }: Props) {
+export function Today({ captured, onOpenReport, wide = false }: Props) {
   const now = useNow(60_000); // estados (atrasada, não feita) recalculados a cada minuto
   const today = todayISO(now);
   const days = weekDays(weekStart(today));
@@ -100,6 +103,7 @@ export function Today({ captured, wide = false }: Props) {
 
   return (
     <div className={wide ? "px-[18px] pt-4 pb-2" : "mx-auto w-full max-w-md px-4"} style={wide ? undefined : MOBILE_PAD}>
+      {isSunday(today) && onOpenReport && <SundayCard onOpen={() => onOpenReport(days[0])} />}
       <WeekStrip days={days} today={today} selected={selected} tasks={tasks} now={now} onSelect={setPicked} />
 
       <header className="mt-5 mb-3">
