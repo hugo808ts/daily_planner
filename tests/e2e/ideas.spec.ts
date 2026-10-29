@@ -134,6 +134,16 @@ test("ideias: link, fixar, autosalvar, resolver e desfazer", async ({ page, requ
   });
 });
 
+test("só texto, sem título: a primeira linha vira o título e nada se perde", async ({ page }) => {
+  await openIdeas(page);
+  await page.getByRole("button", { name: "Abrir pasta Vídeos TikTok" }).click();
+  await page.getByRole("button", { name: "Nova ideia" }).click();
+  await page.getByLabel("Texto").fill("Ideia sem título\nSegunda linha do texto");
+  await expect(saveState(page)).toHaveText("Salvo", { timeout: 10_000 });
+  await page.getByRole("button", { name: "Voltar para Vídeos TikTok" }).click();
+  await expect(card(page, "Ideia sem título")).toBeVisible();
+});
+
 test("busca acha ideia de outra pasta e abre", async ({ page, request }) => {
   const { folder } = await (await request.post("/api/folders", { data: { name: "Estudos", emoji: "📚" } })).json();
   const res = await request.post("/api/ideas", {

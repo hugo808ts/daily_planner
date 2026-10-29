@@ -1,8 +1,21 @@
 import type { Context } from "hono";
+import { isRealDate, todayISO } from "../shared/dates";
 import type { z } from "zod";
 import type { Env } from "./index";
 
 const MAX_BODY_BYTES = 64 * 1024;
+
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/** O pedido veio de um endereço de desenvolvimento local. */
+export const isLocalRequest = (c: Pick<Ctx, "req">): boolean => LOCAL_HOSTS.has(new URL(c.req.url).hostname);
+
+/** Hoje (São Paulo). Só em DEV local, o cabeçalho X-Test-Today troca o dia, para os testes E2E com relógio falso. */
+export function serverToday(c: Ctx): string {
+  const forced = c.req.header("X-Test-Today");
+  if (forced && c.env.DEV === "true" && isLocalRequest(c) && isRealDate(forced)) return forced;
+  return todayISO();
+}
 
 export type Ctx = Context<{ Bindings: Env }>;
 

@@ -20,6 +20,14 @@ export const app = new Hono<{ Bindings: Env }>();
 app.use("/api/*", sameOrigin());
 app.use("/api/*", accessGuard());
 
+app.onError((e, c) => {
+  console.error(e);
+  return c.json({ error: "Algo deu errado. Tente de novo." }, 500);
+});
+app.notFound((c) =>
+  c.req.path.startsWith("/api/") ? c.json({ error: "Não encontrado." }, 404) : c.text("Not found", 404),
+);
+
 app.get("/api/health", (c) => c.json({ ok: true }));
 app.route("/", taskRoutes);
 app.route("/", ideaRoutes);

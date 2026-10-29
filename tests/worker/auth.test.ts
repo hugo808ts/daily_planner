@@ -15,9 +15,16 @@ describe("accessGuard", () => {
     expect(await res.json()).toEqual({ error: "Faça login para continuar." });
   });
 
-  it("200 com DEV=true", async () => {
+  it("200 com DEV=true em localhost, 127.0.0.1 e [::1]", async () => {
+    for (const host of ["localhost", "127.0.0.1", "[::1]"]) {
+      const res = await app.request(`http://${host}/api/health`, {}, dev);
+      expect(res.status).toBe(200);
+    }
+  });
+
+  it("DEV=true é ignorado fora de localhost (401)", async () => {
     const res = await app.request("https://agenda.test/api/health", {}, dev);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(401);
   });
 
   it("falha fechado (401) sem configuração de Access", async () => {
@@ -98,7 +105,7 @@ describe("accessGuard", () => {
 describe("sameOrigin", () => {
   it("403 para POST com Origin de outro site", async () => {
     const res = await app.request(
-      "https://agenda.test/api/health",
+      "http://localhost/api/health",
       { method: "POST", headers: { Origin: "https://evil.example" } },
       dev,
     );
@@ -108,8 +115,8 @@ describe("sameOrigin", () => {
 
   it("passa o guard com Origin igual ao host (404 = rota inexistente)", async () => {
     const res = await app.request(
-      "https://agenda.test/api/health",
-      { method: "POST", headers: { Origin: "https://agenda.test" } },
+      "http://localhost/api/health",
+      { method: "POST", headers: { Origin: "http://localhost" } },
       dev,
     );
     expect(res.status).toBe(404);
@@ -117,7 +124,7 @@ describe("sameOrigin", () => {
 
   it("403 com Sec-Fetch-Site cross-site", async () => {
     const res = await app.request(
-      "https://agenda.test/api/health",
+      "http://localhost/api/health",
       { method: "POST", headers: { "Sec-Fetch-Site": "cross-site" } },
       dev,
     );
@@ -126,7 +133,7 @@ describe("sameOrigin", () => {
 
   it("não restringe GET", async () => {
     const res = await app.request(
-      "https://agenda.test/api/health",
+      "http://localhost/api/health",
       { headers: { Origin: "https://evil.example" } },
       dev,
     );

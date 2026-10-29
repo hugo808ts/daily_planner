@@ -63,7 +63,7 @@ describe("computeWeekReport", () => {
 
   it("zero tasks gives 0%", () => {
     const r = computeWeekReport([], START, SUNDAY);
-    expect(r.percent).toBe(0);
+    expect(r.percent).toBeNull();
     expect(r.perDay).toHaveLength(6);
   });
 });

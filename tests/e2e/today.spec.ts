@@ -28,6 +28,10 @@ async function seed(request: APIRequestContext, input: Seed, done = false) {
   return task;
 }
 
+/** O servidor usa o dia do relógio falso do navegador (só em DEV local) ao validar "levar para outro dia". */
+const fakeServerToday = (page: Page) =>
+  page.route("**/api/**", (route) => route.continue({ headers: { ...route.request().headers(), "x-test-today": TODAY } }));
+
 const row = (page: Page, title: string) => page.getByRole("listitem").filter({ hasText: title });
 
 test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação", async ({ page, request }) => {
@@ -38,6 +42,7 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
   await seed(request, { title: "Reunião de equipe", date: TOMORROW, time: "10:00", area: "work" });
 
   await page.clock.install({ time: NOW });
+  await fakeServerToday(page);
   await page.goto("/");
 
   await test.step("faixa da semana seg–dom com hoje destacado", async () => {
@@ -123,6 +128,7 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
 test("Outra data: só leva ao tocar em Mover", async ({ page, request }) => {
   const task = await seed(request, { title: "Comprar presente", date: TOMORROW });
   await page.clock.install({ time: NOW });
+  await fakeServerToday(page);
   await page.goto("/");
   await dayButton(page, "qui").click();
   await row(page, "Comprar presente").getByRole("button", { name: /Comprar presente/ }).click();
@@ -149,6 +155,7 @@ test("Outra data: só leva ao tocar em Mover", async ({ page, request }) => {
 test("marcar como feita ignora toques enquanto salva e volta ao estado anterior se falhar", async ({ page, request }) => {
   await seed(request, { title: "Pagar boleto", date: TODAY });
   await page.clock.install({ time: NOW });
+  await fakeServerToday(page);
 
   let patches = 0;
   let fail = false;

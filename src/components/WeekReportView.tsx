@@ -1,11 +1,11 @@
 import { weekdayShort } from "../../shared/dates";
-import type { Task, WeekReport } from "../../shared/types";
+import type { ReportTask, WeekReport } from "../../shared/types";
 import { areaInfo } from "../lib/format";
 
 const BAR_UNIT = 12; // px por tarefa
 const BAR_MAX = 64;
 
-export function WeekReportView({ report, onMove }: { report: WeekReport; onMove: (task: Task) => void }) {
+export function WeekReportView({ report, onMove }: { report: WeekReport; onMove: (task: ReportTask) => void }) {
   const stat = (n: number | string, label: string, red = false) => (
     <div className="flex-1 text-center">
       <b className={`font-display block text-[28px] leading-none font-semibold tabular-nums ${red ? "text-danger-ink" : ""}`}>
@@ -20,7 +20,7 @@ export function WeekReportView({ report, onMove }: { report: WeekReport; onMove:
       <div className="flex rounded-[20px] bg-surface px-2 py-4" data-testid="report-numbers">
         {stat(report.done, "feitas")}
         {stat(report.notDone, "não feitas", report.notDone > 0)}
-        {stat(`${report.percent}%`, "do planejado")}
+        {report.percent === null ? stat("—", "do planejado") : stat(`${report.percent}%`, "do planejado")}
       </div>
 
       <section className="mt-3 rounded-[20px] bg-surface px-4 py-3">
@@ -65,13 +65,17 @@ export function WeekReportView({ report, onMove }: { report: WeekReport; onMove:
                     {t.area && ` · ${areaInfo(t.area).label}`}
                   </small>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onMove(t)}
-                  className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-accent active:bg-accent/10"
-                >
-                  → esta semana
-                </button>
+                {t.movedTo ? (
+                  <span className="shrink-0 px-2 py-1 text-xs font-semibold text-muted">levada ✓</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onMove(t)}
+                    className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-accent active:bg-accent/10"
+                  >
+                    → esta semana
+                  </button>
+                )}
               </li>
             ))}
           </ul>

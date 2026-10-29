@@ -48,12 +48,16 @@ export interface CaptureResult {
   source: "ai" | "rules";
 }
 
+/** Tarefa não feita do resumo; movedTo = já existe uma cópia em outro dia. */
+export type ReportTask = Task & { movedTo?: boolean };
+
 export interface WeekReport {
   start: string;
   end: string;
   done: number;
   notDone: number;
-  percent: number;
+  /** null quando não há tarefas contadas (nada a dividir). */
+  percent: number | null;
   perDay: { date: string; done: number; notDone: number }[];
-  notDoneTasks: Task[];
+  notDoneTasks: ReportTask[];
 }

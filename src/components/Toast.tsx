@@ -14,18 +14,22 @@ interface ToastState {
 const DURATION_MS = 5000;
 let state: ToastState | null = null;
 let seq = 0;
+const queue: ToastState[] = [];
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
 /** Mostra um aviso curto embaixo da tela (some em 5 s). */
 export function showToast(message: string, action?: ToastAction): void {
-  state = { id: ++seq, message, action };
+  const next = { id: ++seq, message, action };
+  // Um aviso com "Desfazer" não some antes dos 5 s: o novo espera na fila.
+  if (state?.action) queue.push(next);
+  else state = next;
   emit();
 }
 
 function dismiss(id: number) {
   if (state?.id === id) {
-    state = null;
+    state = queue.shift() ?? null;
     emit();
   }
 }

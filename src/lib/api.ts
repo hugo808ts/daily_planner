@@ -77,9 +77,15 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       headers:
         body === undefined ? undefined : { "Content-Type": blob ? blob.type || "application/octet-stream" : "application/json" },
       body: body === undefined ? undefined : blob ?? JSON.stringify(body),
+      redirect: "manual",
     });
   } catch {
     throw new ApiError("Sem conexão. Verifique a internet e tente de novo.", 0);
+  }
+  // Sessão do Cloudflare Access vencida: o Access redireciona para o login (ou o Worker devolve 401).
+  if (res.type === "opaqueredirect" || res.status === 401) {
+    location.reload();
+    throw new ApiError("Sessão expirada. Entrando de novo…", 401);
   }
   let data: unknown = null;
   try {

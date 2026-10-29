@@ -5,7 +5,7 @@ import { AUDIO_MAX_BYTES } from "../../shared/limits";
 import { app, type Env } from "../../worker/index";
 import { interpretCapture } from "../../worker/routes/capture";
 
-const BASE = "https://agenda.test";
+const BASE = "http://localhost";
 const today = todayISO();
 const withAI = (run: (...a: any[]) => any): Env => ({ DB: env.DB, DEV: "true", AI: { run } }) as unknown as Env;
 const post = (path: string, e: Env, body: BodyInit, type = "application/json") =>

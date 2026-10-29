@@ -1,8 +1,9 @@
 import { env, SELF } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
+import { app } from "../../worker/index";
 import { addDays, todayISO, weekStart } from "../../shared/dates";
 
-const BASE = "https://agenda.test";
+const BASE = "http://localhost";
 const call = (method: string, path: string, body?: unknown) =>
   SELF.fetch(BASE + path, {
     method,
@@ -168,6 +169,44 @@ describe("POST /api/tasks/:id/move", () => {
     const res = await post(`/api/tasks/${json.task.id}/move`, { date: today() });
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({ error: "Tarefa já concluída." });
+  });
+
+  it("data anterior a hoje -> 400", async () => {
+    const { json } = await create({ title: "t", date: today() });
+    const res = await post(`/api/tasks/${json.task.id}/move`, { date: yesterday() });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Escolha hoje ou um dia futuro." });
+  });
+
+  it("X-Test-Today só vale em DEV local", async () => {
+    const { json } = await create({ title: "t", date: today() });
+    const res = await SELF.fetch(`http://localhost/api/tasks/${json.task.id}/move`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Test-Today": addDays(today(), -5) },
+      body: JSON.stringify({ date: yesterday() }),
+    });
+    expect(res.status).toBe(200);
+    const prod = await app.request(
+      `https://agenda.test/api/tasks/${json.task.id}/move`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Test-Today": addDays(today(), -5) },
+        body: JSON.stringify({ date: yesterday() }),
+      },
+      { DB: env.DB, DEV: "true" } as any,
+    );
+    expect(prod.status).toBe(401); // fora de localhost nem o DEV vale
+  });
+
+  it("não feita que já tem cópia -> 409, sem segunda cópia", async () => {
+    const { json } = await create({ title: "t", date: yesterday(), time: "10:00" });
+    const id = json.task.id;
+    expect((await post(`/api/tasks/${id}/move`, { date: today() })).status).toBe(200);
+    const res = await post(`/api/tasks/${id}/move`, { date: addDays(today(), 1) });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: "Essa tarefa já foi levada para outro dia." });
+    const all = (await week(today())).tasks.filter((t: any) => t.title === "t");
+    expect(all).toHaveLength(2); // hoje + ontem (mesma semana, a menos que ontem seja domingo)
   });
 
   it("404 e 400", async () => {

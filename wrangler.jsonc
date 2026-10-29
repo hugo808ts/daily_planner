@@ -11,5 +11,7 @@
   "d1_databases": [
     { "binding": "DB", "database_name": "agenda", "database_id": "efd67906-4924-4622-8b49-6179af25ec54", "migrations_dir": "migrations" }
   ],
-  "ai": { "binding": "AI" }
+  "ai": { "binding": "AI" },
+  "preview_urls": false,
+  "observability": { "enabled": true }
 }

@@ -1,20 +1,14 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { weekDays, weekStart } from "../../shared/dates";
+import { isRealDate, weekDays, weekStart } from "../../shared/dates";
 import { DAY_NOTE_MAX, TASK_TITLE_MAX, TASK_TITLE_MIN } from "../../shared/limits";
 import { taskStatus } from "../../shared/status";
 import type { Task } from "../../shared/types";
 import { getTask, insertTask, notesBetween, tasksBetween, updateTask } from "../db";
-import { badRequest, readBody, type Ctx } from "../http";
+import { badRequest, readBody, serverToday, type Ctx } from "../http";
 import type { Env } from "../index";
 
 const NOT_FOUND = "Tarefa não encontrada.";
-
-const isRealDate = (s: string): boolean => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-  const d = new Date(`${s}T12:00:00Z`);
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
-};
 
 const dateSchema = z.string({ error: "Data inválida." }).refine(isRealDate, "Data inválida (use AAAA-MM-DD).");
 const timeSchema = z
@@ -116,9 +110,12 @@ taskRoutes.post("/api/tasks/:id/move", async (c) => {
   if (!body.ok) return body.res;
   const task = await getTask(c.env.DB, c.req.param("id"));
   if (!task) return notFound(c);
+  if (body.data.date < serverToday(c)) return c.json({ error: "Escolha hoje ou um dia futuro." }, 400);
   if (task.doneAt) return c.json({ error: "Tarefa já concluída." }, 409);
   const now = new Date().toISOString();
   if (taskStatus(task) === "not_done") {
+    const existing = await c.env.DB.prepare("SELECT 1 AS x FROM tasks WHERE moved_from_id = ? LIMIT 1").bind(task.id).first();
+    if (existing) return c.json({ error: "Essa tarefa já foi levada para outro dia." }, 409);
     const copy: Task = {
       ...task,
       id: crypto.randomUUID(),

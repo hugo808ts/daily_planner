@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
-import { addDays, todayISO, weekStart } from "../../shared/dates";
-import type { Task, WeekReport } from "../../shared/types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { addDays, isSunday, todayISO, weekStart } from "../../shared/dates";
+import type { ReportTask, WeekReport } from "../../shared/types";
 import { showToast } from "../components/Toast";
 import { WeekReportView } from "../components/WeekReportView";
 import { api, ApiError } from "../lib/api";
-import { dayNumber } from "../lib/format";
+import { dayNumber, dayPhrase } from "../lib/format";
 
 const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const label = (d: string) => `${dayNumber(d)} ${MONTHS[Number(d.slice(5, 7)) - 1]}`;
@@ -36,14 +36,26 @@ export function Report({ start: initial, onClose, onMoved }: Props) {
     void load(start);
   }, [start, load]);
 
-  const move = async (task: Task) => {
+  /** Tarefas com "levar" em andamento: toques repetidos não criam outra cópia. */
+  const moving = useRef(new Set<string>());
+
+  const move = async (task: ReportTask) => {
+    if (moving.current.has(task.id)) return;
+    moving.current.add(task.id);
+    // Sempre a partir de hoje (não da semana que está sendo vista); no domingo, segunda.
+    const today = todayISO();
+    const target = isSunday(today) ? addDays(today, 1) : today;
     try {
-      await api.moveTask(task.id, addDays(start, 7));
-      showToast("Levada para segunda");
+      await api.moveTask(task.id, target);
+      showToast(`Levada para ${dayPhrase(target, today)}`);
       onMoved?.();
-      setReport((r) => (r ? { ...r, notDoneTasks: r.notDoneTasks.filter((t) => t.id !== task.id) } : r));
+      setReport((r) =>
+        r ? { ...r, notDoneTasks: r.notDoneTasks.map((t) => (t.id === task.id ? { ...t, movedTo: true } : t)) } : r,
+      );
     } catch (e) {
       showToast(e instanceof ApiError ? e.message : "Algo deu errado. Tente de novo.");
+    } finally {
+      moving.current.delete(task.id);
     }
   };
 

@@ -64,19 +64,53 @@ function useAutosize(ref: RefObject<HTMLTextAreaElement | null>, value: string) 
 
 type SaveState = "idle" | "dirty" | "saved" | "error";
 
+const draftKey = (folderId: string, idea: Idea | null) => `agenda:idea-draft:${idea ? idea.id : `new:${folderId}`}`;
+
+function readDraft(key: string): Draft | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const d = JSON.parse(raw) as Partial<Draft>;
+    return typeof d.title === "string" && typeof d.body === "string" && typeof d.link === "string"
+      ? { title: d.title, body: d.body, link: d.link }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(key: string, d: Draft | null): void {
+  try {
+    if (d) localStorage.setItem(key, JSON.stringify(d));
+    else localStorage.removeItem(key);
+  } catch {
+    // Sem armazenamento local: nada a fazer.
+  }
+}
+
+/** Título de uma ideia nova só com texto: a primeira linha do texto. */
+const titleFromBody = (body: string): string => (body.split(/\r?\n/).find((l) => l.trim()) ?? "").trim().slice(0, 160);
+
+const SAVE_FAILED = "Não salvou — verifique a conexão";
+
 /** Editor de uma ideia: salva sozinho (800 ms depois de parar de digitar, ao sair do campo e ao voltar). */
 export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, onSaved, onResolved, onTurnIntoTask }: Props) {
-  const [draft, setDraft] = useState<Draft>({
-    title: idea?.title ?? "",
-    body: idea?.body ?? "",
-    link: idea?.linkUrl ?? "",
+  const baseline: Draft = { title: idea?.title ?? "", body: idea?.body ?? "", link: idea?.linkUrl ?? "" };
+  // Rascunho que não chegou ao servidor da última vez (falha de rede ao sair): volta para a tela.
+  const [restored] = useState<Draft | null>(() => {
+    const d = readDraft(draftKey(folderId, idea));
+    return d && (d.title !== baseline.title || d.body !== baseline.body || d.link !== baseline.link) ? d : null;
   });
+  const [draft, setDraft] = useState<Draft>(restored ?? baseline);
   const [saved, setSaved] = useState<Idea | null>(idea);
-  const [state, setState] = useState<SaveState>(idea ? "saved" : "idle");
+  const [state, setState] = useState<SaveState>(restored ? "dirty" : idea ? "saved" : "idle");
+  const [leaveError, setLeaveError] = useState(false);
   const [fields, setFields] = useState<Record<string, string>>({});
   const [asking, setAsking] = useState(false);
 
   const draftRef = useRef(draft);
+  const mounted = useRef(true);
+  const lastOk = useRef(true);
   const savedRef = useRef(saved);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chain = useRef<Promise<void>>(Promise.resolve());
@@ -97,65 +131,96 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
 
   /** Um salvamento por vez; cada um envia só o que ainda difere do servidor. */
   const runSave = useCallback(async () => {
+    lastOk.current = true;
     if (gone.current) return;
     const d = draftRef.current;
     const s = savedRef.current;
+    const key = draftKey(folderId, s);
     try {
       if (!s) {
-        if (!d.title.trim()) return;
+        // Sem título mas com texto: a primeira linha do texto vira o título (nunca perder o que foi escrito).
+        const title = d.title.trim() || titleFromBody(d.body);
+        if (!title) return;
         const link = normalizeLink(d.link);
-        commit(await api.createIdea({ folderId, title: d.title.trim(), body: d.body, linkUrl: link ?? null }), true);
+        const created = await api.createIdea({ folderId, title, body: d.body, linkUrl: link ?? null });
+        if (!d.title.trim() && !draftRef.current.title.trim()) {
+          draftRef.current = { ...draftRef.current, title: created.title };
+          setDraft(draftRef.current);
+        }
+        commit(created, true);
       } else {
         const patch = diff(d, s);
         if (Object.keys(patch).length === 0) return;
         commit(await api.updateIdea(s.id, patch), false);
       }
+      writeDraft(key, null);
+      writeDraft(draftKey(folderId, null), null);
+      setLeaveError(false);
       setFields({});
     } catch (e) {
-      setState("error");
-      if (e instanceof ApiError && e.fields) setFields(e.fields);
+      lastOk.current = false;
+      writeDraft(key, d);
+      if (!mounted.current) {
+        showToast("Não salvou a ideia. Guardamos o texto neste aparelho; abra a ideia de novo para tentar.");
+      } else {
+        setState("error");
+        if (e instanceof ApiError && e.fields) setFields(e.fields);
+      }
       return;
     } finally {
       const now = draftRef.current;
       const srv = savedRef.current;
-      const pending = srv ? Object.keys(diff(now, srv)).length > 0 : now.title.trim().length > 0;
+      const pending = srv ? Object.keys(diff(now, srv)).length > 0 : !!(now.title.trim() || now.body.trim());
       setState((st) => (st === "error" ? st : pending ? "dirty" : srv ? "saved" : "idle"));
     }
   }, [folderId]);
 
-  const flush = useCallback(() => {
+  /** Salva o que falta; resolve true se não há nada pendente no fim. */
+  const flush = useCallback((): Promise<boolean> => {
     if (timer.current) {
       clearTimeout(timer.current);
       timer.current = null;
     }
     chain.current = chain.current.then(runSave);
-    return chain.current;
+    return chain.current.then(() => lastOk.current);
   }, [runSave]);
 
   const change = (patch: Partial<Draft>) => {
     const next = { ...draftRef.current, ...patch };
     draftRef.current = next;
     setDraft(next);
-    setState(next.title.trim() || savedRef.current ? "dirty" : "idle");
+    setState(next.title.trim() || next.body.trim() || savedRef.current ? "dirty" : "idle");
+    setLeaveError(false);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => void flush(), AUTOSAVE_MS);
   };
 
   // Nunca perder texto: salva ao sair do editor e quando o app vai para o fundo.
   useEffect(() => {
+    mounted.current = true;
     const onHide = () => {
       if (document.visibilityState === "hidden") void flush();
     };
     document.addEventListener("visibilitychange", onHide);
     return () => {
+      mounted.current = false;
       document.removeEventListener("visibilitychange", onHide);
       void flush();
     };
   }, [flush]);
 
-  const back = () => {
-    void flush();
-    onBack?.();
+  // Rascunho recuperado: tenta salvar de novo.
+  useEffect(() => {
+    if (!restored) return;
+    showToast("Recuperamos o texto que não foi salvo.");
+    timer.current = setTimeout(() => void flush(), AUTOSAVE_MS);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Só volta se tudo foi salvo; senão fica na ideia, com o texto à vista.
+  const back = async () => {
+    if (await flush()) onBack?.();
+    else setLeaveError(true);
   };
 
   // Na mesma fila dos salvamentos, para dois PATCH nunca se cruzarem.
@@ -204,7 +269,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
         ? "Salvando…"
         : state === "saved"
           ? "Salvo"
-          : "Escreva um título para salvar";
+          : "Escreva para salvar";
 
   const actions = (
     <div className={wide ? "flex shrink-0 gap-2" : "mt-5 flex gap-2"}>
@@ -232,7 +297,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
   return (
     <section aria-label="Editor da ideia">
       <div className="flex items-center justify-between gap-2">
-        {onBack ? <BackButton label={folderName} onClick={back} /> : <span className="truncate text-sm text-muted">{folderName}</span>}
+        {onBack ? <BackButton label={folderName} onClick={() => void back()} /> : <span className="truncate text-sm text-muted">{folderName}</span>}
         <div className="flex shrink-0 items-center gap-1">
           <span data-testid="save-state" aria-live="polite" className="text-xs text-muted">
             {status}
@@ -288,6 +353,11 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
           wide ? "text-[30px]" : "text-[24px]"
         }`}
       />
+      {leaveError && (
+        <p role="alert" className="text-sm text-danger-ink">
+          {SAVE_FAILED}
+        </p>
+      )}
       {fields.title && <p className="text-sm text-danger-ink">{fields.title}</p>}
       {saved && <p className="mt-1 text-xs text-muted">Criada em {dayMonth(saved.createdAt)}</p>}
 

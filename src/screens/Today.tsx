@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { formatDayTitle, isSunday, todayISO, weekDays, weekStart } from "../../shared/dates";
+import { addDays, formatDayTitle, isSunday, todayISO, weekDays, weekStart } from "../../shared/dates";
 import type { Task } from "../../shared/types";
 import { SundayCard } from "../components/SundayCard";
 import { DayNote } from "../components/DayNote";
@@ -103,7 +103,18 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
 
   return (
     <div className={wide ? "px-[18px] pt-4 pb-2" : "mx-auto w-full max-w-md px-4"} style={wide ? undefined : MOBILE_PAD}>
-      {isSunday(today) && onOpenReport && <SundayCard onOpen={() => onOpenReport(days[0])} />}
+      {onOpenReport &&
+        (isSunday(today) ? (
+          <SundayCard onOpen={() => onOpenReport(days[0])} />
+        ) : (
+          <button
+            type="button"
+            onClick={() => onOpenReport(addDays(days[0], -7))}
+            className="mb-2 -ml-2 rounded-lg px-2 py-1 text-sm font-semibold text-accent active:bg-accent/10"
+          >
+            Resumo da semana passada ›
+          </button>
+        ))}
       <WeekStrip days={days} today={today} selected={selected} tasks={tasks} now={now} onSelect={setPicked} />
 
       <header className="mt-5 mb-3">

@@ -1,5 +1,5 @@
 import { parseCapture } from "../shared/rules";
-import { weekdayShort } from "../shared/dates";
+import { isRealDate, weekdayShort } from "../shared/dates";
 import type { Area, CaptureResult, Folder } from "../shared/types";
 import type { Env } from "./index";
 
@@ -26,12 +26,6 @@ const SCHEMA = {
   required: ["kind", "title", "date", "time", "area", "folderId"],
 };
 
-function validDate(s: unknown): s is string {
-  if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-  const d = new Date(`${s}T12:00:00Z`);
-  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
-}
-
 export function sanitize(raw: unknown, today: string, folderIds: Set<string>): CaptureResult | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
@@ -39,7 +33,7 @@ export function sanitize(raw: unknown, today: string, folderIds: Set<string>): C
   const title = typeof r.title === "string" ? r.title.trim().slice(0, TITLE_MAX).trim() : "";
   if (!title) return null;
   const isTask = r.kind === "task";
-  const date = isTask ? (validDate(r.date) && r.date >= today ? r.date : today) : null;
+  const date = isTask ? (isRealDate(r.date) && r.date >= today ? r.date : today) : null;
   const time = isTask && typeof r.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.time) ? r.time : null;
   const area = typeof r.area === "string" && AREAS.includes(r.area) ? (r.area as Area) : null;
   const folderId = typeof r.folderId === "string" && folderIds.has(r.folderId) ? r.folderId : null;

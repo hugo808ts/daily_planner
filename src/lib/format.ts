@@ -54,7 +54,7 @@ export function linkHost(url: string): string | null {
   }
 }
 
-/** A capa só é usada se for https (o servidor ainda não valida esse campo). */
+/** A capa só é usada se for https (o servidor já filtra; o cliente confere de novo). */
 export function safeThumb(thumb: string | null): string | null {
   if (!thumb) return null;
   try {

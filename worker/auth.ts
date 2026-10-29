@@ -1,5 +1,6 @@
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from "jose";
 import type { MiddlewareHandler } from "hono";
+import { isLocalRequest } from "./http";
 import type { Env } from "./index";
 
 type Options = { getJwks?: (teamDomain: string) => JWTVerifyGetKey };
@@ -19,7 +20,8 @@ export function accessGuard(options: Options = {}): MiddlewareHandler<{ Bindings
   const getJwks = options.getJwks ?? remoteJwks;
   return async (c, next) => {
     const env = c.env;
-    if (env.DEV === "true") return next();
+    // DEV só vale em localhost: se vazar para produção, o Access continua valendo.
+    if (env.DEV === "true" && isLocalRequest(c)) return next();
     const unauthorized = () => c.json({ error: "Faça login para continuar." }, 401);
     const token = c.req.header("Cf-Access-Jwt-Assertion");
     if (!token || !env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) return unauthorized();

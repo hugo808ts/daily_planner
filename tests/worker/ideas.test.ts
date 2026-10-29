@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createIdeaRoutes } from "../../worker/routes/ideas";
 
-const BASE = "https://agenda.test";
+const BASE = "http://localhost";
 const init = (method: string, body?: unknown): RequestInit => ({
   method,
   headers: body === undefined ? {} : { "Content-Type": "application/json" },
