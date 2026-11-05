@@ -14,10 +14,11 @@ Aplicativo web pessoal para organizar a semana e o dia a dia. Reúne tarefas do 
 
 ## Funcionalidades
 
-- **Hoje:** tarefas do dia com faixa da semana, placar (feitas, atrasadas, não feitas) e anotação fixada do dia.
-- **Captura rápida:** o usuário escreve ou fala uma frase livre (ex.: "estudar cálculo amanhã às 14h"); a IA interpreta título, data, horário e área, e tudo passa por uma tela de confirmação editável antes de salvar.
-- **Áreas:** cada tarefa recebe uma etiqueta (Trabalho, Faculdade ou Pessoal) identificada automaticamente.
-- **Resumo semanal:** desempenho de segunda a sábado, gráfico dia a dia e lista do que ficou pendente.
+- **Hoje:** tarefas do dia com faixa da semana, placar (feitas, atrasadas, não feitas) e anotação fixada do dia. As tarefas ficam ordenadas por dificuldade.
+- **Captura rápida:** o usuário escreve ou fala uma frase livre (ex.: "estudar cálculo amanhã às 14h"); a IA interpreta título, data, horário, área e dificuldade, e tudo passa por uma tela de confirmação editável antes de salvar.
+- **Áreas e dificuldade:** cada tarefa recebe uma etiqueta de área (Trabalho, Faculdade ou Pessoal) e uma dificuldade (baixa, média ou alta).
+- **Progresso:** tarefas concluídas rendem pontos de experiência conforme a dificuldade, que se somam num nível e numa medalha da semana.
+- **Resumo semanal:** desempenho de segunda a sábado, gráfico dia a dia, medalha da semana e lista do que ficou pendente.
 - **Ideias:** notas em pastas, com título, texto, link com prévia e opção de fixar ou transformar em tarefa.
 - **Acesso protegido:** o app só abre após login.
 
@@ -25,7 +26,7 @@ Aplicativo web pessoal para organizar a semana e o dia a dia. Reúne tarefas do 
 
 | Camada | Tecnologias |
 |---|---|
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS, PWA |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, Lucide (ícones), PWA |
 | Backend | Cloudflare Workers, Hono, Zod |
 | Banco de dados | Cloudflare D1 (SQLite) |
 | IA | Workers AI (interpretação de texto e transcrição de áudio com Whisper), com regras de reserva |
@@ -39,7 +40,7 @@ Um único Cloudflare Worker serve a interface (arquivos estáticos gerados pelo 
 ```
 src/        → interface React (telas, componentes e hooks)
 worker/     → API (rotas de tarefas, ideias, captura e relatório), autenticação e IA
-shared/     → regras de negócio compartilhadas (datas, status, relatório)
+shared/     → regras de negócio compartilhadas (datas, status, relatório, pontuação)
 migrations/ → estrutura do banco D1
 tests/      → testes de unidade, do Worker e de navegador
 ```
