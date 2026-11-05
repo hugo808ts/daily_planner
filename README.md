@@ -5,7 +5,7 @@ Aplicativo web pessoal para organizar a semana e o dia a dia. Reúne tarefas do 
 <p align="center">
   <img src="docs/screenshots/hoje.png" width="230" alt="Tela Hoje">
   <img src="docs/screenshots/ideias.png" width="230" alt="Tela Ideias">
-  <img src="docs/screenshots/resumo-semanal.png" width="230" alt="Resumo semanal">
+  <img src="docs/screenshots/captura.png" width="230" alt="Captura com confirmação">
 </p>
 
 <p align="center">
