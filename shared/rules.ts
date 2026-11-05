@@ -1,5 +1,6 @@
 import { addDays } from "./dates";
 import type { Area, CaptureResult, Folder } from "./types";
+import type { Difficulty } from "./xp";
 
 // Lowercase + accent-strip, one output char per input char so indices map back to the original text.
 const fold = (s: string): string =>
@@ -111,6 +112,16 @@ function buildTitle(text: string, spans: Span[]): string {
   return out.charAt(0).toUpperCase() + out.slice(1);
 }
 
+const HIGH_WORDS = W("urgente|importante|prova|entregar|entrega|apresentar|projeto|relatorio");
+const LOW_WORDS = W("rapido|rapidinho|so|comprar|ligar|mandar mensagem|responder");
+
+/** Heurística sobre o texto sem acentos: alta vence baixa; senão média. */
+function parseDifficulty(n: string): Difficulty {
+  if (HIGH_WORDS.test(n)) return "high";
+  if (LOW_WORDS.test(n)) return "low";
+  return "medium";
+}
+
 export function parseCapture(text: string, today: string, folders: Pick<Folder, "id" | "name">[]): CaptureResult {
   const trimmed = text.trim();
   const prefix = /^ideia\s*:\s*/i.exec(trimmed);
@@ -127,6 +138,7 @@ export function parseCapture(text: string, today: string, folders: Pick<Folder, 
       time: null,
       area: null,
       folderId: folder?.id ?? null,
+      difficulty: "medium",
       source: "rules",
     };
   }
@@ -134,5 +146,14 @@ export function parseCapture(text: string, today: string, folders: Pick<Folder, 
   const time = parseTime(n, spans);
   const date = parseDate(n, today, spans) ?? today;
   const area = parseArea(n, spans);
-  return { kind: "task", title: buildTitle(body, spans) || trimmed, date, time, area, folderId: null, source: "rules" };
+  return {
+    kind: "task",
+    title: buildTitle(body, spans) || trimmed,
+    date,
+    time,
+    area,
+    folderId: null,
+    difficulty: parseDifficulty(n),
+    source: "rules",
+  };
 }

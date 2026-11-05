@@ -1,5 +1,6 @@
 import type { LucideIcon, LucideProps } from "lucide-react";
 import {
+  ArrowDown,
   ArrowRight,
   ArrowUp,
   BookOpen,
@@ -11,8 +12,10 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ChevronsUp,
   Clock,
   Ellipsis,
+  Equal,
   ExternalLink,
   Folder,
   FolderPlus,
@@ -26,9 +29,12 @@ import {
   PinOff,
   Plus,
   Search,
+  Sparkles,
   Square,
+  Star,
   StickyNote,
   Trash2,
+  Trophy,
   Undo2,
   Video,
   X,
@@ -107,3 +113,12 @@ export const FolderPlusIcon = make(FolderPlus, "FolderPlusIcon");
 export const BriefcaseIcon = make(Briefcase, "BriefcaseIcon");
 export const BookOpenIcon = make(BookOpen, "BookOpenIcon");
 export const HeartIcon = make(Heart, "HeartIcon");
+
+// Jogo (dificuldade, nível, medalhas)
+export const ArrowDownIcon = make(ArrowDown, "ArrowDownIcon");
+export const EqualIcon = make(Equal, "EqualIcon");
+export const ArrowUpIcon = make(ArrowUp, "ArrowUpIcon");
+export const TrophyIcon = make(Trophy, "TrophyIcon");
+export const StarIcon = make(Star, "StarIcon");
+export const SparklesIcon = make(Sparkles, "SparklesIcon");
+export const ChevronsUpIcon = make(ChevronsUp, "ChevronsUpIcon");

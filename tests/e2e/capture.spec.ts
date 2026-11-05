@@ -40,6 +40,16 @@ test("tarefa: escreve, confere os chips, troca o dia e salva", async ({ page }) 
     await expect(s.getByRole("button", { name: /^Dia:/ })).toContainText(`Amanhã, ${shortDay(TOMORROW)}`);
     await expect(s.getByRole("button", { name: /^Horário:/ })).toContainText("10:00");
     await expect(s.getByRole("button", { name: /^Área:/ })).toContainText("Trabalho");
+    await expect(s.getByRole("button", { name: /^Dificuldade:/ })).toContainText("Alta · 50 XP");
+    await s.getByRole("button", { name: /^Dificuldade:/ }).click();
+    await expect(s.getByRole("radio", { name: /Alta/ })).toBeChecked();
+    await s.getByRole("radio", { name: /Alta/ }).focus();
+    await page.keyboard.press("ArrowLeft");
+    await expect(s.getByRole("radio", { name: /Média/ })).toBeChecked();
+    await expect(s.getByRole("button", { name: "Salvar · 25 XP", exact: true })).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await expect(s.getByRole("radio", { name: /Alta/ })).toBeChecked();
+    await expect(s.getByRole("button", { name: "Salvar · 50 XP", exact: true })).toBeVisible();
   });
 
   await test.step("editar o chip de data e salvar põe a tarefa naquele dia", async () => {
@@ -47,7 +57,7 @@ test("tarefa: escreve, confere os chips, troca o dia e salva", async ({ page }) 
     await s.getByRole("button", { name: /^Dia:/ }).click();
     await s.getByLabel("Dia", { exact: true }).fill(OTHER);
     await expect(s.getByRole("button", { name: /^Dia:/ })).toContainText(String(Number(OTHER.slice(8))));
-    await s.getByRole("button", { name: "Salvar", exact: true }).click();
+    await s.getByRole("button", { name: "Salvar · 50 XP", exact: true }).click();
     await expect(s).toBeHidden();
     await expect(page.getByRole("status")).toContainText("Tarefa salva");
     await expect(field(page)).toHaveValue("");
@@ -117,7 +127,7 @@ test("enquanto salva, Esc e toque fora não fecham a folha", async ({ page }) =>
   await field(page).fill("ligar pro dentista sexta");
   await send(page).click();
   const s = sheet(page);
-  await s.getByRole("button", { name: "Salvar", exact: true }).click();
+  await s.getByRole("button", { name: /^Salvar/ }).click();
   await expect(s.getByRole("button", { name: "Salvando…" })).toBeDisabled();
 
   await page.keyboard.press("Escape");

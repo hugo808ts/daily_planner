@@ -79,6 +79,19 @@ describe("POST /api/tasks + GET /api/week", () => {
     expect(res.status).toBe(400);
   });
 
+  it("dificuldade: padrão medium, aceita a informada, rejeita valor inválido", async () => {
+    const a = await create({ title: "sem", date: today() });
+    expect(a.json.task.difficulty).toBe("medium");
+    const b = await create({ title: "alta", date: today(), difficulty: "high" });
+    expect(b.res.status).toBe(201);
+    expect(b.json.task.difficulty).toBe("high");
+    const w = await week(today());
+    expect(w.tasks.find((t: any) => t.id === b.json.task.id).difficulty).toBe("high");
+    const bad = await create({ title: "x", date: today(), difficulty: "extreme" });
+    expect(bad.res.status).toBe(400);
+    expect(bad.json.fields.difficulty).toBe("Dificuldade inválida.");
+  });
+
   it("corpo grande -> 413", async () => {
     const res = await post("/api/tasks", { title: "x", date: today(), pad: "a".repeat(70_000) });
     expect(res.status).toBe(413);
@@ -116,6 +129,18 @@ describe("PATCH / DELETE", () => {
     const { json } = await create({ title: "t", date: today(), time: "10:00", area: "work" });
     const r = (await (await call("PATCH", `/api/tasks/${json.task.id}`, { title: "novo", time: null, area: null })).json()) as any;
     expect(r.task).toMatchObject({ title: "novo", time: null, area: null });
+  });
+
+  it("PATCH muda a dificuldade e mantém quando ausente", async () => {
+    const { json } = await create({ title: "t", date: today() });
+    const id = json.task.id;
+    const a = (await (await call("PATCH", `/api/tasks/${id}`, { difficulty: "low" })).json()) as any;
+    expect(a.task.difficulty).toBe("low");
+    const b = (await (await call("PATCH", `/api/tasks/${id}`, { done: true })).json()) as any;
+    expect(b.task.difficulty).toBe("low");
+    expect((await week(today())).tasks.find((t: any) => t.id === id).difficulty).toBe("low");
+    const bad = await call("PATCH", `/api/tasks/${id}`, { difficulty: null });
+    expect(bad.status).toBe(400);
   });
 
   it("404 para id desconhecido", async () => {
@@ -161,6 +186,17 @@ describe("POST /api/tasks/:id/move", () => {
     const w = await week(yesterday());
     const orig = w.tasks.find((t: any) => t.id === id);
     expect(orig).toMatchObject({ date: yesterday(), doneAt: null });
+  });
+
+  it("cópia e movida levam a dificuldade", async () => {
+    const old = await create({ title: "t", date: yesterday(), time: "10:00", difficulty: "high" });
+    const c = (await (await post(`/api/tasks/${old.json.task.id}/move`, { date: today() })).json()) as any;
+    expect(c.copied).toBe(true);
+    expect(c.task.difficulty).toBe("high");
+    const cur = await create({ title: "u", date: today(), difficulty: "low" });
+    const m = (await (await post(`/api/tasks/${cur.json.task.id}/move`, { date: addDays(today(), 1) })).json()) as any;
+    expect(m.copied).toBe(false);
+    expect(m.task.difficulty).toBe("low");
   });
 
   it("tarefa concluída -> 409", async () => {

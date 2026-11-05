@@ -5,7 +5,9 @@ import { taskStatus } from "../../shared/status";
 import type { Area, Task } from "../../shared/types";
 import { api, ApiError, type MoveResult, type TaskPatch } from "../lib/api";
 import { onDay, shortDay } from "../lib/format";
+import { XP_BY_DIFFICULTY } from "../../shared/xp";
 import { AREA_ORDER, AreaTag } from "./ui/AreaTag";
+import { DIFFICULTY_ORDER, difficultyMeta, type Difficulty } from "./ui/DifficultyTag";
 import { Button } from "./ui/Button";
 import { CloseIcon, TrashIcon } from "./ui/Icon";
 
@@ -39,6 +41,8 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
   const [date, setDate] = useState(task.date);
   const [time, setTime] = useState(task.time ?? "");
   const [area, setArea] = useState<Area | null>(task.area);
+  const [difficulty, setDifficulty] = useState<Difficulty>(task.difficulty);
+  const diffBtns = useRef<(HTMLButtonElement | null)[]>([]);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   /** "Outra data": só move ao tocar em Mover (o seletor de data dispara onChange a cada giro da roda). */
@@ -58,6 +62,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
     (!notDone && date !== task.date) ||
     time !== (task.time ?? "") ||
     area !== task.area ||
+    difficulty !== task.difficulty ||
     other !== "";
   const requestClose = () => (dirty ? setAskDiscard(true) : onClose());
 
@@ -69,6 +74,16 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
     const next = (i + step + AREA_OPTIONS.length) % AREA_OPTIONS.length;
     setArea(AREA_OPTIONS[next]);
     chips.current[next]?.focus();
+  };
+
+  const onDiffKey = (e: React.KeyboardEvent, i: number) => {
+    const step =
+      e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    const next = (i + step + DIFFICULTY_ORDER.length) % DIFFICULTY_ORDER.length;
+    setDifficulty(DIFFICULTY_ORDER[next]);
+    diffBtns.current[next]?.focus();
   };
 
   const fail = (e: unknown) => {
@@ -87,6 +102,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
     if (!notDone && date !== task.date) patch.date = date;
     if ((time || null) !== task.time) patch.time = time || null;
     if (area !== task.area) patch.area = area;
+    if (difficulty !== task.difficulty) patch.difficulty = difficulty;
     if (Object.keys(patch).length === 0) return onClose();
     setBusy(true);
     setError(null);
@@ -317,6 +333,44 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
                       }`}
                     >
                       {value ? <AreaTag area={value} className="text-ink!" /> : "Sem área"}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend className={LABEL}>Dificuldade</legend>
+              <div role="radiogroup" aria-label="Dificuldade" className="grid grid-cols-3 gap-2">
+                {DIFFICULTY_ORDER.map((value, i) => {
+                  const on = difficulty === value;
+                  const m = difficultyMeta(value);
+                  return (
+                    <button
+                      key={value}
+                      ref={(el) => {
+                        diffBtns.current[i] = el;
+                      }}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      aria-label={`${m.label}, ${XP_BY_DIFFICULTY[value]} XP`}
+                      tabIndex={on ? 0 : -1}
+                      onClick={() => setDifficulty(value)}
+                      onKeyDown={(e) => onDiffKey(e, i)}
+                      className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-1.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                        on
+                          ? "border-accent bg-accent-soft text-ink"
+                          : "border-line bg-bg text-ink hover:border-dot hover:bg-accent-soft/50"
+                      }`}
+                    >
+                      <span aria-hidden className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px font-semibold ${m.className}`}>
+                        <m.Icon size={14} strokeWidth={2.5} />
+                        {m.label}
+                      </span>
+                      <span aria-hidden className="text-meta text-muted">
+                        {XP_BY_DIFFICULTY[value]} XP
+                      </span>
                     </button>
                   );
                 })}

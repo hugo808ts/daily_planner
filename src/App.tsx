@@ -3,10 +3,12 @@ import { addDays, isSunday, todayISO, weekStart } from "../shared/dates";
 import type { Idea, Task } from "../shared/types";
 import { CaptureBar } from "./components/CaptureBar";
 import { Toast } from "./components/Toast";
-import { Button } from "./components/ui/Button";
-import { CalendarIcon, CheckIcon, LightbulbIcon, ReportIcon, type IconComponent } from "./components/ui/Icon";
+import { ProgressPill } from "./components/game/ProgressPill";
+import { CalendarIcon, CheckIcon, LightbulbIcon, type IconComponent } from "./components/ui/Icon";
+import { useProgress } from "./lib/useProgress";
 import { useWide } from "./lib/useWide";
 import { Ideas } from "./screens/Ideas";
+import { MedalReveal } from "./screens/MedalReveal";
 import { Report } from "./screens/Report";
 import { Today } from "./screens/Today";
 
@@ -59,15 +61,36 @@ export default function App() {
   const [captured, setCaptured] = useState<Task | null>(null);
   const [capturedIdea, setCapturedIdea] = useState<Idea | null>(null);
   const [reportStart, setReportStart] = useState<string | null>(null);
+  /** Domingo: a revelação da medalha vem antes do resumo. */
+  const [revealStart, setRevealStart] = useState<string | null>(null);
   const [todayKey, setTodayKey] = useState(0);
   const wide = useWide();
+  const { progress } = useProgress(weekStart(todayISO()), true);
 
-  /** Mesmo destino do botão do Hoje: domingo abre a semana atual; nos outros dias, a anterior. */
+  /** Mesmo destino do botão do Hoje: domingo revela a medalha da semana atual; nos outros dias, resumo da anterior. */
   const openReport = () => {
     const today = todayISO();
     const start = weekStart(today);
-    setReportStart(isSunday(today) ? start : addDays(start, -7));
+    if (isSunday(today)) setRevealStart(start);
+    else setReportStart(addDays(start, -7));
   };
+
+  /** Pedido vindo do Hoje (cartão de domingo ou link da semana passada). */
+  const openFromToday = (start: string) => {
+    if (isSunday(todayISO())) setRevealStart(start);
+    else setReportStart(start);
+  };
+
+  const reveal = revealStart && (
+    <MedalReveal
+      start={revealStart}
+      onClose={() => setRevealStart(null)}
+      onDetails={(s) => {
+        setRevealStart(null);
+        setReportStart(s);
+      }}
+    />
+  );
 
   if (wide) {
     // Computador: barra no topo; o dia fixo à esquerda (com a captura embaixo) e as Ideias no resto.
@@ -82,9 +105,7 @@ export default function App() {
             Agenda
           </span>
           <span className="flex-1" />
-          <Button size="sm" variant="secondary" icon={<ReportIcon size={16} />} onClick={openReport}>
-            Resumo da semana
-          </Button>
+          <ProgressPill progress={progress} onClick={openReport} />
           <kbd aria-hidden className="rounded-md border border-line px-1.5 py-px font-sans text-[12px] whitespace-nowrap text-muted">
             {isMac() ? "⌘ K" : "Ctrl K"}
           </kbd>
@@ -92,7 +113,7 @@ export default function App() {
         <div className="grid min-h-0 grid-cols-[380px_minmax(0,1fr)]">
           <aside data-testid="today-pane" aria-label="Dia" className="pane flex h-full flex-col border-r border-line">
             <div className="flex-1">
-              <Today key={todayKey} captured={captured} onOpenReport={setReportStart} wide />
+              <Today key={todayKey} captured={captured} onOpenReport={openFromToday} wide />
             </div>
             <CaptureBar inline onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />
           </aside>
@@ -103,6 +124,7 @@ export default function App() {
         {reportStart && (
           <Report start={reportStart} onClose={() => setReportStart(null)} onMoved={() => setTodayKey((k) => k + 1)} />
         )}
+        {reveal}
         <Toast />
       </div>
     );
@@ -113,7 +135,7 @@ export default function App() {
       <SkipLink />
       <main id="conteudo" tabIndex={-1} className="focus:outline-none">
         {tab === "today" ? (
-          <Today key={todayKey} captured={captured} onOpenReport={setReportStart} />
+          <Today key={todayKey} captured={captured} onOpenReport={openFromToday} />
         ) : (
           <Ideas captured={capturedIdea} onTaskSaved={setCaptured} />
         )}
@@ -151,6 +173,7 @@ export default function App() {
         <Report start={reportStart} onClose={() => setReportStart(null)} onMoved={() => setTodayKey((k) => k + 1)} />
       )}
 
+      {reveal}
       <Toast />
     </div>
   );

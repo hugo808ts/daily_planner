@@ -1,4 +1,5 @@
 import type { Area, CaptureResult, DayNote, Folder, Idea, Task, WeekReport } from "../../shared/types";
+import type { Difficulty, MedalTier } from "../../shared/xp";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -24,6 +25,8 @@ export interface NewTask {
   date: string;
   time?: string | null;
   area?: Area | null;
+  /** Padrão no servidor: "medium". */
+  difficulty?: Difficulty;
 }
 
 export interface TaskPatch {
@@ -31,7 +34,36 @@ export interface TaskPatch {
   date?: string;
   time?: string | null;
   area?: Area | null;
+  difficulty?: Difficulty;
   done?: boolean;
+}
+
+/** Nível (começa em 1), XP já feito nele e XP necessário para o próximo (shared/xp levelFromXp). */
+export interface LevelInfo {
+  level: number;
+  into: number;
+  needed: number;
+}
+
+/** Resposta completa de GET /api/report. */
+export interface ReportData {
+  report: WeekReport;
+  /** XP (seg–sáb) da semana anterior. */
+  previousXp: number;
+  /** Maior XP (seg–sáb) de uma semana do histórico até esta, inclusive. */
+  bestWeekXp: number;
+  /** Nível com o XP total até o domingo desta semana. */
+  level: LevelInfo;
+  /** Número do nível antes desta semana (para o "Subiu de nível"). */
+  levelBefore: number;
+}
+
+/** GET /api/progress: nível (XP total, domingo incluído) e medalha da semana (seg–sáb). */
+export interface Progress extends LevelInfo {
+  totalXp: number;
+  weekXp: number;
+  medal: MedalTier | null;
+  next: { medal: MedalTier; missing: number } | null;
 }
 
 export interface NewFolder {
@@ -106,6 +138,9 @@ export const api = {
   week: (start: string) => request<WeekData>("GET", `/api/week?start=${encodeURIComponent(start)}`),
   report: async (start: string) =>
     (await json("GET", `/api/report?start=${encodeURIComponent(start)}`)).report as WeekReport,
+  /** O resumo com o XP comparado (semana anterior, melhor semana, nível). */
+  reportData: (start: string) => request<ReportData>("GET", `/api/report?start=${encodeURIComponent(start)}`),
+  progress: (start: string) => request<Progress>("GET", `/api/progress?start=${encodeURIComponent(start)}`),
   createTask: async (input: NewTask) => (await json("POST", "/api/tasks", input)).task as Task,
   updateTask: async (id: string, patch: TaskPatch) =>
     (await json("PATCH", `/api/tasks/${encodeURIComponent(id)}`, patch)).task as Task,

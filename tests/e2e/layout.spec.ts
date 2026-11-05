@@ -168,7 +168,7 @@ test.describe("computador (1440×900)", () => {
       const field = today.getByRole("textbox", { name: "Captura rápida" });
       await expect(field).toBeVisible();
       await expect(page.getByRole("banner").getByText("Ctrl K")).toBeVisible();
-      await expect(page.getByRole("banner").getByRole("button", { name: "Resumo da semana" })).toBeVisible();
+      await expect(page.getByRole("banner").getByRole("button", { name: /^Resumo da semana/ })).toBeVisible();
       const c = await box(field);
       const t = await box(today);
       expect(c.x + c.width).toBeLessThanOrEqual(t.x + t.width);

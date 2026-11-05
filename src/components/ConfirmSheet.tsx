@@ -6,8 +6,10 @@ import { api, ApiError } from "../lib/api";
 import { shortDay } from "../lib/format";
 import { FolderGlyph } from "./FolderGrid";
 import { FolderIconPicker } from "./FolderIconPicker";
+import { XP_BY_DIFFICULTY, type Difficulty } from "../../shared/xp";
 import { AREA_ORDER, AreaTag, areaMeta } from "./ui/AreaTag";
 import { Button } from "./ui/Button";
+import { DIFFICULTY_ORDER, DifficultyTag, difficultyMeta } from "./ui/DifficultyTag";
 import { CalendarIcon, CheckIcon, ClockIcon, FolderIcon, LightbulbIcon, PencilIcon, PlusIcon } from "./ui/Icon";
 
 export type SavedItem = { kind: "task"; task: Task } | { kind: "idea"; idea: Idea };
@@ -20,7 +22,7 @@ interface Props {
   onSaved: (item: SavedItem) => void;
 }
 
-type Field = "title" | "date" | "time" | "area" | "folder";
+type Field = "title" | "date" | "time" | "area" | "difficulty" | "folder";
 
 const FIELD =
   "block w-full rounded-xl border border-line bg-bg px-3 py-2.5 text-ink focus-visible:border-accent aria-invalid:border-danger";
@@ -91,6 +93,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
   const [date, setDate] = useState(initial.date ?? today);
   const [time, setTime] = useState(initial.time ?? "");
   const [area, setArea] = useState<Area | null>(initial.area);
+  const [difficulty, setDifficulty] = useState<Difficulty>(initial.difficulty ?? "medium");
   const [folderId, setFolderId] = useState(initial.folderId);
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [foldersError, setFoldersError] = useState(false);
@@ -143,7 +146,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
   };
 
   const saveTask = async () => {
-    const task = await api.createTask({ title, date, time: time || null, area });
+    const task = await api.createTask({ title, date, time: time || null, area, difficulty });
     onSaved({ kind: "task", task });
   };
 
@@ -314,6 +317,13 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
               >
                 {area ? <AreaTag area={area} className="font-semibold" /> : <span className="text-muted">Sem área</span>}
               </Chip>
+              <Chip
+                label={`Dificuldade: ${difficultyMeta(difficulty).label}, ${XP_BY_DIFFICULTY[difficulty]} XP`}
+                open={show("difficulty")}
+                onClick={() => toggle("difficulty")}
+              >
+                <DifficultyTag difficulty={difficulty} xp={XP_BY_DIFFICULTY[difficulty]} />
+              </Chip>
             </>
           ) : foldersError ? (
             <div role="alert" className="flex w-full items-center justify-between gap-2 rounded-xl bg-danger-soft py-1 pr-1 pl-3 text-sm text-danger-ink">
@@ -416,6 +426,32 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
                 >
                   {m && <m.Icon size={16} />}
                   {m ? m.label : "Sem área"}
+                </button>
+              );
+            })}
+          </RadioGroup>
+        )}
+
+        {isTask && show("difficulty") && (
+          <RadioGroup label="Dificuldade" className="mb-4 grid grid-cols-3 gap-2">
+            {DIFFICULTY_ORDER.map((d) => {
+              const m = difficultyMeta(d);
+              const on = difficulty === d;
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  tabIndex={on ? 0 : -1}
+                  onClick={() => setDifficulty(d)}
+                  className={`no-select flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-1.5 text-sm transition-colors duration-150 motion-reduce:transition-none ${
+                    on ? `border-2 font-semibold ${m.className}` : "border-line bg-surface text-ink hover:border-dot active:bg-ink/5"
+                  }`}
+                >
+                  <m.Icon size={16} strokeWidth={2.5} />
+                  <span>{m.label}</span>
+                  <span className="text-meta font-normal opacity-80">{XP_BY_DIFFICULTY[d]} XP</span>
                 </button>
               );
             })}
@@ -527,7 +563,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
             busyLabel="Salvando…"
             disabled={!isTask && folders === null}
           >
-            {isTask ? "Salvar" : "Guardar"}
+            {isTask ? `Salvar · ${XP_BY_DIFFICULTY[difficulty]} XP` : "Guardar"}
           </Button>
         </div>
       </form>

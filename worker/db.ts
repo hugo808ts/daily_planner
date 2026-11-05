@@ -6,6 +6,7 @@ export type TaskRow = {
   date: string;
   time: string | null;
   area: string | null;
+  difficulty: string;
   done_at: string | null;
   moved_from_id: string | null;
   created_at: string;
@@ -19,6 +20,7 @@ export function rowToTask(r: TaskRow): Task {
     date: r.date,
     time: r.time,
     area: r.area as Task["area"],
+    difficulty: r.difficulty as Task["difficulty"],
     doneAt: r.done_at,
     movedFromId: r.moved_from_id,
     createdAt: r.created_at,
@@ -34,16 +36,18 @@ export async function getTask(db: D1Database, id: string): Promise<Task | null> 
 export async function insertTask(db: D1Database, t: Task): Promise<void> {
   await db
     .prepare(
-      "INSERT INTO tasks (id, title, date, time, area, done_at, moved_from_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO tasks (id, title, date, time, area, difficulty, done_at, moved_from_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
-    .bind(t.id, t.title, t.date, t.time, t.area, t.doneAt, t.movedFromId, t.createdAt, t.updatedAt)
+    .bind(t.id, t.title, t.date, t.time, t.area, t.difficulty, t.doneAt, t.movedFromId, t.createdAt, t.updatedAt)
     .run();
 }
 
 export async function updateTask(db: D1Database, t: Task): Promise<void> {
   await db
-    .prepare("UPDATE tasks SET title = ?, date = ?, time = ?, area = ?, done_at = ?, updated_at = ? WHERE id = ?")
-    .bind(t.title, t.date, t.time, t.area, t.doneAt, t.updatedAt, t.id)
+    .prepare(
+      "UPDATE tasks SET title = ?, date = ?, time = ?, area = ?, difficulty = ?, done_at = ?, updated_at = ? WHERE id = ?",
+    )
+    .bind(t.title, t.date, t.time, t.area, t.difficulty, t.doneAt, t.updatedAt, t.id)
     .run();
 }
 

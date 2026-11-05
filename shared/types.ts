@@ -1,3 +1,5 @@
+import type { Difficulty, MedalTier } from "./xp";
+
 export type Area = "work" | "school" | "personal";
 
 export interface Task {
@@ -6,6 +8,7 @@ export interface Task {
   date: string;
   time: string | null;
   area: Area | null;
+  difficulty: Difficulty;
   doneAt: string | null;
   movedFromId: string | null;
   createdAt: string;
@@ -45,6 +48,7 @@ export interface CaptureResult {
   time: string | null;
   area: Area | null;
   folderId: string | null;
+  difficulty: Difficulty;
   source: "ai" | "rules";
 }
 
@@ -60,4 +64,12 @@ export interface WeekReport {
   percent: number | null;
   perDay: { date: string; done: number; notDone: number }[];
   notDoneTasks: ReportTask[];
+  /** XP das tarefas feitas de segunda a sábado. */
+  xp: number;
+  /** null com 0 XP. */
+  medal: MedalTier | null;
+  /** Tarefas feitas (seg–sáb) por dificuldade. */
+  byDifficulty: Record<Difficulty, number>;
+  /** Dia (seg–sáb) com mais XP; o primeiro em caso de empate; null com 0 XP. */
+  bestDay: string | null;
 }

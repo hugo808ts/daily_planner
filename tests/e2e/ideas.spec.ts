@@ -176,7 +176,7 @@ test("Virar tarefa abre a confirmação, salva no dia escolhido e mantém a idei
   await expect(sheet.getByRole("button", { name: /^Dia:/ })).toContainText("Hoje");
   await sheet.getByRole("button", { name: /^Dia:/ }).click();
   await sheet.getByLabel("Dia", { exact: true }).fill(OTHER);
-  await sheet.getByRole("button", { name: "Salvar", exact: true }).click();
+  await sheet.getByRole("button", { name: "Salvar · 25 XP", exact: true }).click();
   await expect(sheet).toBeHidden();
   await expect(page.getByRole("status")).toContainText("Tarefa salva");
   await expect(page.getByLabel("Título")).toHaveValue("Fórmula de Bhaskara");

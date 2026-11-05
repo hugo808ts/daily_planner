@@ -4,6 +4,7 @@ import { isRealDate, weekDays, weekStart } from "../../shared/dates";
 import { DAY_NOTE_MAX, TASK_TITLE_MAX, TASK_TITLE_MIN } from "../../shared/limits";
 import { taskStatus } from "../../shared/status";
 import type { Task } from "../../shared/types";
+import { DIFFICULTIES } from "../../shared/xp";
 import { getTask, insertTask, notesBetween, tasksBetween, updateTask } from "../db";
 import { badRequest, readBody, serverToday, type Ctx } from "../http";
 import type { Env } from "../index";
@@ -15,6 +16,7 @@ const timeSchema = z
   .string({ error: "Horário inválido." })
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Horário inválido (use HH:MM).");
 const areaSchema = z.enum(["work", "school", "personal"], { error: "Área inválida." });
+const difficultySchema = z.enum(DIFFICULTIES, { error: "Dificuldade inválida." });
 const titleSchema = z
   .string({ error: "Título inválido." })
   .trim()
@@ -26,12 +28,14 @@ const createSchema = z.object({
   date: dateSchema,
   time: timeSchema.nullish(),
   area: areaSchema.nullish(),
+  difficulty: difficultySchema.optional(),
 });
 const patchSchema = z.object({
   title: titleSchema.optional(),
   date: dateSchema.optional(),
   time: timeSchema.nullable().optional(),
   area: areaSchema.nullable().optional(),
+  difficulty: difficultySchema.optional(),
   done: z.boolean({ error: "Valor inválido." }).optional(),
 });
 const moveSchema = z.object({ date: dateSchema });
@@ -69,6 +73,7 @@ taskRoutes.post("/api/tasks", async (c) => {
     date: body.data.date,
     time: body.data.time ?? null,
     area: body.data.area ?? null,
+    difficulty: body.data.difficulty ?? "medium",
     doneAt: null,
     movedFromId: null,
     createdAt: now,
@@ -91,6 +96,7 @@ taskRoutes.patch("/api/tasks/:id", async (c) => {
     date: p.date ?? task.date,
     time: p.time === undefined ? task.time : p.time,
     area: p.area === undefined ? task.area : p.area,
+    difficulty: p.difficulty ?? task.difficulty,
     doneAt: p.done === undefined ? task.doneAt : p.done ? (task.doneAt ?? now) : null,
     updatedAt: now,
   };

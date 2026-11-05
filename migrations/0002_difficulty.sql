@@ -1,0 +1,1 @@
+ALTER TABLE tasks ADD COLUMN difficulty TEXT NOT NULL DEFAULT 'medium';

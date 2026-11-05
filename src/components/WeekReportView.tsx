@@ -1,6 +1,12 @@
-import { weekdayShort } from "../../shared/dates";
+import { todayISO, weekdayShort, weekStart } from "../../shared/dates";
 import type { ReportTask, WeekReport } from "../../shared/types";
+import type { LevelInfo } from "../lib/api";
+import { nextMedal, XP_BY_DIFFICULTY } from "../../shared/xp";
+import { signedXp, WEEK_TITLE } from "../screens/MedalReveal";
+import { LevelBar } from "./game/LevelBar";
+import { Medal, MedalPlaceholder, MEDAL_LABEL } from "./game/Medal";
 import { AreaTag } from "./ui/AreaTag";
+import { DIFFICULTY_ORDER, DifficultyTag } from "./ui/DifficultyTag";
 import { Button } from "./ui/Button";
 import { ArrowRightIcon, CalendarIcon, CheckIcon } from "./ui/Icon";
 
@@ -10,7 +16,74 @@ const BAR_MAX = 64;
 const percentFmt = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 0 });
 const CARD = "rounded-[18px] border border-line bg-surface";
 
-export function WeekReportView({ report, onMove }: { report: WeekReport; onMove: (task: ReportTask) => void }) {
+/** Cabeçalho do jogo: medalha, XP da semana, comparação com a anterior e feitas por dificuldade. */
+function XpHeader({ report, previousXp, level }: { report: WeekReport; previousXp?: number; level?: LevelInfo }) {
+  const diff = previousXp === undefined ? null : report.xp - previousXp;
+  // "faltam" só faz sentido na semana atual; nas passadas já não há o que ganhar.
+  const next = report.start === weekStart(todayISO()) ? nextMedal(report.xp) : null;
+  return (
+    <section className={`mb-3 ${CARD} px-4 py-3.5`} data-testid="report-xp" aria-label="XP da semana">
+      {level && (
+        <div data-testid="report-level" className="mb-3">
+          <LevelBar level={level.level} into={level.into} needed={level.needed} compact />
+        </div>
+      )}
+      <div className="flex items-center gap-3.5">
+        <span className="grid size-14 shrink-0 place-items-center">
+          {report.medal ? (
+            <Medal tier={report.medal} size={report.medal === "supremo" ? 44 : 56} />
+          ) : (
+            <MedalPlaceholder size={50} />
+          )}
+        </span>
+        <div className="min-w-0">
+          <h2 className="font-display text-[19px] leading-tight font-bold text-balance">
+            {report.medal ? WEEK_TITLE[report.medal] : "Semana sem medalha"} · {report.xp} XP
+          </h2>
+          {diff !== null && (
+            <p className="mt-0.5 text-meta text-muted">
+              <b className={`font-semibold tabular-nums ${diff > 0 ? "text-accent-ink" : "text-ink"}`}>{signedXp(diff)} XP</b> vs semana
+              passada
+            </p>
+          )}
+          {next && (
+            <p data-testid="report-next" className="mt-0.5 text-meta text-muted">
+              faltam <b className="font-semibold text-ink tabular-nums">{next.missing}</b> para {MEDAL_LABEL[next.medal]}
+            </p>
+          )}
+        </div>
+      </div>
+      <ul className="mt-3 grid grid-cols-3 gap-2 border-t border-line pt-3" aria-label="Feitas por dificuldade">
+        {[...DIFFICULTY_ORDER].reverse().map((d) => {
+          const n = report.byDifficulty[d];
+          return (
+            <li key={d} className="flex flex-col items-start gap-1">
+              <DifficultyTag difficulty={d} />
+              <span className="text-meta text-muted">
+                <b className="font-display text-[17px] font-semibold text-ink tabular-nums">{n}</b> {n === 1 ? "feita" : "feitas"} ·{" "}
+                {n * XP_BY_DIFFICULTY[d]} XP
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+export function WeekReportView({
+  report,
+  previousXp,
+  level,
+  onMove,
+}: {
+  report: WeekReport;
+  /** XP da semana anterior, para o "vs semana passada". */
+  previousXp?: number;
+  /** Nível com o XP até o domingo da semana. */
+  level?: LevelInfo;
+  onMove: (task: ReportTask) => void;
+}) {
   const stat = (n: number | string, label: string, red = false) => (
     <div className="flex-1 text-center">
       <b className={`font-display block text-[28px] leading-none font-semibold tabular-nums ${red ? "text-danger-ink" : ""}`}>
@@ -23,6 +96,7 @@ export function WeekReportView({ report, onMove }: { report: WeekReport; onMove:
 
   return (
     <>
+      <XpHeader report={report} previousXp={previousXp} level={level} />
       <div className={`flex ${CARD} px-2 py-4`} data-testid="report-numbers">
         {stat(report.done, "feitas")}
         {stat(report.notDone, "não feitas", report.notDone > 0)}

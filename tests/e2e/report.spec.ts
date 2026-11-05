@@ -26,7 +26,7 @@ test("Resumo: link na semana, domingo com cartão; semana anterior; levar a part
   await seed(request, { title: "Atividade de Estatística", date: WED, area: "school" });
   await seed(request, { title: "Feita E (tarde)", date: addDays(START, 5) }, true);
   await seed(request, { title: "Domingo ignorado", date: SUNDAY }); // domingo nunca entra na conta
-  // feitas 5, não feitas 3 -> 63%
+  // feitas 5, não feitas 3 -> 63%; 5 médias = 125 XP -> Bronze (a semana anterior não tem XP)
 
   // Relógio real do navegador: o servidor recusa levar tarefas para dias que já passaram.
   const realToday = todayISO();
@@ -35,11 +35,13 @@ test("Resumo: link na semana, domingo com cartão; semana anterior; levar a part
 
   await test.step("abre o resumo da semana passada pelo link (ou pelo cartão, no domingo)", async () => {
     if (isSunday(realToday)) {
+      // No domingo o cartão abre a revelação da medalha; dela se chega ao resumo.
       await page.getByRole("button", { name: /Sua semana fechou/ }).click();
+      await page.getByRole("dialog", { name: "Medalha da semana" }).getByRole("button", { name: "Ver detalhes da semana" }).click();
       await page.getByRole("dialog", { name: "Resumo da semana" }).getByRole("button", { name: "Semana anterior" }).click();
     } else {
       await expect(page.getByRole("button", { name: /Sua semana fechou/ })).toHaveCount(0);
-      await page.getByRole("button", { name: "Resumo da semana", exact: true }).click();
+      await page.getByRole("button", { name: /^Resumo da semana/ }).click();
     }
     const report = page.getByRole("dialog", { name: "Resumo da semana" });
     const numbers = report.getByTestId("report-numbers");
@@ -48,6 +50,14 @@ test("Resumo: link na semana, domingo com cartão; semana anterior; levar a part
     await expect(numbers).toContainText("3");
     await expect(numbers).toContainText("não feitas");
     await expect(numbers).toContainText("63%");
+    const xp = report.getByTestId("report-xp");
+    await expect(xp.getByRole("heading", { name: "Semana Bronze · 125 XP" })).toBeVisible();
+    await expect(xp.getByRole("img", { name: "Medalha Bronze" })).toBeVisible();
+    await expect(xp).toContainText("+125 XP vs semana passada");
+    await expect(report.getByTestId("report-level").getByRole("progressbar", { name: /^Nível \d+/ })).toBeVisible();
+    await expect(report.getByTestId("report-next")).toHaveCount(0); // semana passada: sem "faltam"
+    await expect(xp.getByRole("listitem").filter({ hasText: "Média" })).toContainText("5 feitas · 125 XP");
+    await expect(xp.getByRole("listitem").filter({ hasText: "Alta" })).toContainText("0 feitas · 0 XP");
     await expect(report.getByRole("listitem").filter({ hasText: /^(seg|ter|qua|qui|sex|sáb|dom)$/ })).toHaveCount(6);
     await expect(report.getByRole("listitem", { name: /^dom/ })).toHaveCount(0);
     await expect(report.getByText("Não feitas (3)")).toBeVisible();

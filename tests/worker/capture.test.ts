@@ -22,7 +22,7 @@ beforeEach(async () => {
 
 describe("POST /api/capture", () => {
   it("resultado válido da IA tem source ai (objeto ou string)", async () => {
-    const raw = { kind: "task", title: "Ligar pro dentista", date: today, time: "09:30", area: "personal", folderId: null };
+    const raw = { kind: "task", title: "Ligar pro dentista", date: today, time: "09:30", area: "personal", folderId: null, difficulty: "low" };
     for (const asString of [false, true]) {
       const res = await capture(aiReturns(raw, asString), "ligar pro dentista hoje 9h30");
       expect(res.status).toBe(200);
@@ -49,8 +49,21 @@ describe("POST /api/capture", () => {
       "estudar",
     );
     expect((await j(res)).result).toEqual({
-      kind: "task", title: "Estudar", date: today, time: null, area: null, folderId: null, source: "ai",
+      kind: "task", title: "Estudar", date: today, time: null, area: null, folderId: null, difficulty: "medium", source: "ai",
     });
+  });
+
+  it("dificuldade da IA: válida é mantida; inválida ou ausente vira medium", async () => {
+    const base = { kind: "task", title: "x", date: today, time: null, area: null, folderId: null };
+    for (const [d, want] of [["high", "high"], ["low", "low"], ["epic", "medium"], [undefined, "medium"], [3, "medium"]] as const) {
+      const r = (await j(await capture(aiReturns({ ...base, difficulty: d }), "x"))).result;
+      expect(r.difficulty).toBe(want);
+    }
+  });
+
+  it("regras devolvem dificuldade quando a IA cai", async () => {
+    const r = (await j(await capture({ DB: env.DB, DEV: "true" } as unknown as Env, "entregar o relatório amanhã"))).result;
+    expect(r).toMatchObject({ source: "rules", difficulty: "high" });
   });
 
   it("data impossível vira hoje; ideia ignora data/hora e mantém pasta válida", async () => {

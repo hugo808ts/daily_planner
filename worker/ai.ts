@@ -1,6 +1,7 @@
 import { parseCapture } from "../shared/rules";
 import { isRealDate, weekdayShort } from "../shared/dates";
 import type { Area, CaptureResult, Folder } from "../shared/types";
+import { DIFFICULTIES, type Difficulty } from "../shared/xp";
 import type { Env } from "./index";
 
 const CAPTURE_MODEL = "@cf/meta/llama-3.1-8b-instruct";
@@ -22,8 +23,9 @@ const SCHEMA = {
     time: { type: ["string", "null"], description: "HH:MM, 24h" },
     area: { type: ["string", "null"], enum: ["work", "school", "personal", null] },
     folderId: { type: ["string", "null"] },
+    difficulty: { type: "string", enum: ["low", "medium", "high"] },
   },
-  required: ["kind", "title", "date", "time", "area", "folderId"],
+  required: ["kind", "title", "date", "time", "area", "folderId", "difficulty"],
 };
 
 export function sanitize(raw: unknown, today: string, folderIds: Set<string>): CaptureResult | null {
@@ -37,7 +39,11 @@ export function sanitize(raw: unknown, today: string, folderIds: Set<string>): C
   const time = isTask && typeof r.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.time) ? r.time : null;
   const area = typeof r.area === "string" && AREAS.includes(r.area) ? (r.area as Area) : null;
   const folderId = typeof r.folderId === "string" && folderIds.has(r.folderId) ? r.folderId : null;
-  return { kind: r.kind, title, date, time, area, folderId, source: "ai" };
+  const difficulty: Difficulty =
+    isTask && typeof r.difficulty === "string" && (DIFFICULTIES as readonly string[]).includes(r.difficulty)
+      ? (r.difficulty as Difficulty)
+      : "medium";
+  return { kind: r.kind, title, date, time, area, folderId, difficulty, source: "ai" };
 }
 
 export async function interpretWithAI(
@@ -54,6 +60,7 @@ export async function interpretWithAI(
       `Hoje é ${weekday}, ${today} (formato AAAA-MM-DD).`,
       'kind: "task" (algo a fazer) ou "idea" (algo a guardar). Ideias nunca têm data nem hora.',
       "Áreas possíveis: work (trabalho), school (escola/estudos), personal (pessoal); use null se não der para saber.",
+      "dificuldade: low (rápida/simples), medium (normal), high (grande/importante/prova/entrega); na dúvida medium.",
       `Pastas disponíveis (id: nome); use o id só se a frase citar claramente a pasta, senão null:\n${folderList}`,
       "Datas relativas (amanhã, sexta) devem virar AAAA-MM-DD a partir de hoje. Hora em HH:MM, 24h. title curto, sem data/hora.",
     ].join("\n");

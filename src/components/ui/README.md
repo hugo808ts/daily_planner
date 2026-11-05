@@ -96,3 +96,14 @@ Comportamentos globais:
 - A página não rola enquanto houver um `dialog[open]`.
 - Títulos usam `text-wrap:balance`.
 - `scroll-padding-bottom` compensa as barras fixas.
+
+## Peças do jogo (gamificação)
+
+Base visual: `docs/superpowers/mockups/gamificacao-2026-11.html`. Os tipos `MedalTier` e `Difficulty` são locais e idênticos aos de `shared/xp.ts`.
+
+- `DifficultyTag` (`ui/DifficultyTag.tsx`): chip com seta (baixa verde, média âmbar, alta vermelha). Props: `difficulty`, `xp?` (mostra "· 25 XP") e `className?`. Exporta também `difficultyMeta(d)` (`{ label, Icon, className }`) e `DIFFICULTY_ORDER`. Cores AA pelos tokens `--diff-*` (claro e escuro).
+- `Medal` (`game/Medal.tsx`): `tier`, `size` (altura, padrão 96), `glow?`, `className?`. Os ids de gradiente são únicos por instância (`useId`), então várias medalhas na mesma tela não colidem. Supremo é mais largo (160:120). Também exporta `MedalPlaceholder` (semana sem medalha) e `MEDAL_LABEL`.
+- `LevelBar` (`game/LevelBar.tsx`): `level`, `into`, `needed`, `compact?`. É um `role="progressbar"` e a barra anima por transição CSS.
+- `XpPop` (`game/XpPop.tsx`): `amount`, `onDone`. Pílula "+N XP" com `aria-live="polite"`, em posição absoluta (use um pai `relative`); chama `onDone` após cerca de 900 ms. Com movimento reduzido, não sobe.
+- Keyframes em `styles.css`: `xp-pop`, `medal-in` (classe `.medal-in`) e `rays-spin` (classe `.rays-spin`).
+- Ícones novos: `ArrowDownIcon`, `EqualIcon`, `ArrowUpIcon`, `TrophyIcon`, `StarIcon`, `SparklesIcon`, `ChevronsUpIcon`.

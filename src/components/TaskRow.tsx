@@ -1,6 +1,8 @@
 import type { TaskStatus } from "../../shared/status";
 import type { Task } from "../../shared/types";
 import { AreaTag } from "./ui/AreaTag";
+import { XP_BY_DIFFICULTY } from "../../shared/xp";
+import { DifficultyTag } from "./ui/DifficultyTag";
 import { CheckIcon } from "./ui/Icon";
 
 interface Props {
@@ -59,9 +61,14 @@ export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
         >
           {task.title}
         </span>
-        {(task.area || timeText || origin) && (
+        {(
           <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-meta text-muted">
             {task.area && <AreaTag area={task.area} muted={done} />}
+            <DifficultyTag difficulty={task.difficulty} />
+            <span data-testid="task-xp" className={done ? "font-semibold" : ""}>
+              {done ? "+" : ""}
+              {XP_BY_DIFFICULTY[task.difficulty]} XP
+            </span>
             {timeText && <span className={bad ? "font-semibold text-danger-ink" : ""}>{timeText}</span>}
             {origin && <span>{origin}</span>}
           </span>

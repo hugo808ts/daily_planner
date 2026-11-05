@@ -4,7 +4,7 @@ import type { Task } from "../../shared/types";
 
 const now = new Date("2026-10-28T18:00:00-03:00");
 const mk = (p: Partial<Task>): Task => ({
-  id: "x", title: "t", date: "2026-10-28", time: null, area: null, doneAt: null,
+  id: "x", title: "t", date: "2026-10-28", time: null, area: null, difficulty: "medium", doneAt: null,
   movedFromId: null, createdAt: "", updatedAt: "", ...p,
 });
 const tasks = [

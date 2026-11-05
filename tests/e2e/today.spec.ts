@@ -15,7 +15,7 @@ const SUNDAY = addDays(TODAY, 4);
 const dayButton = (page: Page, weekday: string) =>
   page.getByRole("navigation", { name: "Dias da semana" }).getByRole("button", { name: new RegExp(`^${weekday}`) });
 
-type Seed = { title: string; date: string; time?: string; area?: string };
+type Seed = { title: string; date: string; time?: string; area?: string; difficulty?: string };
 
 async function seed(request: APIRequestContext, input: Seed, done = false) {
   const res = await request.post("/api/tasks", { data: input });
@@ -96,7 +96,7 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
     const sheet = page.getByRole("dialog");
     await expect(sheet).toBeVisible();
     // Tarefa não feita: a data não se edita no formulário, só pela ação de levar.
-    await expect(sheet.getByLabel("Dia")).toHaveCount(0);
+    await expect(sheet.getByLabel("Dia", { exact: true })).toHaveCount(0);
     await sheet.getByRole("button", { name: "Levar para outro dia" }).click();
     await sheet.getByRole("button", { name: shortDay(FRIDAY) }).click();
     await expect(sheet).toBeHidden();
@@ -183,7 +183,71 @@ test("marcar como feita ignora toques enquanto salva e volta ao estado anterior 
   fail = true;
   await box.click();
   await expect(box).toHaveAttribute("aria-checked", "false"); // otimista
-  await expect(page.getByRole("status")).toContainText("Falhou.");
+  await expect(page.getByRole("status").filter({ hasText: "Falhou." })).toBeVisible();
   await expect(box).toHaveAttribute("aria-checked", "true"); // volta ao de antes do toque
   expect(patches).toBe(2);
+});
+
+test("Hoje: nível, medalha da semana, dificuldade, +XP ao marcar e seletor no editor", async ({ page, request }) => {
+  const high = await seed(request, { title: "Fechar relatório de XP", date: TODAY, area: "work", difficulty: "high" });
+  await seed(request, { title: "Comprar presente XP", date: TODAY, difficulty: "low" });
+  await seed(request, { title: "Estudar Física XP", date: TODAY });
+
+  await page.clock.install({ time: NOW });
+  await fakeServerToday(page);
+  await page.goto("/");
+
+  // Os cartões de nível e medalha saíram do Hoje: só a pílula compacta no botão do resumo.
+  const pill = page.getByRole("button", { name: /^Resumo da semana — Nível \d+, \d+ XP, / });
+  await expect(page.getByRole("progressbar", { name: /Nível/ })).toHaveCount(0);
+  await expect(page.getByTestId("week-chip")).toHaveCount(0);
+  await expect(pill).toContainText(/Nv \d+ · \d+ XP/);
+  await expect(pill).toHaveAccessibleName(/Semana (sem medalha|em )/);
+
+  const r = row(page, "Fechar relatório de XP");
+  await expect(r).toContainText("Alta");
+  await expect(r.getByTestId("task-xp")).toHaveText("50 XP");
+  await expect(row(page, "Comprar presente XP").getByTestId("task-xp")).toHaveText("10 XP");
+  await expect(row(page, "Estudar Física XP").getByTestId("task-xp")).toHaveText("25 XP");
+
+  await test.step("marcar como feita mostra +50 XP e atualiza a medalha", async () => {
+    await page.getByRole("checkbox", { name: /Fechar relatório de XP/ }).click();
+    await expect(page.getByRole("status").filter({ hasText: "+50 XP" })).toBeVisible();
+    await expect(r.getByTestId("task-xp")).toHaveText("+50 XP");
+    await expect(pill).toHaveAccessibleName(/Semana em (Bronze|Prata|Ouro|Diamante|Supremo)/);
+  });
+
+  await test.step("desmarcar não mostra pop e devolve o XP", async () => {
+    await page.waitForTimeout(1000);
+    await page.getByRole("checkbox", { name: /Desfazer conclusão: Fechar relatório de XP/ }).click();
+    await expect(page.getByRole("status").filter({ hasText: "+" })).toHaveCount(0);
+  });
+
+  await test.step("editor troca a dificuldade com as setas", async () => {
+    await row(page, "Estudar Física XP").getByRole("button", { name: /Estudar Física XP/ }).click();
+    const radios = page.getByRole("radiogroup", { name: "Dificuldade" }).getByRole("radio");
+    await expect(radios.nth(1)).toHaveAttribute("aria-checked", "true");
+    await radios.nth(1).focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(radios.nth(2)).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("button", { name: "Salvar", exact: true }).click();
+    await expect(row(page, "Estudar Física XP").getByTestId("task-xp")).toHaveText("50 XP");
+  });
+  expect(high.id).toBeTruthy();
+});
+
+test("Hoje: tarefas do dia ordenadas por dificuldade (Alta, Média, Baixa)", async ({ page, request }) => {
+  await seed(request, { title: "Ordem baixa", date: TODAY, time: "08:00", difficulty: "low" });
+  await seed(request, { title: "Ordem alta", date: TODAY, time: "18:00", difficulty: "high" });
+  await seed(request, { title: "Ordem média", date: TODAY, difficulty: "medium" });
+
+  await page.clock.install({ time: NOW });
+  await fakeServerToday(page);
+  await page.goto("/");
+
+  const titles = page.getByRole("listitem").filter({ hasText: /^Ordem / });
+  await expect(titles).toHaveCount(3);
+  await expect(titles.nth(0)).toContainText("Ordem alta");
+  await expect(titles.nth(1)).toContainText("Ordem média");
+  await expect(titles.nth(2)).toContainText("Ordem baixa");
 });

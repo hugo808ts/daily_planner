@@ -7,12 +7,15 @@ import { ScoreBar, ScoreText } from "../components/ScoreBar";
 import { TaskList } from "../components/TaskList";
 import { TaskSheet } from "../components/TaskSheet";
 import { showToast } from "../components/Toast";
+import { XP_BY_DIFFICULTY } from "../../shared/xp";
+import { ProgressPill } from "../components/game/ProgressPill";
+import { XpPop } from "../components/game/XpPop";
 import { Button } from "../components/ui/Button";
-import { ReportIcon } from "../components/ui/Icon";
 import { WeekStrip } from "../components/WeekStrip";
 import { api, ApiError, type MoveResult } from "../lib/api";
 import { dayPhrase, longDate } from "../lib/format";
 import { useNow } from "../lib/useNow";
+import { notifyProgressChanged, useProgress } from "../lib/useProgress";
 import { useWeek } from "../lib/useWeek";
 
 const errorMessage = (e: unknown) => (e instanceof ApiError ? e.message : "Algo deu errado. Tente de novo.");
@@ -41,6 +44,8 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
   const [picked, setPicked] = useState<string | null>(null);
   const selected = picked && days.includes(picked) ? picked : today;
   const { data, error, reload, setTask, removeTask, setNote } = useWeek(days[0]);
+  const { progress, refresh: refreshProgress } = useProgress(days[0]);
+  const [pop, setPop] = useState<{ key: number; amount: number } | null>(null);
   const [editing, setEditing] = useState<Task | null>(null);
   /** Tarefas com PATCH de feita/não feita em andamento: toques repetidos são ignorados. */
   const toggling = useRef(new Set<string>());
@@ -55,6 +60,14 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
   const title = formatDayTitle(selected, today);
   const relative = title === "Hoje" || title === "Amanhã" || title === "Ontem";
 
+  /** Recarrega nível e medalha; avisa se o nível subiu por causa de uma tarefa feita. */
+  const afterChange = async (celebrate = false) => {
+    const before = progress?.level;
+    const p = await refreshProgress();
+    notifyProgressChanged();
+    if (celebrate && p && before !== undefined && p.level > before) showToast(`Subiu para o nível ${p.level}!`);
+  };
+
   const toggle = async (task: Task) => {
     if (toggling.current.has(task.id)) return;
     toggling.current.add(task.id);
@@ -62,6 +75,8 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
     setTask({ ...task, doneAt: done ? new Date().toISOString() : null });
     try {
       setTask(await api.updateTask(task.id, { done }));
+      if (done) setPop({ key: Date.now(), amount: XP_BY_DIFFICULTY[task.difficulty] });
+      void afterChange(done);
     } catch (e) {
       setTask(task); // volta ao estado de antes do toque
       showToast(errorMessage(e));
@@ -78,6 +93,7 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
       } else {
         setTask((await api.moveTask(result.task.id, from.date)).task);
       }
+      void afterChange();
     } catch (e) {
       showToast(errorMessage(e));
     }
@@ -86,6 +102,7 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
   const onMoved = (result: MoveResult, from: Task) => {
     setTask(result.task);
     setEditing(null);
+    void afterChange();
     const where = dayPhrase(result.task.date, today);
     showToast(result.copied ? `Cópia criada para ${where}` : `Levada para ${where}`, {
       label: "Desfazer",
@@ -98,12 +115,14 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
     setTask(task);
     setEditing(null);
     if (moved) showToast(`Levada para ${dayPhrase(task.date, today)}`);
+    void afterChange();
   };
 
   const onDeleted = (task: Task) => {
     removeTask(task.id);
     setEditing(null);
     showToast("Tarefa excluída");
+    void afterChange();
   };
 
   return (
@@ -111,21 +130,14 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
       <div className="mb-1 flex min-h-11 items-center justify-between gap-3">
         <span className="font-display text-base font-semibold text-ink capitalize">{monthName(selected)}</span>
         {onOpenReport && !wide && !isSunday(today) && (
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<ReportIcon size={16} />}
-            className="rounded-full!"
-            onClick={() => onOpenReport(addDays(days[0], -7))}
-          >
-            Resumo da semana
-          </Button>
+          <ProgressPill progress={progress} onClick={() => onOpenReport(addDays(days[0], -7))} />
         )}
       </div>
       {onOpenReport && isSunday(today) && <SundayCard onOpen={() => onOpenReport(days[0])} />}
       <WeekStrip days={days} today={today} selected={selected} tasks={tasks} now={now} onSelect={setPicked} />
 
-      <header className="mt-5 mb-3">
+      <header className="relative mt-5 mb-3">
+        {pop && <XpPop key={pop.key} amount={pop.amount} onDone={() => setPop(null)} />}
         <div className="flex items-end justify-between gap-3">
           <h1 className="font-display text-[28px] leading-tight font-semibold tracking-[-0.01em]">{title}</h1>
           <ScoreText tasks={dayTasks} now={now} />

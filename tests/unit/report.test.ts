@@ -6,7 +6,7 @@ const SUNDAY = new Date("2026-11-01T09:00:00-03:00");
 const START = "2026-10-26";
 let n = 0;
 const mk = (p: Partial<Task>): Task => ({
-  id: `t${n++}`, title: "t", date: START, time: null, area: null, doneAt: null,
+  id: `t${n++}`, title: "t", date: START, time: null, area: null, difficulty: "medium", doneAt: null,
   movedFromId: null, createdAt: "", updatedAt: "", ...p,
 });
 const done = "2026-10-27T10:00:00-03:00";
@@ -65,5 +65,33 @@ describe("computeWeekReport", () => {
     const r = computeWeekReport([], START, SUNDAY);
     expect(r.percent).toBeNull();
     expect(r.perDay).toHaveLength(6);
+    expect(r).toMatchObject({ xp: 0, medal: null, bestDay: null, byDifficulty: { low: 0, medium: 0, high: 0 } });
+  });
+
+  it("XP, medalha, feitas por dificuldade e melhor dia (domingo e não feitas fora)", () => {
+    const tasks = [
+      mk({ date: "2026-10-26", difficulty: "high", doneAt: done }), // 50
+      mk({ date: "2026-10-26", difficulty: "low", doneAt: done }), // 10
+      mk({ date: "2026-10-28", difficulty: "high", doneAt: done }), // 50
+      mk({ date: "2026-10-28", difficulty: "medium", doneAt: done }), // 25
+      mk({ date: "2026-10-30", difficulty: "medium", doneAt: done }), // 25
+      mk({ date: "2026-10-30", difficulty: "high" }), // não feita
+      mk({ date: "2026-11-01", difficulty: "high", doneAt: done }), // domingo
+    ];
+    const r = computeWeekReport(tasks, START, SUNDAY);
+    expect(r.xp).toBe(160);
+    expect(r.medal).toBe("prata");
+    expect(r.byDifficulty).toEqual({ low: 1, medium: 2, high: 2 });
+    expect(r.bestDay).toBe("2026-10-28");
+  });
+
+  it("melhor dia: empate fica com o primeiro", () => {
+    const r = computeWeekReport(
+      [mk({ date: "2026-10-29", doneAt: done }), mk({ date: "2026-10-27", doneAt: done })],
+      START,
+      SUNDAY,
+    );
+    expect(r.bestDay).toBe("2026-10-27");
+    expect(r.medal).toBe("bronze");
   });
 });

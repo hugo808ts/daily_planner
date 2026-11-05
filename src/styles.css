@@ -35,6 +35,18 @@
   --tabbar-h: 57px;
   /* Espaço no fim da rolagem para barra de abas + captura fixas (celular). */
   --fixed-bars-h: calc(var(--tabbar-h) + 72px + env(safe-area-inset-bottom));
+  /* Jogo: dificuldade (texto AA sobre o fundo do chip) e selo de nível. */
+  --diff-low-ink: #1e7a55; /* 4,9:1 sobre --diff-low-bg */
+  --diff-low-bg: #e3f5ec;
+  --diff-medium-ink: #8a5a00; /* 5,2:1 sobre --diff-medium-bg */
+  --diff-medium-bg: #fff2d6;
+  --diff-high-ink: #b02a30; /* 5,5:1 sobre --diff-high-bg */
+  --diff-high-bg: #fde8e8;
+  --level-from: #8a6cff;
+  --level-to: #4b2fd6;
+  --level-track: #e6e1f2;
+  --level-fill-from: #6d4aff;
+  --level-fill-to: #a58bff;
   color-scheme: light dark;
 }
 
@@ -62,6 +74,13 @@
     --personal: #ff7aab;
     --personal-ink: #ff7aab; /* 6,7:1 */
     --accent-fill: #6b4ff5;
+    --diff-low-ink: #5fd9a5; /* 8:1 sobre --diff-low-bg */
+    --diff-low-bg: #17372b;
+    --diff-medium-ink: #f5c04a; /* 8,6:1 sobre --diff-medium-bg */
+    --diff-medium-bg: #3b2e10;
+    --diff-high-ink: #ff9a9e; /* 7,2:1 sobre --diff-high-bg */
+    --diff-high-bg: #3d1f24;
+    --level-track: #2e2942;
   }
 }
 
@@ -236,6 +255,50 @@
     max-width: 440px;
     border-radius: 24px;
   }
+}
+/* Jogo: chips de dificuldade, selo/barra de nível e animações. */
+.diff-low { color: var(--diff-low-ink); background: var(--diff-low-bg); }
+.diff-medium { color: var(--diff-medium-ink); background: var(--diff-medium-bg); }
+.diff-high { color: var(--diff-high-ink); background: var(--diff-high-bg); }
+.level-badge {
+  background: linear-gradient(160deg, var(--level-from), var(--level-to));
+  box-shadow: inset 0 1px 0 #ffffff55, 0 4px 10px -4px var(--accent);
+  color: #fff;
+}
+.level-track { background: var(--level-track); }
+.level-fill {
+  background: linear-gradient(90deg, var(--level-fill-from), var(--level-fill-to));
+  transition: width 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.xp-pop {
+  background: linear-gradient(180deg, #8a6cff, #6d4aff);
+  color: #fff;
+  box-shadow: 0 4px 12px -4px #6d4aff;
+  animation: xp-pop 900ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.medal-in { animation: medal-in 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.rays-spin { animation: rays-spin 40s linear infinite; }
+@keyframes xp-pop {
+  0% { transform: translateY(6px) scale(0.8); opacity: 0; }
+  20% { transform: translateY(0) scale(1.08); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateY(-26px) scale(1); opacity: 0; }
+}
+@keyframes medal-in {
+  from { transform: scale(0.3) rotate(-24deg); opacity: 0; }
+  to { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes rays-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes xp-pop-still {
+  0%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* XpPop: aparece e some no lugar, sem deslocamento (!important vence o bloco global que zera a duração). */
+  .xp-pop { animation-name: xp-pop-still; animation-duration: 900ms !important; }
+  .rays-spin { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sheet-dialog[open] {

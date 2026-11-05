@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { addDays, isSunday, todayISO, weekStart } from "../../shared/dates";
-import type { ReportTask, WeekReport } from "../../shared/types";
+import type { ReportTask } from "../../shared/types";
 import { showToast } from "../components/Toast";
 import { Button } from "../components/ui/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from "../components/ui/Icon";
 import { WeekReportView } from "../components/WeekReportView";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, type ReportData } from "../lib/api";
 import { dayPhrase } from "../lib/format";
 
 const rangeFmt = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", timeZone: "UTC" });
@@ -21,7 +21,7 @@ interface Props {
 export function Report({ start: initial, onClose, onMoved }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [start, setStart] = useState(initial);
-  const [report, setReport] = useState<WeekReport | null>(null);
+  const [data, setData] = useState<ReportData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const currentWeek = weekStart(todayISO());
 
@@ -31,10 +31,10 @@ export function Report({ start: initial, onClose, onMoved }: Props) {
   }, []);
 
   const load = useCallback(async (s: string) => {
-    setReport(null);
+    setData(null);
     setError(null);
     try {
-      setReport(await api.report(s));
+      setData(await api.reportData(s));
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Não foi possível carregar o resumo.");
     }
@@ -57,8 +57,16 @@ export function Report({ start: initial, onClose, onMoved }: Props) {
       await api.moveTask(task.id, target);
       showToast(`Levada para ${dayPhrase(target, today)}`);
       onMoved?.();
-      setReport((r) =>
-        r ? { ...r, notDoneTasks: r.notDoneTasks.map((t) => (t.id === task.id ? { ...t, movedTo: true } : t)) } : r,
+      setData((d) =>
+        d
+          ? {
+              ...d,
+              report: {
+                ...d.report,
+                notDoneTasks: d.report.notDoneTasks.map((t) => (t.id === task.id ? { ...t, movedTo: true } : t)),
+              },
+            }
+          : d,
       );
     } catch (e) {
       showToast(e instanceof ApiError ? e.message : "Algo deu errado. Tente de novo.");
@@ -98,12 +106,12 @@ export function Report({ start: initial, onClose, onMoved }: Props) {
               Tentar de novo
             </Button>
           </div>
-        ) : !report ? (
+        ) : !data ? (
           <div role="status" aria-busy="true" className="h-40 rounded-[18px] bg-ink/[0.04] motion-safe:animate-pulse">
             <span className="sr-only">Carregando…</span>
           </div>
         ) : (
-          <WeekReportView report={report} onMove={(t) => void move(t)} />
+          <WeekReportView report={data.report} previousXp={data.previousXp} level={data.level} onMove={(t) => void move(t)} />
         )}
 
         <div className="mt-4 flex justify-between">

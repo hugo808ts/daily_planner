@@ -2,11 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { DayNote, Task } from "../../shared/types";
 import { api, ApiError, type WeekData } from "./api";
 
-/** Mesma ordem do servidor: data, horário (sem horário por último), criação. */
+const RANK: Record<Task["difficulty"], number> = { high: 0, medium: 1, low: 2 };
+
+/** Data, dificuldade (Alta, Média, Baixa), horário (sem horário por último), criação. */
 export function sortTasks(tasks: Task[]): Task[] {
   return [...tasks].sort(
     (a, b) =>
       a.date.localeCompare(b.date) ||
+      RANK[a.difficulty] - RANK[b.difficulty] ||
       (a.time ?? "99:99").localeCompare(b.time ?? "99:99") ||
       a.createdAt.localeCompare(b.createdAt),
   );
@@ -23,7 +26,7 @@ export function useWeek(start: string) {
     try {
       const week = await api.week(requested);
       if (current.current !== requested) return;
-      setData(week);
+      setData({ ...week, tasks: sortTasks(week.tasks) });
       setError(null);
     } catch (e) {
       if (current.current !== requested) return;

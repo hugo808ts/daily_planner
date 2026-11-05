@@ -225,6 +225,7 @@ export function Ideas({ captured, onTaskSaved, wide = false }: Props) {
         time: null,
         area: null,
         folderId: null,
+        difficulty: "medium",
         source: "rules",
       }}
       onClose={() => setConverting(null)}

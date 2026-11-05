@@ -14,6 +14,7 @@ describe("parseCapture", () => {
       time: "10:00",
       area: "work",
       folderId: null,
+      difficulty: "high",
       source: "rules",
     });
   });
@@ -66,8 +67,19 @@ describe("parseCapture", () => {
       time: null,
       area: null,
       folderId: null,
+      difficulty: "low",
       source: "rules",
     });
+  });
+  it("infers difficulty from keywords", () => {
+    expect(parse("prova de cálculo sexta").difficulty).toBe("high");
+    expect(parse("entregar o projeto amanhã").difficulty).toBe("high");
+    expect(parse("preciso fazer isso, é urgente").difficulty).toBe("high");
+    expect(parse("ligar pro dentista").difficulty).toBe("low");
+    expect(parse("responder o e-mail rapidinho").difficulty).toBe("low");
+    expect(parse("comprar presente para entrega").difficulty).toBe("high");
+    expect(parse("estudar cálculo").difficulty).toBe("medium");
+    expect(parse("ideia: prova surpresa").difficulty).toBe("medium");
   });
   it("first area keyword wins", () => {
     expect(parse("academia depois da reunião").area).toBe("personal");
@@ -87,6 +99,7 @@ describe("parseCapture", () => {
       time: null,
       area: null,
       folderId: null,
+      difficulty: "medium",
       source: "rules",
     });
   });
