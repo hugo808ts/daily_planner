@@ -4,7 +4,10 @@ import { TASK_TITLE_MAX } from "../../shared/limits";
 import { taskStatus } from "../../shared/status";
 import type { Area, Task } from "../../shared/types";
 import { api, ApiError, type MoveResult, type TaskPatch } from "../lib/api";
-import { AREAS, onDay, shortDay } from "../lib/format";
+import { onDay, shortDay } from "../lib/format";
+import { AREA_ORDER, AreaTag } from "./ui/AreaTag";
+import { Button } from "./ui/Button";
+import { CloseIcon, TrashIcon } from "./ui/Icon";
 
 interface Props {
   task: Task;
@@ -19,12 +22,14 @@ interface Props {
 type Mode = "edit" | "move";
 
 const FIELD =
-  "block w-full rounded-xl border border-line bg-bg px-3 py-2.5 text-ink focus:border-accent focus:outline-none aria-invalid:border-danger";
+  "block w-full rounded-xl border border-line bg-bg px-3 py-2.5 text-ink focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent aria-invalid:border-danger";
 const LABEL = "mb-1 block text-sm font-medium";
+const AREA_OPTIONS: (Area | null)[] = [...AREA_ORDER, null];
 
 /** Folha inferior para editar, levar para outro dia ou excluir uma tarefa. */
 export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDeleted }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const chips = useRef<(HTMLButtonElement | null)[]>([]);
   const status = taskStatus(task, now);
   const notDone = status === "not_done";
   const done = status === "done";
@@ -40,11 +45,31 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
   const [other, setOther] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fields, setFields] = useState<Record<string, string>>({});
+  /** "Descartar alterações?" ao tentar fechar com edições não salvas. */
+  const [askDiscard, setAskDiscard] = useState(false);
 
   useEffect(() => {
     const d = dialog.current;
     if (d && !d.open) d.showModal();
   }, []);
+
+  const dirty =
+    title !== task.title ||
+    (!notDone && date !== task.date) ||
+    time !== (task.time ?? "") ||
+    area !== task.area ||
+    other !== "";
+  const requestClose = () => (dirty ? setAskDiscard(true) : onClose());
+
+  const onAreaKey = (e: React.KeyboardEvent, i: number) => {
+    const step =
+      e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    const next = (i + step + AREA_OPTIONS.length) % AREA_OPTIONS.length;
+    setArea(AREA_OPTIONS[next]);
+    chips.current[next]?.focus();
+  };
 
   const fail = (e: unknown) => {
     if (e instanceof ApiError) {
@@ -116,10 +141,10 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
       aria-labelledby="task-sheet-title"
       onCancel={(e) => {
         e.preventDefault();
-        onClose();
+        requestClose();
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) requestClose();
       }}
     >
       <div className="px-5 pt-2" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}>
@@ -128,39 +153,49 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
           <h2 id="task-sheet-title" className="font-display text-xl font-semibold">
             {mode === "edit" ? "Editar tarefa" : "Levar para outro dia"}
           </h2>
-          <button
-            type="button"
-            onClick={mode === "edit" ? onClose : () => setMode("edit")}
-            className="-mr-2 rounded-xl px-3 text-sm text-muted active:bg-ink/5"
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={mode === "edit" ? <CloseIcon size={16} /> : undefined}
+            className="-mr-2 text-muted"
+            onClick={mode === "edit" ? requestClose : () => setMode("edit")}
           >
             {mode === "edit" ? "Fechar" : "Voltar"}
-          </button>
+          </Button>
         </div>
 
+        {askDiscard && (
+          <div role="alert" className="mb-3 rounded-xl bg-note p-3 text-note-ink">
+            <p className="mb-2 text-sm font-medium">Descartar as alterações que você fez?</p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setAskDiscard(false)}>
+                Continuar editando
+              </Button>
+              <Button variant="secondary" size="sm" onClick={onClose}>
+                Descartar
+              </Button>
+            </div>
+          </div>
+        )}
+
         {error && (
-          <p role="alert" className="mb-3 rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger-ink">
+          <p role="alert" className="mb-3 rounded-xl bg-danger-soft px-3 py-2 text-sm text-danger-ink">
             {error}
           </p>
         )}
 
         {mode === "move" ? (
           <div>
-            <p className="mb-3 text-sm text-muted">
+            <p className="mb-3 text-sm text-muted break-words">
               {notDone
                 ? `“${task.title}” continua como não feita ${onDay(task.date, today)}. Uma cópia vai para o dia escolhido.`
                 : `“${task.title}” muda de dia.`}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {moveDays.map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void move(d)}
-                  className="rounded-xl bg-accent/10 px-2 text-sm font-medium text-accent active:bg-accent/20 disabled:opacity-50"
-                >
+                <Button key={d} variant="secondary" disabled={busy} onClick={() => void move(d)} className="px-2">
                   {dayLabel(d)}
-                </button>
+                </Button>
               ))}
             </div>
             <label htmlFor="move-other" className={`${LABEL} mt-4`}>
@@ -169,6 +204,8 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
             <div className="flex gap-2">
               <input
                 id="move-other"
+                name="move-other"
+                autoComplete="off"
                 type="date"
                 min={today}
                 value={other}
@@ -176,14 +213,9 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
                 onChange={(e) => setOther(e.target.value)}
                 className={`${FIELD} min-w-0 flex-1`}
               />
-              <button
-                type="button"
-                disabled={busy || !other || other === task.date}
-                onClick={() => void move(other)}
-                className="shrink-0 rounded-xl bg-accent-fill px-4 text-sm font-semibold text-on-accent active:opacity-85 disabled:opacity-40"
-              >
+              <Button variant="primary" disabled={busy || !other || other === task.date} onClick={() => void move(other)}>
                 Mover
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -201,6 +233,8 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
               </label>
               <input
                 id="task-title"
+                name="title"
+                autoComplete="off"
                 value={title}
                 maxLength={TASK_TITLE_MAX}
                 enterKeyHint="done"
@@ -224,6 +258,8 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
                   </label>
                   <input
                     id="task-date"
+                    name="date"
+                    autoComplete="off"
                     type="date"
                     value={date}
                     required
@@ -240,6 +276,8 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
                 </label>
                 <input
                   id="task-time"
+                  name="time"
+                  autoComplete="off"
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
@@ -251,63 +289,58 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
             </div>
             {notDone && (
               <p className="text-sm text-muted">
-                Ficou como não feita {onDay(task.date, today)}. Para fazer em outro dia, use
-                “Levar para outro dia”.
+                Ficou como não feita {onDay(task.date, today)}. Para fazer em outro dia, use “Levar para outro dia”.
               </p>
             )}
 
             <fieldset>
               <legend className={LABEL}>Área</legend>
               <div role="radiogroup" aria-label="Área" className="flex flex-wrap gap-2">
-                {[...AREAS, { value: null, label: "Sem área", emoji: "" }].map((a) => {
-                  const on = area === a.value;
+                {AREA_OPTIONS.map((value, i) => {
+                  const on = area === value;
                   return (
                     <button
-                      key={a.label}
+                      key={value ?? "none"}
+                      ref={(el) => {
+                        chips.current[i] = el;
+                      }}
                       type="button"
                       role="radio"
                       aria-checked={on}
-                      onClick={() => setArea(a.value)}
-                      className={`rounded-xl px-3 text-sm transition-colors duration-150 ${
-                        on ? "bg-ink text-bg" : "bg-ink/[0.06] text-ink active:bg-ink/10"
+                      tabIndex={on ? 0 : -1}
+                      onClick={() => setArea(value)}
+                      onKeyDown={(e) => onAreaKey(e, i)}
+                      className={`inline-flex min-h-11 items-center rounded-xl border px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                        on
+                          ? "border-accent bg-accent-soft text-ink"
+                          : "border-line bg-bg text-ink hover:border-dot hover:bg-accent-soft/50"
                       }`}
                     >
-                      {a.emoji && <span aria-hidden>{a.emoji} </span>}
-                      {a.label}
+                      {value ? <AreaTag area={value} className="text-ink!" /> : "Sem área"}
                     </button>
                   );
                 })}
               </div>
             </fieldset>
 
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-2xl bg-accent-fill font-semibold text-on-accent active:opacity-85 disabled:opacity-60"
-            >
+            <Button type="submit" variant="primary" busy={busy} busyLabel="Salvando…" className="w-full">
               Salvar
-            </button>
+            </Button>
             <div className="flex gap-2">
               {!done && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => setMode("move")}
-                  className="flex-1 rounded-2xl bg-accent/10 text-sm font-semibold text-accent active:bg-accent/20"
-                >
+                <Button variant="secondary" disabled={busy} onClick={() => setMode("move")} className="flex-1 px-2">
                   Levar para outro dia
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
+              <Button
+                variant={confirmDelete ? "primary" : "danger"}
                 disabled={busy}
+                icon={confirmDelete ? undefined : <TrashIcon size={16} />}
                 onClick={() => void remove()}
-                className={`flex-1 rounded-2xl text-sm font-semibold transition-colors duration-150 ${
-                  confirmDelete ? "bg-danger-fill text-on-accent" : "bg-danger/10 text-danger-ink active:bg-danger/20"
-                }`}
+                className={`flex-1 px-2 ${confirmDelete ? "bg-danger-fill! enabled:hover:bg-danger-fill!" : ""}`}
               >
                 {confirmDelete ? "Confirmar exclusão" : "Excluir"}
-              </button>
+              </Button>
             </div>
           </form>
         )}

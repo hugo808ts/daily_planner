@@ -63,17 +63,19 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
   await test.step("tarefa com horário passado fica vermelha", async () => {
     const late = row(page, "Estudar Cálculo, cap. 4");
     await expect(late).toHaveAttribute("data-status", "overdue");
-    await expect(late).toContainText("passou do horário");
+    await expect(late).toContainText("14:00 · atrasada");
     await expect(row(page, "Jantar com a namorada")).toHaveAttribute("data-status", "pending");
-    await expect(page.getByTestId("score")).toHaveText("1 feita · 1 atrasada");
+    await expect(page.getByTestId("score")).toContainText(/1\sde\s\d+\sfeitas/);
+    await expect(page.getByTestId("score")).toContainText(/1\satrasada/);
   });
 
   await test.step("marcar como feita tira o vermelho e atualiza o placar", async () => {
     await page.getByRole("checkbox", { name: "Marcar como feita: Estudar Cálculo, cap. 4" }).click();
     const late = row(page, "Estudar Cálculo, cap. 4");
     await expect(late).toHaveAttribute("data-status", "done");
-    await expect(late).not.toContainText("passou do horário");
-    await expect(page.getByTestId("score")).toHaveText("2 feitas");
+    await expect(late).not.toContainText("atrasada");
+    await expect(page.getByTestId("score")).toContainText(/2\sde\s\d+\sfeitas/);
+    await expect(page.getByTestId("score")).not.toContainText("atrasada");
   });
 
   await test.step("tocar em outro dia mostra as tarefas dele", async () => {
@@ -168,7 +170,7 @@ test("marcar como feita ignora toques enquanto salva e volta ao estado anterior 
   });
   await page.goto("/");
 
-  const box = page.getByRole("checkbox", { name: "Marcar como feita: Pagar boleto" });
+  const box = page.getByRole("checkbox", { name: /Pagar boleto/ });
   await box.click();
   await box.click(); // segundo toque com o PATCH ainda no ar: ignorado
   await box.click();

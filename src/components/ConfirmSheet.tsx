@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { formatDayTitle, todayISO } from "../../shared/dates";
 import { FOLDER_NAME_MAX, IDEA_TITLE_MAX, TASK_TITLE_MAX } from "../../shared/limits";
 import type { Area, CaptureResult, Folder, Idea, Task } from "../../shared/types";
 import { api, ApiError } from "../lib/api";
-import { AREAS, areaInfo, shortDay } from "../lib/format";
+import { shortDay } from "../lib/format";
+import { FolderGlyph } from "./FolderGrid";
+import { FolderIconPicker } from "./FolderIconPicker";
+import { AREA_ORDER, AreaTag, areaMeta } from "./ui/AreaTag";
+import { Button } from "./ui/Button";
+import { CalendarIcon, CheckIcon, ClockIcon, FolderIcon, LightbulbIcon, PencilIcon, PlusIcon } from "./ui/Icon";
 
 export type SavedItem = { kind: "task"; task: Task } | { kind: "idea"; idea: Idea };
 
@@ -18,10 +23,18 @@ interface Props {
 type Field = "title" | "date" | "time" | "area" | "folder";
 
 const FIELD =
-  "block w-full rounded-xl border border-line bg-bg px-3 py-2.5 text-ink focus:border-accent focus:outline-none aria-invalid:border-danger";
+  "block w-full rounded-xl border border-line bg-bg px-3 py-2.5 text-ink focus-visible:border-accent aria-invalid:border-danger";
 const LABEL = "mb-1 block text-sm font-medium";
+const ERROR = "mt-1 text-sm text-danger-ink";
 const OPTION = (on: boolean) =>
-  `rounded-xl px-3 text-sm transition-colors duration-150 ${on ? "bg-ink text-bg" : "bg-ink/[0.06] text-ink active:bg-ink/10"}`;
+  `no-select inline-flex items-center gap-1.5 rounded-xl border px-3 text-sm transition-colors duration-150 motion-reduce:transition-none ${
+    on
+      ? "border-accent bg-accent-soft font-semibold text-accent-ink"
+      : "border-line bg-surface text-ink hover:border-dot active:bg-ink/5"
+  }`;
+
+/** Toque (sem mouse) abriria o teclado e cobriria a folha: autoFocus só com ponteiro fino. */
+const canAutoFocus = () => typeof window !== "undefined" && !window.matchMedia("(pointer: coarse)").matches;
 
 /** "Amanhã" + "qui 29", ou "Sexta" + "30 out". */
 function dayParts(date: string, today: string): [string, string] {
@@ -38,15 +51,33 @@ function Chip({ label, open, onClick, children }: { label: string; open: boolean
       aria-label={label}
       aria-expanded={open}
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 text-sm transition-colors duration-150 active:bg-ink/5 ${
-        open ? "border-accent bg-accent/5" : "border-line"
+      className={`no-select inline-flex max-w-full items-center gap-1.5 rounded-xl border px-3 text-sm transition-colors duration-150 hover:border-dot active:bg-ink/5 motion-reduce:transition-none ${
+        open ? "border-accent bg-accent-soft" : "border-line bg-surface"
       }`}
     >
       {children}
-      <span aria-hidden className="ml-0.5 text-xs opacity-40">
-        ✎
-      </span>
+      <PencilIcon size={12} className="ml-0.5 opacity-50" />
     </button>
+  );
+}
+
+/** Grupo de opções com seta ←/→/↑/↓ movendo a escolha (padrão WAI-ARIA de radiogroup). */
+function RadioGroup({ label, className, children }: { label: string; className: string; children: ReactNode }) {
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const dir = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+    if (!dir) return;
+    const radios = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+    const at = radios.indexOf(document.activeElement as HTMLButtonElement);
+    if (at < 0) return;
+    e.preventDefault();
+    const next = radios[(at + dir + radios.length) % radios.length];
+    next.focus();
+    next.click();
+  };
+  return (
+    <div role="radiogroup" aria-label={label} onKeyDown={onKeyDown} className={className}>
+      {children}
+    </div>
   );
 }
 
@@ -66,7 +97,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
   const [foldersTry, setFoldersTry] = useState(0);
   const [newFolder, setNewFolder] = useState(false);
   const [folderName, setFolderName] = useState("");
-  const [folderEmoji, setFolderEmoji] = useState("");
+  const [folderIcon, setFolderIcon] = useState<string | null>(null);
   const [open, setOpen] = useState<Field | "all" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -123,13 +154,13 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
         setFields({ name: "Dê um nome à pasta." });
         return;
       }
-      const folder = await api.createFolder({ name: folderName, emoji: folderEmoji.trim() || null });
+      const folder = await api.createFolder({ name: folderName, emoji: folderIcon });
       // Se a ideia falhar depois, a pasta já existe e fica escolhida (sem duplicar ao tentar de novo).
       setFolders((list) => [...(list ?? []), folder]);
       setFolderId(folder.id);
       setNewFolder(false);
       setFolderName("");
-      setFolderEmoji("");
+      setFolderIcon(null);
       target = folder.id;
     }
     if (!target) {
@@ -159,8 +190,9 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
     }
   };
 
-  const switchKind = () => {
-    setKind((k) => (k === "task" ? "idea" : "task"));
+  const chooseKind = (k: typeof kind) => {
+    if (k === kind) return;
+    setKind(k);
     setOpen(null);
     setFields({});
     setError(null);
@@ -169,6 +201,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
   const folder = folders?.find((f) => f.id === folderId) ?? null;
   const [dayStrong, dayRest] = dayParts(date, today);
   const titleMax = isTask ? TASK_TITLE_MAX : IDEA_TITLE_MAX;
+  const focusOk = canAutoFocus();
 
   return (
     <dialog
@@ -197,21 +230,34 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
         </h2>
         <div aria-hidden className="mx-auto mb-3 h-1 w-10 rounded-full bg-ink/15" />
 
-        {said && <p className="mb-3 text-sm text-muted italic">“{said}”</p>}
+        {said && <p className="mb-3 text-sm break-words text-pretty text-muted italic">“{said}”</p>}
 
-        <button
-          type="button"
-          aria-label={`Tipo: ${isTask ? "Tarefa" : "Ideia"}. Tocar para trocar`}
-          onClick={switchKind}
-          className={`mb-2 inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 ${
-            isTask ? "bg-accent/12 text-accent" : "bg-note text-note-ink"
-          }`}
-        >
-          <span>{isTask ? "✓ Tarefa" : "💡 Ideia"}</span>
-          <span aria-hidden className="text-xs font-normal opacity-60">
-            ⇄
-          </span>
-        </button>
+        <RadioGroup label="Tipo" className="mb-3 inline-flex rounded-xl bg-ink/[0.06] p-0.5">
+          {(
+            [
+              ["task", "Tarefa", CheckIcon],
+              ["idea", "Ideia", LightbulbIcon],
+            ] as const
+          ).map(([k, text, Icon]) => {
+            const on = kind === k;
+            return (
+              <button
+                key={k}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                tabIndex={on ? 0 : -1}
+                onClick={() => chooseKind(k)}
+                className={`no-select inline-flex min-h-10 items-center gap-1.5 rounded-[10px] px-3.5 text-[13.5px] font-semibold transition-colors duration-150 motion-reduce:transition-none ${
+                  on ? "bg-surface text-accent-ink shadow-sm" : "text-muted hover:text-ink"
+                }`}
+              >
+                <Icon size={16} />
+                {text}
+              </button>
+            );
+          })}
+        </RadioGroup>
 
         {show("title") ? (
           <div className="mb-3">
@@ -220,17 +266,19 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
             </label>
             <input
               id="confirm-title"
+              name="title"
+              autoComplete="off"
               value={title}
               maxLength={titleMax}
               enterKeyHint="done"
-              autoFocus={open === "title"}
+              autoFocus={focusOk && open === "title"}
               onChange={(e) => setTitle(e.target.value)}
               aria-invalid={fields.title ? true : undefined}
               aria-describedby={fields.title ? "confirm-title-error" : undefined}
               className={FIELD}
             />
             {fields.title && (
-              <p id="confirm-title-error" className="mt-1 text-sm text-danger-ink">
+              <p id="confirm-title-error" role="alert" className={ERROR}>
                 {fields.title}
               </p>
             )}
@@ -240,7 +288,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
             type="button"
             aria-label={`Título: ${title}. Tocar para editar`}
             onClick={() => toggle("title")}
-            className="mb-3 block w-full text-left text-lg leading-snug font-semibold active:opacity-70"
+            className="mb-3 block w-full text-left text-lg leading-snug font-semibold break-words text-pretty hover:text-accent-ink active:opacity-70"
           >
             {title}
           </button>
@@ -250,40 +298,29 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
           {isTask ? (
             <>
               <Chip label={`Dia: ${dayStrong}, ${dayRest}`} open={show("date")} onClick={() => toggle("date")}>
-                <span aria-hidden>📅</span>
+                <CalendarIcon size={16} />
                 <span>
                   <b className="font-semibold">{dayStrong}</b>, {dayRest}
                 </span>
               </Chip>
               <Chip label={`Horário: ${time || "sem horário"}`} open={show("time")} onClick={() => toggle("time")}>
-                <span aria-hidden>🕙</span>
+                <ClockIcon size={16} />
                 {time ? <b className="font-semibold">{time}</b> : <span className="text-muted">Sem horário</span>}
               </Chip>
               <Chip
-                label={`Área: ${area ? areaInfo(area).label : "sem área"}`}
+                label={`Área: ${area ? areaMeta(area).label : "sem área"}`}
                 open={show("area")}
                 onClick={() => toggle("area")}
               >
-                {area ? (
-                  <>
-                    <span aria-hidden>{areaInfo(area).emoji}</span>
-                    <b className="font-semibold">{areaInfo(area).label}</b>
-                  </>
-                ) : (
-                  <span className="text-muted">Sem área</span>
-                )}
+                {area ? <AreaTag area={area} className="font-semibold" /> : <span className="text-muted">Sem área</span>}
               </Chip>
             </>
           ) : foldersError ? (
-            <div role="alert" className="flex w-full items-center justify-between gap-2 rounded-xl bg-danger/10 py-1 pr-1 pl-3 text-sm text-danger-ink">
+            <div role="alert" className="flex w-full items-center justify-between gap-2 rounded-xl bg-danger-soft py-1 pr-1 pl-3 text-sm text-danger-ink">
               <span>Não foi possível carregar as pastas.</span>
-              <button
-                type="button"
-                onClick={() => setFoldersTry((n) => n + 1)}
-                className="shrink-0 rounded-xl px-3 font-semibold active:bg-danger/10"
-              >
+              <Button variant="danger" size="sm" onClick={() => setFoldersTry((n) => n + 1)}>
                 Tentar de novo
-              </button>
+              </Button>
             </div>
           ) : (
             !noFolders && (
@@ -292,9 +329,9 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
                 open={show("folder")}
                 onClick={() => toggle("folder")}
               >
-                <span aria-hidden>{folder?.emoji || "🗂"}</span>
+                <FolderGlyph folder={folder ?? { id: "", emoji: null }} size={20} plain />
                 {folder ? (
-                  <span>
+                  <span className="min-w-0 break-words">
                     Pasta: <b className="font-semibold">{folder.name}</b>
                   </span>
                 ) : (
@@ -312,14 +349,22 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
             </label>
             <input
               id="confirm-date"
+              name="date"
+              autoComplete="off"
               type="date"
               value={date}
+              min={today}
               required
               onChange={(e) => e.target.value && setDate(e.target.value)}
               aria-invalid={fields.date ? true : undefined}
+              aria-describedby={fields.date ? "confirm-date-error" : undefined}
               className={FIELD}
             />
-            {fields.date && <p className="mt-1 text-sm text-danger-ink">{fields.date}</p>}
+            {fields.date && (
+              <p id="confirm-date-error" role="alert" className={ERROR}>
+                {fields.date}
+              </p>
+            )}
           </div>
         )}
 
@@ -331,10 +376,13 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
             <div className="flex gap-2">
               <input
                 id="confirm-time"
+                name="time"
+                autoComplete="off"
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 aria-invalid={fields.time ? true : undefined}
+                aria-describedby={fields.time ? "confirm-time-error" : undefined}
                 className={`${FIELD} min-w-0 flex-1`}
               />
               {time && (
@@ -343,56 +391,70 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
                 </button>
               )}
             </div>
-            {fields.time && <p className="mt-1 text-sm text-danger-ink">{fields.time}</p>}
+            {fields.time && (
+              <p id="confirm-time-error" role="alert" className={ERROR}>
+                {fields.time}
+              </p>
+            )}
           </div>
         )}
 
         {isTask && show("area") && (
-          <div role="radiogroup" aria-label="Área" className="mb-4 flex flex-wrap gap-2">
-            {[...AREAS, { value: null, label: "Sem área", emoji: "" }].map((a) => (
-              <button
-                key={a.label}
-                type="button"
-                role="radio"
-                aria-checked={area === a.value}
-                onClick={() => setArea(a.value)}
-                className={OPTION(area === a.value)}
-              >
-                {a.emoji && <span aria-hidden>{a.emoji} </span>}
-                {a.label}
-              </button>
-            ))}
-          </div>
+          <RadioGroup label="Área" className="mb-4 flex flex-wrap gap-2">
+            {[...AREA_ORDER.map((a) => areaMeta(a)), null].map((m) => {
+              const value = m ? m.area : null;
+              const on = area === value;
+              return (
+                <button
+                  key={value ?? "none"}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  tabIndex={on ? 0 : -1}
+                  onClick={() => setArea(value)}
+                  className={OPTION(on)}
+                >
+                  {m && <m.Icon size={16} />}
+                  {m ? m.label : "Sem área"}
+                </button>
+              );
+            })}
+          </RadioGroup>
         )}
 
         {!isTask && !creatingFolder && show("folder") && folders && (
-          <div role="radiogroup" aria-label="Pasta" className="mb-4 flex flex-wrap gap-2">
-            {folders.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                role="radio"
-                aria-checked={folderId === f.id}
-                onClick={() => {
-                  setFolderId(f.id);
-                  setFields({});
-                }}
-                className={OPTION(folderId === f.id)}
-              >
-                {f.emoji && <span aria-hidden>{f.emoji} </span>}
-                {f.name}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setNewFolder(true)}
-              className="rounded-xl bg-accent/10 px-3 text-sm font-semibold text-accent active:bg-accent/20"
-            >
-              + Nova pasta
-            </button>
-          </div>
+          <RadioGroup label="Pasta" className="mb-4 flex flex-wrap gap-2">
+              {folders.map((f, i) => {
+                const on = folderId === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    tabIndex={on || (!folders.some((x) => x.id === folderId) && i === 0) ? 0 : -1}
+                    aria-describedby={fields.folder ? "confirm-folder-pick-error" : undefined}
+                    onClick={() => {
+                      setFolderId(f.id);
+                      setFields({});
+                    }}
+                    className={`${OPTION(on)} max-w-full break-words`}
+                  >
+                    <FolderGlyph folder={f} size={20} plain />
+                    {f.name}
+                  </button>
+                );
+              })}
+            <Button variant="ghost" size="sm" icon={<PlusIcon size={16} />} onClick={() => setNewFolder(true)}>
+              Nova pasta
+            </Button>
+          </RadioGroup>
         )}
-        {fields.folder && !creatingFolder && <p className="-mt-2 mb-4 text-sm text-danger-ink">{fields.folder}</p>}
+        {fields.folder && !creatingFolder && (
+          <p id="confirm-folder-pick-error" role="alert" className={`-mt-2 mb-4 ${ERROR}`}>
+            {fields.folder}
+          </p>
+        )}
 
         {creatingFolder && (
           <fieldset className="mb-4 rounded-2xl bg-bg p-3">
@@ -401,31 +463,19 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
             </legend>
             {noFolders && <p className="mb-3 text-sm text-muted">Toda ideia mora numa pasta. Dê um nome para guardar esta.</p>}
             <div className="flex gap-2">
-              <div className="w-20 shrink-0">
-                <label htmlFor="confirm-folder-emoji" className="sr-only">
-                  Emoji (opcional)
-                </label>
-                <input
-                  id="confirm-folder-emoji"
-                  value={folderEmoji}
-                  maxLength={8}
-                  placeholder="🗂"
-                  aria-invalid={fields.emoji ? true : undefined}
-                  onChange={(e) => setFolderEmoji(e.target.value)}
-                  className={`${FIELD} text-center`}
-                />
-              </div>
               <div className="min-w-0 flex-1">
                 <label htmlFor="confirm-folder-name" className="sr-only">
                   Nome da pasta
                 </label>
                 <input
                   id="confirm-folder-name"
+                  name="folder-name"
+                  autoComplete="off"
                   value={folderName}
                   maxLength={FOLDER_NAME_MAX}
-                  placeholder="Nome da pasta, ex.: Estudos"
+                  placeholder="Nome da pasta, ex.: Estudos…"
                   enterKeyHint="done"
-                  autoFocus={!noFolders}
+                  autoFocus={focusOk && !noFolders}
                   aria-invalid={fields.name ? true : undefined}
                   aria-describedby={fields.name ? "confirm-folder-error" : undefined}
                   onChange={(e) => setFolderName(e.target.value)}
@@ -433,8 +483,9 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
                 />
               </div>
             </div>
+            <FolderIconPicker value={folderIcon} onChange={setFolderIcon} className="mt-3" />
             {(fields.name || fields.emoji) && (
-              <p id="confirm-folder-error" className="mt-1 text-sm text-danger-ink">
+              <p id="confirm-folder-error" role="alert" className={ERROR}>
                 {fields.name ?? fields.emoji}
               </p>
             )}
@@ -445,7 +496,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
                   setNewFolder(false);
                   setFields({});
                 }}
-                className="mt-1 -mb-1 rounded-xl px-1 text-sm text-muted active:text-ink"
+                className="mt-1 -mb-1 rounded-xl px-1 text-sm text-muted hover:text-ink active:text-ink"
               >
                 Escolher uma pasta existente
               </button>
@@ -454,27 +505,30 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
         )}
 
         {error && (
-          <p role="alert" className="mb-3 rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger-ink">
+          <p role="alert" className="mb-3 rounded-xl bg-danger-soft px-3 py-2 text-sm text-danger-ink">
             {error}
           </p>
         )}
 
         <div className="flex gap-2">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            className="flex-1"
             disabled={busy}
             onClick={() => setOpen((o) => (o === "all" ? null : "all"))}
-            className="flex-1 rounded-2xl bg-bg font-semibold text-ink active:bg-ink/10 disabled:opacity-60"
           >
-            {open === "all" ? "Ocultar" : "Editar"}
-          </button>
-          <button
+            {open === "all" ? "Ocultar" : "Editar tudo"}
+          </Button>
+          <Button
             type="submit"
-            disabled={busy || (!isTask && folders === null)}
-            className="flex-1 rounded-2xl bg-accent-fill font-semibold text-on-accent active:opacity-85 disabled:opacity-60"
+            variant="primary"
+            className="flex-1"
+            busy={busy}
+            busyLabel="Salvando…"
+            disabled={!isTask && folders === null}
           >
             {isTask ? "Salvar" : "Guardar"}
-          </button>
+          </Button>
         </div>
       </form>
     </dialog>

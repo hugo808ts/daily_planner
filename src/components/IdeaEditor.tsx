@@ -6,6 +6,8 @@ import { dayMonth, findLinks, linkHost, safeThumb } from "../lib/format";
 import { AskSheet } from "./AskSheet";
 import { BackButton } from "./IdeaList";
 import { showToast } from "./Toast";
+import { Button, IconButton } from "./ui/Button";
+import { CalendarPlusIcon, CheckIcon, ExternalLinkIcon, LinkIcon, PinIcon } from "./ui/Icon";
 
 /** Espera depois da última tecla antes de salvar. */
 export const AUTOSAVE_MS = 800;
@@ -107,6 +109,9 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
   const [leaveError, setLeaveError] = useState(false);
   const [fields, setFields] = useState<Record<string, string>>({});
   const [asking, setAsking] = useState(false);
+  // "Salvando…" só enquanto o pedido está em andamento (com um mínimo para não piscar).
+  const [saving, setSaving] = useState(false);
+  const touch = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
 
   const draftRef = useRef(draft);
   const mounted = useRef(true);
@@ -136,12 +141,15 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
     const d = draftRef.current;
     const s = savedRef.current;
     const key = draftKey(folderId, s);
+    let started = false;
     try {
       if (!s) {
         // Sem título mas com texto: a primeira linha do texto vira o título (nunca perder o que foi escrito).
         const title = d.title.trim() || titleFromBody(d.body);
         if (!title) return;
         const link = normalizeLink(d.link);
+        started = true;
+        setSaving(true);
         const created = await api.createIdea({ folderId, title, body: d.body, linkUrl: link ?? null });
         if (!d.title.trim() && !draftRef.current.title.trim()) {
           draftRef.current = { ...draftRef.current, title: created.title };
@@ -151,6 +159,8 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
       } else {
         const patch = diff(d, s);
         if (Object.keys(patch).length === 0) return;
+        started = true;
+        setSaving(true);
         commit(await api.updateIdea(s.id, patch), false);
       }
       writeDraft(key, null);
@@ -168,11 +178,20 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
       }
       return;
     } finally {
+      if (started) setTimeout(() => setSaving(false), 450);
       const now = draftRef.current;
       const srv = savedRef.current;
       const pending = srv ? Object.keys(diff(now, srv)).length > 0 : !!(now.title.trim() || now.body.trim());
       setState((st) => (st === "error" ? st : pending ? "dirty" : srv ? "saved" : "idle"));
     }
+  }, [folderId]);
+
+  /** Guarda o texto neste aparelho, de forma síncrona, se ainda há algo não salvo. */
+  const persistDraft = useCallback(() => {
+    const d = draftRef.current;
+    const sv = savedRef.current;
+    const pending = sv ? Object.keys(diff(d, sv)).length > 0 : !!(d.title.trim() || d.body.trim());
+    if (pending) writeDraft(draftKey(folderId, sv), d);
   }, [folderId]);
 
   /** Salva o que falta; resolve true se não há nada pendente no fim. */
@@ -199,15 +218,24 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
   useEffect(() => {
     mounted.current = true;
     const onHide = () => {
-      if (document.visibilityState === "hidden") void flush();
+      if (document.visibilityState !== "hidden") return;
+      persistDraft();
+      void flush();
+    };
+    // pagehide: o navegador pode matar a página sem esperar a rede; o rascunho local é a rede de segurança.
+    const onPageHide = () => {
+      persistDraft();
+      void flush();
     };
     document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", onPageHide);
     return () => {
       mounted.current = false;
       document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", onPageHide);
       void flush();
     };
-  }, [flush]);
+  }, [flush, persistDraft]);
 
   // Rascunho recuperado: tenta salvar de novo.
   useEffect(() => {
@@ -263,67 +291,79 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
   const linkError = fields.linkUrl ?? (draft.link.trim() && linkNow === undefined ? "Link inválido (use http ou https)." : null);
 
   const status =
-    state === "error"
-      ? null
-      : state === "dirty"
-        ? "Salvando…"
-        : state === "saved"
-          ? "Salvo"
-          : "Escreva para salvar";
+    state === "error" ? null : saving ? (
+      "Salvando…"
+    ) : state === "saved" ? (
+      <>
+        <CheckIcon size={14} />
+        Salvo
+      </>
+    ) : state === "idle" ? (
+      "Escreva para salvar"
+    ) : null;
 
   const actions = (
-    <div className={wide ? "flex shrink-0 gap-2" : "mt-5 flex gap-2"}>
-      <button
-        type="button"
+    <div className={wide ? "flex shrink-0 gap-2" : "mt-5 flex flex-wrap gap-2"}>
+      <Button
+        variant="secondary"
+        size={wide ? "sm" : "md"}
+        className={wide ? "" : "flex-1"}
         disabled={!saved}
+        icon={<CalendarPlusIcon size={wide ? 16 : 18} />}
         onClick={() => void turnIntoTask()}
-        className={`rounded-2xl font-semibold text-ink disabled:opacity-50 ${
-          wide ? "bg-bg px-4 text-sm active:bg-ink/10" : "flex-1 bg-surface py-3 active:bg-surface/70"
-        }`}
       >
-        📅 Virar tarefa
-      </button>
-      <button
-        type="button"
+        Virar tarefa
+      </Button>
+      <Button
+        variant="danger"
+        size={wide ? "sm" : "md"}
+        className={wide ? "" : "flex-1"}
         disabled={!saved}
+        icon={<CheckIcon size={wide ? 16 : 18} />}
         onClick={() => setAsking(true)}
-        className={`rounded-2xl bg-ink font-semibold text-bg active:opacity-85 disabled:opacity-50 ${wide ? "px-4 text-sm" : "flex-1 py-3"}`}
       >
-        ✓ Resolvida
-      </button>
+        Concluir e apagar
+      </Button>
     </div>
   );
 
   return (
     <section aria-label="Editor da ideia">
       <div className="flex items-center justify-between gap-2">
-        {onBack ? <BackButton label={folderName} onClick={() => void back()} /> : <span className="truncate text-sm text-muted">{folderName}</span>}
+        {onBack ? (
+          <BackButton label={folderName} onClick={() => void back()} />
+        ) : (
+          <span className="min-w-0 truncate text-sm text-muted">{folderName}</span>
+        )}
         <div className="flex shrink-0 items-center gap-1">
-          <span data-testid="save-state" aria-live="polite" className="text-xs text-muted">
+          <span data-testid="save-state" aria-live="polite" className="inline-flex items-center gap-1 text-xs text-muted">
             {status}
           </span>
           {state === "error" && (
-            <button
-              type="button"
-              onClick={() => {
-                setState("dirty");
-                void flush();
-              }}
-              className="rounded-xl px-2 text-xs font-semibold text-danger-ink active:bg-danger/10"
-            >
-              Não salvou · Tentar de novo
-            </button>
+            <>
+              <span role="alert" className="text-xs font-medium text-danger-ink">
+                Não salvou
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setState("dirty");
+                  void flush();
+                }}
+              >
+                Tentar de novo
+              </Button>
+            </>
           )}
-          <button
-            type="button"
-            aria-label={saved?.pinned ? "Desafixar" : "Fixar no topo"}
+          <IconButton
+            label="Fixar no topo"
             aria-pressed={saved?.pinned ?? false}
             disabled={!saved}
             onClick={togglePin}
-            className={`grid place-items-center rounded-xl active:bg-ink/5 disabled:opacity-20 ${saved?.pinned ? "" : "opacity-35 grayscale"}`}
-          >
-            <span aria-hidden>📌</span>
-          </button>
+            icon={<PinIcon size={18} className={saved?.pinned ? "fill-current" : ""} />}
+            className={saved?.pinned ? "bg-accent-soft text-accent-ink" : "text-muted"}
+          />
           {wide && actions}
         </div>
       </div>
@@ -337,9 +377,11 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
         rows={1}
         value={draft.title}
         maxLength={IDEA_TITLE_MAX}
-        placeholder="Título da ideia"
+        name="titulo"
+        placeholder="Título da ideia…"
         enterKeyHint="next"
-        autoFocus={!idea}
+        autoComplete="off"
+        autoFocus={!idea && !touch}
         aria-invalid={fields.title ? true : undefined}
         onChange={(e) => change({ title: e.target.value.replace(/\n/g, " ") })}
         onKeyDown={(e) => {
@@ -349,7 +391,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
           }
         }}
         onBlur={() => void flush()}
-        className={`mt-2 block w-full resize-none overflow-hidden bg-transparent font-display leading-tight font-semibold text-ink placeholder:text-muted/70 focus:outline-none ${
+        className={`mt-2 block w-full resize-none overflow-hidden bg-transparent font-display leading-tight font-semibold text-ink placeholder:text-muted focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent/50 ${
           wide ? "text-[30px]" : "text-[24px]"
         }`}
       />
@@ -358,20 +400,29 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
           {SAVE_FAILED}
         </p>
       )}
-      {fields.title && <p className="text-sm text-danger-ink">{fields.title}</p>}
+      {fields.title && (
+        <p role="alert" className="text-sm text-danger-ink">
+          {fields.title}
+        </p>
+      )}
       {saved && <p className="mt-1 text-xs text-muted">Criada em {dayMonth(saved.createdAt)}</p>}
 
       <div className="mt-4">
         <label htmlFor="idea-link" className="sr-only">
           Link
         </label>
+        <div className={`relative ${wide ? "max-w-[460px]" : ""}`}>
+        <LinkIcon size={18} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted" />
         <input
           id="idea-link"
+          name="link"
           type="url"
           inputMode="url"
           value={draft.link}
           autoComplete="off"
-          placeholder="🔗 Cole um link (TikTok, YouTube…)"
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder="Cole um link (https://…)"
           aria-invalid={linkError ? true : undefined}
           aria-describedby={linkError ? "idea-link-error" : undefined}
           onChange={(e) => change({ link: e.target.value })}
@@ -380,12 +431,11 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
             if (n && n !== draft.link) change({ link: n });
             void flush();
           }}
-          className={`block min-h-11 w-full rounded-xl border border-line px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none aria-invalid:border-danger ${
-            wide ? "max-w-[460px] bg-bg" : "bg-surface"
-          }`}
+          className="block min-h-11 w-full truncate rounded-xl border border-line bg-surface py-2 pr-3 pl-10 text-ink placeholder:text-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-accent aria-invalid:border-danger"
         />
+        </div>
         {linkError && (
-          <p id="idea-link-error" className="mt-1 text-sm text-danger-ink">
+          <p id="idea-link-error" role="alert" className="mt-1 text-sm text-danger-ink">
             {linkError}
           </p>
         )}
@@ -394,25 +444,31 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
             href={preview.linkUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`mt-2 flex gap-3 rounded-2xl p-2 ${wide ? "max-w-[460px] bg-bg active:bg-ink/10" : "bg-surface active:bg-surface/70"}`}
+            className={`mt-2 flex gap-3 rounded-2xl bg-surface p-2 transition-colors hover:bg-accent-soft/50 focus-visible:outline-2 focus-visible:outline-accent ${wide ? "max-w-[460px]" : ""}`}
           >
             {thumb ? (
               <img
                 src={thumb}
                 alt=""
+                width={54}
+                height={72}
                 loading="lazy"
                 referrerPolicy="no-referrer"
                 className="h-[72px] w-[54px] shrink-0 rounded-lg bg-bg object-cover"
               />
             ) : (
-              <span aria-hidden className="grid h-[72px] w-[54px] shrink-0 place-items-center rounded-lg bg-bg text-xl">
-                🔗
+              <span aria-hidden className="grid h-[72px] w-[54px] shrink-0 place-items-center rounded-lg bg-bg text-muted">
+                <LinkIcon size={22} />
               </span>
             )}
             <span className="flex min-w-0 flex-col justify-center">
               {preview.linkTitle && <b className="line-clamp-2 text-sm font-semibold">{preview.linkTitle}</b>}
               <small className="truncate text-xs text-muted">{linkHost(preview.linkUrl)}</small>
-              <small className="text-xs font-medium text-accent">Abrir link ↗</small>
+              <small className="inline-flex items-center gap-1 text-xs font-medium text-accent-ink">
+                Abrir link
+                <ExternalLinkIcon size={12} />
+                <span className="sr-only">(abre em nova aba)</span>
+              </small>
             </span>
           </a>
         )}
@@ -426,16 +482,22 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
         ref={bodyRef}
         value={draft.body}
         maxLength={IDEA_BODY_MAX}
+        name="texto"
         placeholder="Escreva à vontade…"
+        autoComplete="off"
         onChange={(e) => change({ body: e.target.value })}
         onBlur={() => void flush()}
         className={`mt-4 block w-full resize-none overflow-hidden text-ink placeholder:text-muted ${
           wide
-            ? "min-h-[50dvh] bg-transparent px-0 py-1 text-[16px] leading-[1.7] focus:outline-none"
-            : "min-h-40 rounded-2xl bg-surface px-4 py-3 leading-relaxed focus:outline-2 focus:outline-accent/40"
+            ? "min-h-[50dvh] bg-transparent px-0 py-1 text-[16px] leading-[1.7] focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent/40"
+            : "min-h-40 rounded-2xl bg-surface px-4 py-3 leading-relaxed focus-visible:outline-2 focus-visible:outline-accent/40"
         }`}
       />
-      {fields.body && <p className="mt-1 text-sm text-danger-ink">{fields.body}</p>}
+      {fields.body && (
+        <p role="alert" className="mt-1 text-sm text-danger-ink">
+          {fields.body}
+        </p>
+      )}
 
       {bodyLinks.length > 0 && (
         <div className="mt-2">
@@ -447,7 +509,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex max-w-full items-center truncate text-sm text-accent underline underline-offset-2"
+                  className="block truncate text-sm text-accent-ink underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   {url}
                 </a>

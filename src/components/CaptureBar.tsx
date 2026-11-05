@@ -4,6 +4,8 @@ import type { CaptureResult, Idea, Task } from "../../shared/types";
 import { api, ApiError } from "../lib/api";
 import { ConfirmSheet, type SavedItem } from "./ConfirmSheet";
 import { Recorder } from "./Recorder";
+import { IconButton } from "./ui/Button";
+import { SendIcon } from "./ui/Icon";
 import { showToast } from "./Toast";
 
 interface Props {
@@ -14,8 +16,6 @@ interface Props {
   /** Computador: fica no pé da coluna do Hoje (sticky), em vez de flutuar sobre a barra de abas. */
   inline?: boolean;
 }
-
-const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
 /**
  * Altura do teclado virtual. No iOS um elemento `fixed; bottom: 0` fica atrás do teclado,
@@ -45,6 +45,7 @@ function useKeyboardInset(): number {
 export function CaptureBar({ onTaskSaved, onIdeaSaved, inline = false }: Props) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<{ result: CaptureResult; said: string } | null>(null);
   const input = useRef<HTMLTextAreaElement>(null);
@@ -124,7 +125,7 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved, inline = false }: Props) 
             e.preventDefault();
             void submit();
           }}
-          className={`pointer-events-auto relative mx-auto flex items-end gap-1 rounded-[22px] border border-line bg-surface py-1 pr-1 pl-4 shadow-[0_10px_30px_-12px_rgb(36_32_58/0.35)] ${inline ? "" : "max-w-md"}`}
+          className={`pointer-events-auto mx-auto flex items-end gap-1 rounded-[22px] border border-line bg-surface py-1 pr-1 pl-4 shadow-[0_10px_30px_-12px_rgb(36_32_58/0.35)] transition-[border-color,box-shadow] duration-150 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25 motion-reduce:transition-none ${inline ? "" : "max-w-md"}`}
         >
           <label htmlFor="capture-input" className="sr-only">
             Captura rápida
@@ -135,9 +136,11 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved, inline = false }: Props) 
             rows={1}
             value={text}
             maxLength={CAPTURE_TEXT_MAX}
-            placeholder={inline ? "Anotar algo…" : "Escreva uma tarefa ou ideia…"}
+            name="capture"
+            placeholder="Ex.: dentista amanhã às 15h…"
             enterKeyHint="send"
             autoComplete="off"
+            aria-keyshortcuts="Control+K Meta+K"
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? "capture-error" : undefined}
             onChange={(e) => {
@@ -150,38 +153,25 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved, inline = false }: Props) 
                 void submit();
               }
             }}
-            className="max-h-[116px] min-w-0 flex-1 resize-none self-center bg-transparent py-2.5 leading-6 text-ink placeholder:text-muted focus:outline-none"
+            className={`max-h-[116px] min-w-0 flex-1 resize-none self-center bg-transparent py-2.5 leading-6 text-ink placeholder:text-muted focus:outline-none ${recording ? "hidden" : ""}`}
           />
-          {inline && empty && (
-            <kbd
-              aria-hidden
-              className="mr-1 shrink-0 self-center rounded-md border border-line px-1.5 py-px font-sans text-[11px] whitespace-nowrap text-muted"
-            >
-              {isMac() ? "⌘ K" : "Ctrl K"}
-            </kbd>
-          )}
           <Recorder
             disabled={busy}
+            onActiveChange={setRecording}
             onText={(t) => {
               setText(t);
               void submit(t);
             }}
           />
-          <button
+          <IconButton
             type="submit"
-            aria-label="Enviar"
-            aria-busy={busy || undefined}
-            disabled={empty || busy}
-            className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-fill text-on-accent transition-opacity duration-150 active:opacity-85 disabled:bg-ink/10 disabled:text-muted"
-          >
-            {busy ? (
-              <span aria-hidden className="size-5 rounded-full border-2 border-current border-t-transparent motion-safe:animate-spin" />
-            ) : (
-              <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
-                <path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </button>
+            label="Enviar"
+            variant="primary"
+            icon={<SendIcon size={20} strokeWidth={2.4} />}
+            busy={busy}
+            disabled={empty}
+            className={empty ? "bg-accent-soft! text-accent-ink! opacity-100! border border-accent/25" : ""}
+          />
         </form>
         {error && (
           <p id="capture-error" role="alert" className={`pointer-events-auto mx-auto mt-1 px-4 text-sm text-danger-ink ${inline ? "" : "max-w-md"}`}>

@@ -7,6 +7,8 @@ import { ScoreBar, ScoreText } from "../components/ScoreBar";
 import { TaskList } from "../components/TaskList";
 import { TaskSheet } from "../components/TaskSheet";
 import { showToast } from "../components/Toast";
+import { Button } from "../components/ui/Button";
+import { ReportIcon } from "../components/ui/Icon";
 import { WeekStrip } from "../components/WeekStrip";
 import { api, ApiError, type MoveResult } from "../lib/api";
 import { dayPhrase, longDate } from "../lib/format";
@@ -23,6 +25,9 @@ interface Props {
   /** Computador: coluna fixa à esquerda, sem barra de abas nem captura flutuante embaixo. */
   wide?: boolean;
 }
+
+const monthFmt = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: "UTC" });
+const monthName = (date: string) => monthFmt.format(new Date(`${date}T12:00:00Z`));
 
 const MOBILE_PAD = {
   paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
@@ -103,44 +108,44 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
 
   return (
     <div className={wide ? "px-[18px] pt-4 pb-2" : "mx-auto w-full max-w-md px-4"} style={wide ? undefined : MOBILE_PAD}>
-      {onOpenReport &&
-        (isSunday(today) ? (
-          <SundayCard onOpen={() => onOpenReport(days[0])} />
-        ) : (
-          <button
-            type="button"
+      <div className="mb-1 flex min-h-11 items-center justify-between gap-3">
+        <span className="font-display text-base font-semibold text-ink capitalize">{monthName(selected)}</span>
+        {onOpenReport && !wide && !isSunday(today) && (
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<ReportIcon size={16} />}
+            className="rounded-full!"
             onClick={() => onOpenReport(addDays(days[0], -7))}
-            className="mb-2 -ml-2 rounded-lg px-2 py-1 text-sm font-semibold text-accent active:bg-accent/10"
           >
-            Resumo da semana passada ›
-          </button>
-        ))}
+            Resumo da semana
+          </Button>
+        )}
+      </div>
+      {onOpenReport && isSunday(today) && <SundayCard onOpen={() => onOpenReport(days[0])} />}
       <WeekStrip days={days} today={today} selected={selected} tasks={tasks} now={now} onSelect={setPicked} />
 
       <header className="mt-5 mb-3">
-        <div className="flex items-baseline justify-between gap-3">
+        <div className="flex items-end justify-between gap-3">
           <h1 className="font-display text-[28px] leading-tight font-semibold tracking-[-0.01em]">{title}</h1>
           <ScoreText tasks={dayTasks} now={now} />
         </div>
-        {relative && <p className="text-sm text-muted first-letter:uppercase">{longDate(selected)}</p>}
+        {relative && <p className="mt-1 text-[13px] text-muted first-letter:uppercase">{longDate(selected)}</p>}
         <div className="mt-3">
           <ScoreBar tasks={dayTasks} now={now} />
         </div>
       </header>
 
       {error && !data ? (
-        <div role="alert" className="rounded-[20px] bg-surface px-4 py-5 text-center text-sm">
+        <div role="alert" className="rounded-[18px] border border-line bg-surface px-4 py-5 text-center text-sm">
           <p className="mb-2 text-danger-ink">{error}</p>
-          <button
-            type="button"
-            onClick={() => void reload()}
-            className="rounded-xl bg-accent/10 px-4 font-semibold text-accent active:bg-accent/20"
-          >
+          <Button variant="secondary" size="sm" onClick={() => void reload()}>
             Tentar de novo
-          </button>
+          </Button>
         </div>
       ) : !data ? (
-        <div aria-busy="true" aria-label="Carregando" className="space-y-px overflow-hidden rounded-[20px] bg-surface px-4 py-3">
+        <div role="status" aria-busy="true" className="space-y-px overflow-hidden rounded-[18px] border border-line bg-surface px-4 py-3">
+          <span className="sr-only">Carregando…</span>
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-11 rounded-lg bg-ink/[0.04] motion-safe:animate-pulse" />
           ))}

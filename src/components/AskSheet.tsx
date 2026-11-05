@@ -1,15 +1,18 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { Button } from "./ui/Button";
 
 interface Props {
   question: string;
   detail?: string;
   confirmLabel: string;
+  /** Texto do botão enquanto a ação roda (padrão: "Excluindo…"). */
+  busyLabel?: string;
   onConfirm: () => Promise<void> | void;
   onClose: () => void;
 }
 
 /** Pergunta de confirmação (ações que apagam), numa folha inferior. */
-export function AskSheet({ question, detail, confirmLabel, onConfirm, onClose }: Props) {
+export function AskSheet({ question, detail, confirmLabel, busyLabel = "Excluindo…", onConfirm, onClose }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const id = useId();
   const [busy, setBusy] = useState(false);
@@ -33,6 +36,7 @@ export function AskSheet({ question, detail, confirmLabel, onConfirm, onClose }:
       ref={dialog}
       role="alertdialog"
       aria-labelledby={`${id}-q`}
+      aria-describedby={detail ? `${id}-d` : undefined}
       className="sheet-dialog"
       onCancel={(e) => {
         e.preventDefault();
@@ -44,28 +48,27 @@ export function AskSheet({ question, detail, confirmLabel, onConfirm, onClose }:
     >
       <div className="px-5 pt-2.5" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}>
         <div aria-hidden className="mx-auto mb-4 h-1 w-10 rounded-full bg-ink/15" />
-        <h2 id={`${id}-q`} className="font-display text-xl leading-snug font-semibold">
+        <h2 id={`${id}-q`} className="font-display text-xl leading-snug font-semibold text-balance">
           {question}
         </h2>
-        {detail && <p className="mt-1 text-sm text-muted">{detail}</p>}
+        {detail && (
+          <p id={`${id}-d`} className="mt-1 text-sm text-muted">
+            {detail}
+          </p>
+        )}
         <div className="mt-5 flex gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={onClose}
-            className="flex-1 rounded-2xl bg-bg font-semibold text-ink active:bg-ink/10 disabled:opacity-60"
-          >
+          <Button variant="secondary" disabled={busy} onClick={onClose} className="flex-1">
             Cancelar
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            aria-busy={busy || undefined}
+          </Button>
+          <Button
+            variant="primary"
+            busy={busy}
+            busyLabel={busyLabel}
             onClick={() => void confirm()}
-            className="flex-1 rounded-2xl bg-danger-fill font-semibold text-on-accent active:opacity-85 disabled:opacity-60"
+            className="flex-1 bg-danger-fill! enabled:hover:bg-danger-fill!"
           >
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </dialog>

@@ -1,6 +1,7 @@
 import type { TaskStatus } from "../../shared/status";
 import type { Task } from "../../shared/types";
-import { areaInfo, formatTime } from "../lib/format";
+import { AreaTag } from "./ui/AreaTag";
+import { CheckIcon } from "./ui/Icon";
 
 interface Props {
   task: Task;
@@ -12,70 +13,57 @@ interface Props {
 }
 
 const STATUS_NOTE: Partial<Record<TaskStatus, string>> = {
-  overdue: "passou do horário",
+  overdue: "atrasada",
   not_done: "não feita",
 };
+
+const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
   const done = status === "done";
   const bad = status === "overdue" || status === "not_done";
-  const meta = [task.time ? formatTime(task.time) : null, STATUS_NOTE[status] ?? null, origin].filter(Boolean);
+  const timeText = [task.time, STATUS_NOTE[status]].filter(Boolean).join(" · ");
 
   return (
     <li
       data-status={status}
-      className={`-mx-4 flex items-start gap-1 border-b border-line px-4 transition-colors duration-200 last:border-b-0 ${
-        bad ? "bg-danger/8" : ""
-      }`}
+      className="relative -mx-4 flex items-start gap-1 border-b border-line px-4 transition-colors duration-200 last:border-b-0 hover:bg-ink/[0.025]"
     >
+      {bad && <span aria-hidden className="absolute top-2.5 bottom-2.5 left-0 w-[3px] rounded-r-[3px] bg-danger" />}
       <button
         type="button"
         role="checkbox"
         aria-checked={done}
-        aria-label={`Marcar como feita: ${task.title}`}
+        aria-label={done ? `Desfazer conclusão: ${task.title}` : `Marcar como feita: ${task.title}`}
         onClick={() => onToggle(task)}
-        className="group -ml-3 grid size-11 shrink-0 place-items-center rounded-xl"
+        className={`group -ml-3 grid size-11 shrink-0 place-items-center rounded-xl ${FOCUS}`}
       >
         <span
-          className={`grid size-5 place-items-center rounded-md border-[1.6px] transition-[background-color,border-color,transform] duration-150 group-active:scale-90 ${
-            done ? "border-accent-fill bg-accent-fill" : bad ? "border-danger" : "border-ink/45"
+          className={`grid size-5 place-items-center rounded-md border-[1.75px] transition-[background-color,border-color,transform] duration-150 group-hover:border-accent group-active:scale-90 motion-reduce:transition-none ${
+            done ? "border-accent-fill bg-accent-fill" : bad ? "border-danger" : "border-muted"
           }`}
         >
-          {done && (
-            <svg viewBox="0 0 16 16" className="size-3.5 text-on-accent" aria-hidden>
-              <path
-                d="M3.5 8.5l3 3 6-7"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
+          {done && <CheckIcon size={14} strokeWidth={3.2} className="text-on-accent" />}
         </span>
       </button>
       <button
         type="button"
         aria-haspopup="dialog"
         onClick={() => onOpen(task)}
-        className="min-w-0 flex-1 rounded-lg py-2.5 text-left"
+        className={`min-w-0 flex-1 rounded-lg py-2.5 text-left ${FOCUS}`}
       >
         <span
-          className={`block text-[15px] leading-snug ${
-            done ? "text-ink/45 line-through decoration-ink/40" : bad ? "font-medium text-danger-ink" : "text-ink"
+          className={`block text-[15px] leading-snug font-medium break-words ${
+            done ? "text-muted line-through decoration-muted/70" : "text-ink"
           }`}
         >
           {task.title}
         </span>
-        {(task.area || meta.length > 0) && (
-          <span className={`mt-1 flex flex-wrap items-center gap-x-1.5 text-xs ${bad ? "text-danger-ink" : "text-muted"}`}>
-            {task.area && (
-              <span className={`rounded-md px-1.5 py-px ${bad ? "bg-danger/10" : "bg-ink/[0.06]"} ${done ? "opacity-60" : ""}`}>
-                {areaInfo(task.area).emoji} {areaInfo(task.area).label}
-              </span>
-            )}
-            {meta.length > 0 && <span>{meta.join(" · ")}</span>}
+        {(task.area || timeText || origin) && (
+          <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-meta text-muted">
+            {task.area && <AreaTag area={task.area} muted={done} />}
+            {timeText && <span className={bad ? "font-semibold text-danger-ink" : ""}>{timeText}</span>}
+            {origin && <span>{origin}</span>}
           </span>
         )}
       </button>

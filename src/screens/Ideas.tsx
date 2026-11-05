@@ -4,11 +4,12 @@ import type { Folder, Idea, Task } from "../../shared/types";
 import { ConfirmSheet, type SavedItem } from "../components/ConfirmSheet";
 import { FolderGrid } from "../components/FolderGrid";
 import { IdeaEditor } from "../components/IdeaEditor";
-import { IdeaList } from "../components/IdeaList";
+import { IdeaList, RecentIdeas } from "../components/IdeaList";
 import { showToast } from "../components/Toast";
+import { LightbulbIcon } from "../components/ui/Icon";
 import { api, ApiError } from "../lib/api";
 import { useNow } from "../lib/useNow";
-import { useFolderIdeas, useFolders } from "../lib/useIdeas";
+import { sortIdeas, useFolderIdeas, useFolders } from "../lib/useIdeas";
 
 const errorMessage = (e: unknown) => (e instanceof ApiError ? e.message : "Algo deu errado. Tente de novo.");
 const byName = (a: Folder, b: Folder) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
@@ -27,14 +28,16 @@ const MOBILE_PAD = {
   paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5.5rem)",
 };
 
-function EmptyPane({ icon, title, text }: { icon: string; title: string; text: string }) {
+const RECENT_MAX = 12;
+
+function EmptyPane({ title, text }: { title: string; text: string }) {
   return (
     <div className="grid h-full place-items-center px-6 text-center">
       <div>
-        <p aria-hidden className="text-3xl opacity-70">
-          {icon}
-        </p>
-        <p className="mt-2 font-display text-lg font-semibold">{title}</p>
+        <span aria-hidden className="mx-auto grid size-12 place-items-center rounded-2xl bg-accent-soft text-accent-ink">
+          <LightbulbIcon size={24} />
+        </span>
+        <h2 className="mt-3 font-display text-lg font-semibold">{title}</h2>
         <p className="mx-auto mt-1 max-w-[32ch] text-sm text-muted">{text}</p>
       </div>
     </div>
@@ -56,6 +59,27 @@ export function Ideas({ captured, onTaskSaved, wide = false }: Props) {
   const [query, setQuery] = useState("");
   const [converting, setConverting] = useState<Idea | null>(null);
   const { ideas, error: ideasError, reload: reloadIdeas, upsert, remove } = useFolderIdeas(folderId);
+
+  // Computador, sem pasta aberta: "Recentes" = últimas ideias de todas as pastas, fixadas primeiro.
+  const [recent, setRecent] = useState<Idea[] | null>(null);
+  const [recentError, setRecentError] = useState<string | null>(null);
+  const [recentTick, setRecentTick] = useState(0);
+  useEffect(() => {
+    if (!wide || folderId || !folders) return;
+    let alive = true;
+    Promise.all(folders.map((f) => api.ideas(f.id)))
+      .then((lists) => {
+        if (!alive) return;
+        setRecent(sortIdeas(lists.flat()).slice(0, RECENT_MAX));
+        setRecentError(null);
+      })
+      .catch((e) => alive && setRecentError(errorMessage(e)));
+    return () => {
+      alive = false;
+    };
+  }, [wide, folderId, folders, captured, recentTick]);
+  const patchRecent = (idea: Idea) =>
+    setRecent((list) => (list ? sortIdeas(list.map((i) => (i.id === idea.id ? idea : i))) : list));
 
   const folder = folders?.find((f) => f.id === folderId) ?? null;
   const view = editing ? "editor" : folderId ? "list" : "folders";
@@ -110,10 +134,14 @@ export function Ideas({ captured, onTaskSaved, wide = false }: Props) {
 
   const togglePin = async (idea: Idea) => {
     upsert({ ...idea, pinned: !idea.pinned });
+    patchRecent({ ...idea, pinned: !idea.pinned });
     try {
-      upsert(await api.updateIdea(idea.id, { pinned: !idea.pinned }));
+      const updated = await api.updateIdea(idea.id, { pinned: !idea.pinned });
+      upsert(updated);
+      patchRecent(updated);
     } catch (e) {
       upsert(idea);
+      patchRecent(idea);
       showToast(errorMessage(e));
     }
   };
@@ -168,6 +196,11 @@ export function Ideas({ captured, onTaskSaved, wide = false }: Props) {
       query={query}
       sidebar={wide}
       selectedId={wide ? folderId : null}
+      recentSelected={wide && !folderId}
+      onOpenRecent={() => {
+        setFolderId(null);
+        setEditing(null);
+      }}
       onQuery={setQuery}
       onReload={() => void reloadFolders()}
       onOpenFolder={(f) => {
@@ -200,29 +233,50 @@ export function Ideas({ captured, onTaskSaved, wide = false }: Props) {
   );
 
   if (wide) {
+    const showRecent = !folderId;
+    // Pasta para a "Nova ideia" dos Recentes: a da ideia mais recente, ou a primeira.
+    const newTarget = recent?.[0]?.folderId ?? folders?.[0]?.id ?? null;
     return (
-      <div className="grid h-dvh grid-cols-[240px_300px_minmax(0,1fr)]">
-        <div data-testid="folders-pane" className="pane border-r border-line bg-ink/[0.025] px-3 pt-[18px] pb-6">
+      <div className={`grid h-full bg-bg ${showRecent ? "grid-cols-[260px_minmax(0,1fr)]" : "grid-cols-[240px_300px_minmax(0,1fr)]"}`}>
+        <nav data-testid="folders-pane" aria-label="Pastas e busca" className="pane border-r border-line bg-bg px-3 pt-[18px] pb-6">
           {grid}
-        </div>
-        <div data-testid="list-pane" className="pane border-r border-line px-3 pt-[18px] pb-6">
-          {folderId && folder ? (
-            list(folder)
-          ) : (
-            <EmptyPane icon="🗂" title="Escolha uma pasta" text="As ideias da pasta aparecem aqui, as fixadas primeiro." />
-          )}
-        </div>
-        <div data-testid="editor-pane" className="pane bg-surface px-10 pt-7 pb-10">
-          {editing && folderId ? (
-            <div className="mx-auto max-w-[680px]">{editor(folderId, editing)}</div>
-          ) : (
-            <EmptyPane
-              icon="✍️"
-              title="Escolha uma ideia"
-              text={folder ? "Ou crie uma nova com o + da lista. Tudo salva sozinho." : "Abra uma pasta à esquerda para ver e escrever ideias."}
-            />
-          )}
-        </div>
+        </nav>
+        {showRecent ? (
+          <div data-testid="list-pane" className="pane bg-bg px-8 pt-[22px] pb-8">
+            <div className="mx-auto max-w-[900px]">
+              <RecentIdeas
+                ideas={recent}
+                error={recentError}
+                folders={folders ?? []}
+                now={now}
+                onReload={() => setRecentTick((n) => n + 1)}
+                onOpen={openIdea}
+                onTogglePin={(i) => void togglePin(i)}
+                onNew={
+                  newTarget
+                    ? () => {
+                        setFolderId(newTarget);
+                        setEditing({ key: `new-${Date.now()}`, idea: null });
+                      }
+                    : undefined
+                }
+              />
+            </div>
+          </div>
+        ) : (
+          <>
+            <div data-testid="list-pane" className="pane border-r border-line bg-bg px-3 pt-[18px] pb-6">
+              {folder ? list(folder) : <div role="status" aria-label="Carregando" className="h-40" />}
+            </div>
+            <div data-testid="editor-pane" className="pane bg-bg px-10 pt-7 pb-10">
+              {editing ? (
+                <div className="mx-auto max-w-[680px]">{editor(folderId, editing)}</div>
+              ) : (
+                <EmptyPane title="Escolha uma ideia" text="Ou crie uma nova com Nova ideia, na lista. Tudo salva sozinho." />
+              )}
+            </div>
+          </>
+        )}
         {sheet}
       </div>
     );
@@ -236,7 +290,7 @@ export function Ideas({ captured, onTaskSaved, wide = false }: Props) {
         folder ? (
           list(folder)
         ) : (
-          <div aria-busy="true" aria-label="Carregando" className="h-40" />
+          <div role="status" aria-label="Carregando" className="h-40" />
         )
       ) : (
         grid

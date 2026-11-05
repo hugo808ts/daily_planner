@@ -18,7 +18,7 @@ function originLabel(task: Task, allTasks: Task[]): string | null {
   return original ? `veio de ${weekdayShort(original.date)}` : "veio de outro dia";
 }
 
-const CARD = "rounded-[20px] bg-surface shadow-[0_1px_2px_rgb(36_32_58/0.08)]";
+const CARD = "rounded-[18px] border border-line bg-surface";
 
 export function TaskList({ tasks, allTasks, now, onToggle, onOpen }: Props) {
   if (tasks.length === 0) {

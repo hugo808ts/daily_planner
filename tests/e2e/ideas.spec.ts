@@ -30,7 +30,7 @@ test.beforeAll(async ({ request }) => {
   await clearFolders(request);
 });
 
-test("pastas: primeira visita, criar com emoji e renomear", async ({ page }) => {
+test("pastas: primeira visita, criar com ícone e renomear", async ({ page }) => {
   await openIdeas(page);
 
   await test.step("primeira visita pede a primeira pasta", async () => {
@@ -41,12 +41,12 @@ test("pastas: primeira visita, criar com emoji e renomear", async ({ page }) => 
   await test.step("criar pasta com emoji", async () => {
     await page.getByRole("button", { name: "Nova pasta" }).first().click();
     const sheet = page.getByRole("dialog", { name: "Nova pasta" });
-    await sheet.getByLabel("Emoji (opcional)").fill("🎬");
+    await sheet.getByRole("radio", { name: "Vídeo" }).click();
     await sheet.getByLabel("Nome da pasta").fill("Vídeos");
     await sheet.getByRole("button", { name: "Criar pasta" }).click();
     await expect(sheet).toBeHidden();
     const tile = page.getByRole("listitem").filter({ hasText: "Vídeos" });
-    await expect(tile).toContainText("🎬");
+    await expect(tile.locator("svg")).not.toHaveCount(0);
     await expect(tile).toContainText("0 ideias");
     await expect(page.getByText("Crie sua primeira pasta")).toHaveCount(0);
   });
@@ -108,7 +108,7 @@ test("ideias: link, fixar, autosalvar, resolver e desfazer", async ({ page, requ
   await page.screenshot({ path: "test-results/ideas-editor-390x844.png", animations: "disabled", scale: "css" });
 
   await test.step("Resolvida pede confirmação, apaga e oferece Desfazer", async () => {
-    await page.getByRole("button", { name: "✓ Resolvida" }).click();
+    await page.getByRole("button", { name: "Concluir e apagar", exact: true }).click();
     const ask = page.getByRole("alertdialog", { name: "Concluir e apagar esta ideia?" });
     await expect(ask).toBeVisible();
     await ask.getByRole("button", { name: "Apagar" }).click();
@@ -169,9 +169,9 @@ test("Virar tarefa abre a confirmação, salva no dia escolhido e mantém a idei
   await page.getByRole("button", { name: "Abrir pasta Estudos" }).click();
   await card(page, "Fórmula de Bhaskara").getByRole("button", { name: /Fórmula de Bhaskara/ }).click();
 
-  await page.getByRole("button", { name: "📅 Virar tarefa" }).click();
+  await page.getByRole("button", { name: "Virar tarefa" }).click();
   const sheet = page.getByRole("dialog", { name: "Confirmar captura" });
-  await expect(sheet).toContainText("✓ Tarefa");
+  await expect(sheet.getByRole("radio", { name: "Tarefa" })).toBeChecked();
   await expect(sheet).toContainText("Fórmula de Bhaskara");
   await expect(sheet.getByRole("button", { name: /^Dia:/ })).toContainText("Hoje");
   await sheet.getByRole("button", { name: /^Dia:/ }).click();

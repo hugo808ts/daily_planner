@@ -36,10 +36,10 @@ test("Resumo: link na semana, domingo com cartão; semana anterior; levar a part
   await test.step("abre o resumo da semana passada pelo link (ou pelo cartão, no domingo)", async () => {
     if (isSunday(realToday)) {
       await page.getByRole("button", { name: /Sua semana fechou/ }).click();
-      await page.getByRole("dialog", { name: "Resumo da semana" }).getByRole("button", { name: "‹ semana anterior" }).click();
+      await page.getByRole("dialog", { name: "Resumo da semana" }).getByRole("button", { name: "Semana anterior" }).click();
     } else {
       await expect(page.getByRole("button", { name: /Sua semana fechou/ })).toHaveCount(0);
-      await page.getByRole("button", { name: "Resumo da semana passada ›" }).click();
+      await page.getByRole("button", { name: "Resumo da semana", exact: true }).click();
     }
     const report = page.getByRole("dialog", { name: "Resumo da semana" });
     const numbers = report.getByTestId("report-numbers");
@@ -59,10 +59,10 @@ test("Resumo: link na semana, domingo com cartão; semana anterior; levar a part
   await test.step("levar uma não feita para hoje (ou segunda, no domingo), uma única vez", async () => {
     const report = page.getByRole("dialog", { name: "Resumo da semana" });
     const row = report.getByRole("listitem").filter({ hasText: "Ligar para o banco" });
-    await row.getByRole("button", { name: "→ esta semana" }).dblclick();
+    await row.getByRole("button", { name: /^Levar .* para esta semana$/ }).dblclick();
     await expect(page.getByText(/^Levada para (hoje|amanhã)/)).toBeVisible();
-    await expect(row.getByText("levada ✓")).toBeVisible();
-    await expect(row.getByRole("button", { name: "→ esta semana" })).toHaveCount(0);
+    await expect(row.getByText("Levada")).toBeVisible();
+    await expect(row.getByRole("button", { name: /para esta semana/ })).toHaveCount(0);
     await expect(report.getByText("Não feitas (3)")).toBeVisible();
     const week = await (await request.get(`/api/week?start=${weekStart(target)}`)).json();
     const copies = week.tasks.filter((t: { title: string }) => t.title === "Ligar para o banco");
@@ -75,11 +75,11 @@ test("Resumo: link na semana, domingo com cartão; semana anterior; levar a part
 
   await test.step("semana anterior e próxima", async () => {
     const report = page.getByRole("dialog", { name: "Resumo da semana" });
-    await report.getByRole("button", { name: "‹ semana anterior" }).click();
+    await report.getByRole("button", { name: "Semana anterior" }).click();
     await expect(report.getByTestId("report-numbers")).toContainText("—");
-    await report.getByRole("button", { name: "próxima ›" }).click();
+    await report.getByRole("button", { name: "Próxima" }).click();
     await expect(report.getByTestId("report-numbers")).toContainText("63%");
-    await report.getByRole("button", { name: "‹ voltar" }).click();
+    await report.getByRole("button", { name: "Voltar" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 });

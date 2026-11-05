@@ -131,25 +131,27 @@ test.describe("computador (1440×900)", () => {
     const list = page.getByTestId("list-pane");
     const editor = page.getByTestId("editor-pane");
 
-    await test.step("sem abas; quatro colunas visíveis lado a lado", async () => {
+    await test.step("sem abas; Hoje, pastas e Recentes lado a lado (sem painel de editor vazio)", async () => {
       await expect(page.getByRole("navigation", { name: "Seções" })).toHaveCount(0);
-      for (const pane of [today, folders, list, editor]) await expect(pane).toBeVisible();
+      for (const pane of [today, folders, list]) await expect(pane).toBeVisible();
+      await expect(editor).toHaveCount(0);
+      await expect(list.getByRole("heading", { name: "Recentes" })).toBeVisible();
+      await expect(list.getByRole("button", { name: new RegExp(IDEA) }).first()).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(2); // Hoje e Ideias
       await expect(today.getByRole("heading", { level: 1 })).toHaveText("Hoje");
       await expect(today.getByRole("navigation", { name: "Dias da semana" })).toBeVisible();
 
       const t = await box(today);
       const f = await box(folders);
       const l = await box(list);
-      const e = await box(editor);
       expect(t.x).toBeLessThanOrEqual(1);
-      expect(t.width).toBeGreaterThanOrEqual(320);
-      expect(t.width).toBeLessThanOrEqual(360);
-      expect(t.height).toBeGreaterThanOrEqual(899);
+      expect(t.width).toBeGreaterThanOrEqual(375);
+      expect(t.width).toBeLessThanOrEqual(385);
+      expect(t.height).toBeGreaterThanOrEqual(840); // 900 menos a barra de 52 px
       expect(f.x).toBeGreaterThanOrEqual(t.x + t.width - 1);
       expect(l.x).toBeGreaterThanOrEqual(f.x + f.width - 1);
-      expect(e.x).toBeGreaterThanOrEqual(l.x + l.width - 1);
-      expect(e.x + e.width).toBeGreaterThan(1430);
-      expect(e.width).toBeGreaterThan(l.width);
+      expect(l.x + l.width).toBeGreaterThan(1430);
+      expect(l.width).toBeGreaterThan(f.width);
     });
 
     await test.step("a janela não rola; cada coluna rola sozinha", async () => {
@@ -165,7 +167,8 @@ test.describe("computador (1440×900)", () => {
     await test.step("captura dentro da coluna do Hoje, com a dica Ctrl K", async () => {
       const field = today.getByRole("textbox", { name: "Captura rápida" });
       await expect(field).toBeVisible();
-      await expect(today.getByText("Ctrl K")).toBeVisible();
+      await expect(page.getByRole("banner").getByText("Ctrl K")).toBeVisible();
+      await expect(page.getByRole("banner").getByRole("button", { name: "Resumo da semana" })).toBeVisible();
       const c = await box(field);
       const t = await box(today);
       expect(c.x + c.width).toBeLessThanOrEqual(t.x + t.width);
@@ -174,8 +177,13 @@ test.describe("computador (1440×900)", () => {
     });
 
     await test.step("pasta → lista → editor, com o Hoje sempre à vista", async () => {
-      await expect(editor).toContainText("Escolha uma ideia");
       await folders.getByRole("button", { name: new RegExp(`Abrir pasta ${FOLDER}`) }).click();
+      await expect(editor).toContainText("Escolha uma ideia");
+      const [fb, lb, eb] = [await box(folders), await box(list), await box(editor)];
+      expect(lb.x).toBeGreaterThanOrEqual(fb.x + fb.width - 1);
+      expect(eb.x).toBeGreaterThanOrEqual(lb.x + lb.width - 1);
+      expect(eb.x + eb.width).toBeGreaterThan(1430);
+      expect(eb.width).toBeGreaterThan(lb.width);
       await expect(list.getByRole("heading", { name: new RegExp(FOLDER) })).toBeVisible();
       // Botão de nova ideia mora na coluna da lista, não no canto da janela.
       const plus = list.getByRole("button", { name: "Nova ideia" });

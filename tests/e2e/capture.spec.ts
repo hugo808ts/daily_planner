@@ -35,7 +35,7 @@ test("tarefa: escreve, confere os chips, troca o dia e salva", async ({ page }) 
     const s = sheet(page);
     await expect(s).toBeVisible();
     await expect(s).toContainText(`“${RELATORIO}”`);
-    await expect(s).toContainText("✓ Tarefa");
+    await expect(s.getByRole("radio", { name: "Tarefa" })).toBeChecked();
     await expect(s).toContainText("Apresentar o relatório pro gerente");
     await expect(s.getByRole("button", { name: /^Dia:/ })).toContainText(`Amanhã, ${shortDay(TOMORROW)}`);
     await expect(s.getByRole("button", { name: /^Horário:/ })).toContainText("10:00");
@@ -55,7 +55,7 @@ test("tarefa: escreve, confere os chips, troca o dia e salva", async ({ page }) 
     await page.getByRole("navigation", { name: "Dias da semana" }).getByRole("button", { name: new RegExp(shortDay(OTHER).replace(" ", ".*")) }).click();
     const row = page.getByRole("listitem").filter({ hasText: "Apresentar o relatório pro gerente" });
     await expect(row).toBeVisible();
-    await expect(row).toContainText("10h");
+    await expect(row).toContainText("10:00");
   });
 });
 
@@ -69,7 +69,7 @@ test("ideia sem pastas pede a primeira pasta e guarda nela", async ({ page, requ
 
   const s = sheet(page);
   await expect(s).toBeVisible();
-  await expect(s).toContainText("💡 Ideia");
+  await expect(s.getByRole("radio", { name: "Ideia" })).toBeChecked();
   await expect(s).toContainText("Testar revisão espaçada nas provas de cálculo");
   await expect(s).toContainText("Crie sua primeira pasta");
   await expect(s.getByRole("button", { name: /^Dia:/ })).toHaveCount(0);
@@ -78,14 +78,14 @@ test("ideia sem pastas pede a primeira pasta e guarda nela", async ({ page, requ
   await expect(s.getByText("Dê um nome à pasta.")).toBeVisible();
 
   await s.getByLabel("Nome da pasta").fill("Estudos");
-  await s.getByLabel("Emoji (opcional)").fill("📚");
+  await s.getByRole("radio", { name: "Livro" }).click();
   await s.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(s).toBeHidden();
   await expect(page.getByRole("status")).toContainText("Ideia guardada");
 
   const { folders } = await (await request.get("/api/folders")).json();
   expect(folders).toHaveLength(1);
-  expect(folders[0]).toMatchObject({ name: "Estudos", emoji: "📚" });
+  expect(folders[0]).toMatchObject({ name: "Estudos", emoji: "i:book" });
   const { ideas } = await (await request.get(`/api/folders/${folders[0].id}/ideas`)).json();
   expect(ideas.map((i: { title: string }) => i.title)).toEqual(["Testar revisão espaçada nas provas de cálculo"]);
 });
@@ -95,11 +95,11 @@ test("trocar o tipo para ideia mostra a pasta e '+ Nova pasta'", async ({ page }
   await field(page).fill("ligar pro dentista sexta");
   await send(page).click();
   const s = sheet(page);
-  await s.getByRole("button", { name: /^Tipo:/ }).click();
-  await expect(s).toContainText("💡 Ideia");
+  await s.getByRole("radio", { name: "Ideia" }).click();
+  await expect(s.getByRole("radio", { name: "Ideia" })).toBeChecked();
   await s.getByRole("button", { name: /^Pasta:/ }).click();
   await expect(s.getByRole("radio", { name: /Estudos/ })).toBeVisible();
-  await expect(s.getByRole("button", { name: "+ Nova pasta" })).toBeVisible();
+  await expect(s.getByRole("button", { name: "Nova pasta" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(s).toBeHidden();
   await expect(field(page)).toHaveValue("ligar pro dentista sexta");
@@ -118,7 +118,7 @@ test("enquanto salva, Esc e toque fora não fecham a folha", async ({ page }) =>
   await send(page).click();
   const s = sheet(page);
   await s.getByRole("button", { name: "Salvar", exact: true }).click();
-  await expect(s.getByRole("button", { name: "Salvar", exact: true })).toBeDisabled();
+  await expect(s.getByRole("button", { name: "Salvando…" })).toBeDisabled();
 
   await page.keyboard.press("Escape");
   await page.mouse.click(195, 20); // fundo, acima da folha
@@ -138,7 +138,7 @@ test("falha ao carregar pastas mostra o erro com 'Tentar de novo', não 'Crie su
   await field(page).fill("ideia: assistir documentário sobre abelhas");
   await send(page).click();
   const s = sheet(page);
-  await expect(s).toContainText("💡 Ideia");
+  await expect(s.getByRole("radio", { name: "Ideia" })).toBeChecked();
   await expect(s.getByRole("alert")).toContainText("Não foi possível carregar as pastas.");
   await expect(s).not.toContainText("Crie sua primeira pasta");
   await expect(s.getByRole("button", { name: "Guardar", exact: true })).toBeDisabled();
@@ -219,28 +219,34 @@ test("voz: segurar o microfone transcreve e abre a confirmação", async ({ page
   });
   await page.goto("/");
 
-  await test.step("toque curto (< 0,5 s) é descartado", async () => {
-    // Dentro da página e sem temporizadores: solta no mesmo instante em que o indicador de
-    // gravação aparece (MutationObserver). Com setTimeout, uma máquina ocupada podia atrasar o
-    // "soltar" além dos 500 ms e o toque curto virava gravação (teste instável).
-    await page.evaluate(async () => {
-      const mic = document.querySelector<HTMLButtonElement>('[aria-label="Segure para falar"]')!;
+  const tap = (page: Page) =>
+    page.evaluate(() => {
+      const mic = document.querySelector<HTMLButtonElement>("[aria-describedby=recorder-hint]")!;
       const opts = { bubbles: true, pointerId: 1, pointerType: "touch", isPrimary: true, button: 0 };
-      const released = new Promise<void>((resolve) => {
-        const obs = new MutationObserver(() => {
-          if (!document.querySelector('[data-testid="recorder"]')) return;
-          obs.disconnect();
-          mic.dispatchEvent(new PointerEvent("pointerup", opts));
-          resolve();
-        });
-        obs.observe(document.body, { childList: true, subtree: true });
-      });
       mic.dispatchEvent(new PointerEvent("pointerdown", opts));
-      await released;
+      mic.dispatchEvent(new PointerEvent("pointerup", opts));
     });
+
+  await test.step("dois toques seguidos (< 0,5 s de áudio) são descartados", async () => {
+    await tap(page);
+    await expect(page.getByTestId("recorder")).toBeVisible();
+    await tap(page);
     await expect(page.getByTestId("recorder")).toHaveCount(0);
     await page.waitForTimeout(300);
     expect(calls).toBe(0);
+  });
+
+  await test.step("tocar começa, tocar de novo envia", async () => {
+    await tap(page);
+    await expect(page.getByTestId("recorder")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Parar e enviar" })).toBeVisible();
+    await page.waitForTimeout(700);
+    await tap(page);
+    await expect(sheet(page)).toBeVisible();
+    expect(calls).toBe(1);
+    await page.keyboard.press("Escape");
+    await expect(sheet(page)).toBeHidden();
+    calls = 0;
   });
 
   await test.step("segurar mostra o tempo e, ao soltar, preenche e interpreta", async () => {

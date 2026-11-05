@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
+import { addDays, isSunday, todayISO, weekStart } from "../shared/dates";
 import type { Idea, Task } from "../shared/types";
 import { CaptureBar } from "./components/CaptureBar";
 import { Toast } from "./components/Toast";
+import { Button } from "./components/ui/Button";
+import { CalendarIcon, CheckIcon, LightbulbIcon, ReportIcon, type IconComponent } from "./components/ui/Icon";
 import { useWide } from "./lib/useWide";
 import { Ideas } from "./screens/Ideas";
 import { Report } from "./screens/Report";
@@ -9,38 +12,94 @@ import { Today } from "./screens/Today";
 
 type Tab = "today" | "ideas";
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  // Folha com uma tarefa riscada
-  { id: "today", label: "Hoje", icon: "M5 4h14v16H5zM8.5 9.5l2 2 4-4M8.5 15h7" },
-  // Lâmpada
-  { id: "ideas", label: "Ideias", icon: "M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" },
+const TABS: { id: Tab; label: string; hash: string; Icon: IconComponent }[] = [
+  { id: "today", label: "Hoje", hash: "hoje", Icon: CalendarIcon },
+  { id: "ideas", label: "Ideias", hash: "ideias", Icon: LightbulbIcon },
 ];
 
+const tabFromHash = (): Tab => (window.location.hash === "#ideias" ? "ideas" : "today");
+
+/** Aba atual refletida no hash (#hoje / #ideias): o botão Voltar do navegador troca de aba. */
+function useHashTab(): [Tab, (t: Tab) => void] {
+  const [tab, setTabState] = useState<Tab>(tabFromHash);
+  useEffect(() => {
+    const onChange = () => setTabState(tabFromHash());
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+  const setTab = (t: Tab) => {
+    if (t !== tab) window.location.hash = TABS.find((x) => x.id === t)!.hash;
+  };
+  return [tab, setTab];
+}
+
+const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
+/** Primeira coisa focável: pula as barras e vai direto ao conteúdo. */
+function SkipLink() {
+  const go = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault(); // o hash é das abas; não pode virar #conteudo
+    const main = document.getElementById("conteudo");
+    main?.focus();
+    main?.scrollIntoView();
+  };
+  return (
+    <a
+      href="#conteudo"
+      onClick={go}
+      className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:flex focus:items-center focus:rounded-xl focus:bg-accent-fill focus:px-4 focus:text-on-accent focus:shadow-lg"
+    >
+      Pular para o conteúdo
+    </a>
+  );
+}
+
 export default function App() {
-  const [tab, setTab] = useState<Tab>("today");
+  const [tab, setTab] = useHashTab();
   const [captured, setCaptured] = useState<Task | null>(null);
   const [capturedIdea, setCapturedIdea] = useState<Idea | null>(null);
   const [reportStart, setReportStart] = useState<string | null>(null);
   const [todayKey, setTodayKey] = useState(0);
   const wide = useWide();
 
+  /** Mesmo destino do botão do Hoje: domingo abre a semana atual; nos outros dias, a anterior. */
+  const openReport = () => {
+    const today = todayISO();
+    const start = weekStart(today);
+    setReportStart(isSunday(today) ? start : addDays(start, -7));
+  };
+
   if (wide) {
-    // Computador: o dia fixo à esquerda (com a captura embaixo) e as Ideias no resto da tela.
+    // Computador: barra no topo; o dia fixo à esquerda (com a captura embaixo) e as Ideias no resto.
     return (
-      <div className="safe-x grid h-dvh grid-cols-[340px_minmax(0,1fr)] overflow-hidden">
-        <aside data-testid="today-pane" aria-label="Dia" className="pane flex h-dvh flex-col border-r border-line">
-          <div className="flex items-center gap-2 px-[18px] pt-[18px] font-semibold">
-            <span aria-hidden className="size-[22px] rounded-[7px] bg-accent-fill" />
+      <div className="safe-x grid h-dvh grid-rows-[52px_minmax(0,1fr)] overflow-hidden">
+        <SkipLink />
+        <header className="flex items-center gap-3 border-b border-line bg-surface px-5">
+          <span aria-hidden className="grid size-[26px] place-items-center rounded-lg bg-accent-fill text-on-accent">
+            <CheckIcon size={15} strokeWidth={2.6} />
+          </span>
+          <span translate="no" className="font-display text-base font-bold">
             Agenda
-          </div>
-          <div className="flex-1">
-            <Today key={todayKey} captured={captured} onOpenReport={setReportStart} wide />
-          </div>
-          <CaptureBar inline onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />
-        </aside>
-        <main className="min-w-0">
-          <Ideas wide captured={capturedIdea} onTaskSaved={setCaptured} />
-        </main>
+          </span>
+          <span className="flex-1" />
+          <Button size="sm" variant="secondary" icon={<ReportIcon size={16} />} onClick={openReport}>
+            Resumo da semana
+          </Button>
+          <kbd aria-hidden className="rounded-md border border-line px-1.5 py-px font-sans text-[12px] whitespace-nowrap text-muted">
+            {isMac() ? "⌘ K" : "Ctrl K"}
+          </kbd>
+        </header>
+        <div className="grid min-h-0 grid-cols-[380px_minmax(0,1fr)]">
+          <aside data-testid="today-pane" aria-label="Dia" className="pane flex h-full flex-col border-r border-line">
+            <div className="flex-1">
+              <Today key={todayKey} captured={captured} onOpenReport={setReportStart} wide />
+            </div>
+            <CaptureBar inline onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />
+          </aside>
+          <main id="conteudo" tabIndex={-1} className="min-h-0 min-w-0 overflow-hidden focus:outline-none">
+            <Ideas wide captured={capturedIdea} onTaskSaved={setCaptured} />
+          </main>
+        </div>
         {reportStart && (
           <Report start={reportStart} onClose={() => setReportStart(null)} onMoved={() => setTodayKey((k) => k + 1)} />
         )}
@@ -51,7 +110,8 @@ export default function App() {
 
   return (
     <div className="safe-x min-h-dvh">
-      <main>
+      <SkipLink />
+      <main id="conteudo" tabIndex={-1} className="focus:outline-none">
         {tab === "today" ? (
           <Today key={todayKey} captured={captured} onOpenReport={setReportStart} />
         ) : (
@@ -63,33 +123,24 @@ export default function App() {
 
       <nav
         aria-label="Seções"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/90 backdrop-blur-md"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-md"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="mx-auto flex max-w-md">
-          {TABS.map((t) => {
-            const on = tab === t.id;
+          {TABS.map(({ id, label, Icon }) => {
+            const on = tab === id;
             return (
               <button
-                key={t.id}
+                key={id}
                 type="button"
                 aria-current={on ? "page" : undefined}
-                onClick={() => setTab(t.id)}
-                className={`flex flex-1 flex-col items-center justify-center gap-0.5 pt-2 pb-1.5 text-[11px] font-medium transition-colors duration-150 ${
-                  on ? "text-accent" : "text-muted active:text-ink"
+                onClick={() => setTab(id)}
+                className={`flex flex-1 flex-col items-center justify-center gap-0.5 pt-2 pb-1.5 text-[12px] transition-colors duration-150 focus-visible:-outline-offset-4 motion-reduce:transition-none ${
+                  on ? "font-semibold text-accent" : "font-medium text-muted hover:text-ink active:text-ink"
                 }`}
               >
-                <svg viewBox="0 0 24 24" className="size-6" aria-hidden>
-                  <path
-                    d={t.icon}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={on ? 2 : 1.6}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                {t.label}
+                <Icon size={20} strokeWidth={on ? 2.2 : 1.8} />
+                {label}
               </button>
             );
           })}

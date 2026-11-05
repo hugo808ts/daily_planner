@@ -2,10 +2,10 @@ import { formatDayTitle, weekdayShort } from "../../shared/dates";
 import type { TaskStatus } from "../../shared/status";
 import type { Area } from "../../shared/types";
 
-export const AREAS: { value: Area; label: string; emoji: string }[] = [
-  { value: "work", label: "Trabalho", emoji: "💼" },
-  { value: "school", label: "Faculdade", emoji: "📚" },
-  { value: "personal", label: "Pessoal", emoji: "❤️" },
+export const AREAS: { value: Area; label: string }[] = [
+  { value: "work", label: "Trabalho" },
+  { value: "school", label: "Faculdade" },
+  { value: "personal", label: "Pessoal" },
 ];
 
 export const areaInfo = (area: Area) => AREAS.find((a) => a.value === area)!;

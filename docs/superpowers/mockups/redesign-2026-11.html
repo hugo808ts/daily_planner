@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda — rascunho do novo visual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F2FA; --surface:#fff; --ink:#1F1B33; --muted:#625C7A; --line:#E6E1F2;
+  --accent:#6D4AFF; --accent-soft:#EEE9FF; --danger:#D93A40; --danger-soft:#FDECEC;
+  --note:#FFF6C9; --work:#3B6FE0; --school:#1E9E6A; --personal:#D6457A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#E9E6F2;color:var(--ink);font:14px/1.45 Geist,system-ui,sans-serif;padding:32px 24px 80px}
+h1.page{font:700 26px 'Bricolage Grotesque',sans-serif;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 28px;max-width:760px}
+section{margin-bottom:56px}
+section>h2{font:600 18px 'Bricolage Grotesque',sans-serif;margin:0 0 6px}
+section>p{color:var(--muted);margin:0 0 18px;max-width:780px}
+.row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.col{display:flex;flex-direction:column;align-items:center;gap:10px}
+.tag{font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px}
+.tag.before{background:#e2dfe9;color:#5b566c}.tag.after{background:var(--accent);color:#fff}
+.shot{width:300px;border-radius:30px;border:8px solid #111;display:block}
+.shot.wide{width:720px;border-radius:12px;border-width:6px}
+ul.changes{margin:0;padding-left:18px;max-width:300px;color:var(--muted);font-size:13px}
+ul.changes li{margin:3px 0}
+/* phone */
+.ph{width:300px;height:650px;border:8px solid #111;border-radius:38px;background:var(--bg);overflow:hidden;position:relative;font-size:13.5px}
+.disp{font-family:'Bricolage Grotesque',sans-serif}
+.pad{padding:14px 16px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.month{font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:5px 10px;font-size:12.5px;font-weight:500;color:var(--ink)}
+.week{display:flex;justify-content:space-between;margin:12px 0 14px}
+.d{width:36px;text-align:center;padding:6px 0 7px;border-radius:12px;color:var(--muted);font-size:11.5px}
+.d b{display:block;color:var(--ink);font-size:15px;font-weight:600;margin-top:1px}
+.d.on{background:var(--accent);color:#fff}.d.on b{color:#fff}
+.d i{display:flex;gap:2px;justify-content:center;margin-top:4px;height:4px}
+.d i span{width:4px;height:4px;border-radius:50%}
+.g{background:var(--accent)}.r{background:var(--danger)}.n{background:#CFC8E6}
+.on .g{background:#fff}.on .n{background:#ffffff80}
+.title{display:flex;justify-content:space-between;align-items:flex-end}
+.title h3{margin:0;font:700 26px 'Bricolage Grotesque',sans-serif;line-height:1}
+.title small{display:block;color:var(--muted);font-size:13px;margin-top:4px}
+.score{font-size:13px;color:var(--muted);text-align:right}.score b{color:var(--ink)}.score .x{color:var(--danger);font-weight:600}
+.bar{display:flex;gap:3px;margin:12px 0 14px}.bar span{flex:1;height:5px;border-radius:3px}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.it{display:flex;gap:11px;padding:11px 14px;border-top:1px solid var(--line);position:relative}
+.it:first-child{border-top:0}
+.it.late::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--danger)}
+.box{width:20px;height:20px;border-radius:6px;border:1.75px solid #8E88A8;flex-shrink:0;margin-top:1px;display:grid;place-items:center}
+.done .box{background:var(--accent);border-color:var(--accent)}
+.done .t{color:var(--muted);text-decoration:line-through;text-decoration-color:#A39DBA}
+.t{font-weight:500}
+.meta{display:flex;gap:8px;align-items:center;margin-top:3px;font-size:12.5px;color:var(--muted)}
+.area{display:inline-flex;align-items:center;gap:5px}.area::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
+.area.w{color:var(--work)}.area.s{color:var(--school)}.area.p{color:var(--personal)}
+.late .tm{color:var(--danger);font-weight:600}
+.note{display:flex;gap:8px;align-items:center;margin-top:12px;background:var(--note);border-radius:14px;padding:10px 12px;color:#4D4520}
+.cap{position:absolute;left:12px;right:12px;bottom:70px;display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:6px 6px 6px 14px;box-shadow:0 8px 24px -12px #1F1B3340}
+.cap span{flex:1;color:var(--muted)}
+.ib{width:38px;height:38px;border-radius:12px;display:grid;place-items:center}
+.ib.send{background:var(--accent);color:#fff}.ib.mic{color:var(--accent)}
+.tabs{position:absolute;left:0;right:0;bottom:0;height:60px;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;font-size:11.5px;color:var(--muted)}
+.tabs div{display:flex;flex-direction:column;align-items:center;gap:3px}.tabs .on{color:var(--accent);font-weight:600}
+svg{flex-shrink:0}
+/* ideas */
+.ihead{display:flex;justify-content:space-between;align-items:center}
+.ihead h3{margin:0;font:700 26px 'Bricolage Grotesque',sans-serif}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 14px;border-radius:12px;font-weight:600;font-size:13.5px}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.sec{background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid #F2C9CB}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--muted);margin:12px 0 14px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;min-height:96px;display:flex;flex-direction:column;justify-content:space-between}
+.fi{width:32px;height:32px;border-radius:10px;display:grid;place-items:center}
+.fc b{font-weight:600;display:block}.fc small{color:var(--muted);font-size:12px}
+.fc.new{border:1.5px dashed #CFC8E6;background:transparent;align-items:center;justify-content:center;color:var(--muted);flex-direction:row;gap:6px}
+/* editor */
+.back{display:flex;align-items:center;gap:4px;color:var(--accent);font-weight:500}
+.ed h3{font:700 23px/1.15 'Bricolage Grotesque',sans-serif;margin:14px 0 4px}
+.ed .when{font-size:12.5px;color:var(--muted)}
+.link{display:flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;color:var(--muted);margin:14px 0 10px}
+.body{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;min-height:120px}
+.edacts{display:flex;gap:8px;margin-top:14px}.edacts .btn{flex:1}
+.saved{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+/* desktop */
+.desk{width:1100px;height:640px;border:6px solid #111;border-radius:14px;overflow:hidden;background:var(--bg);display:grid;grid-template-rows:52px 1fr;font-size:13.5px}
+.appbar{display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--surface)}
+.logo{width:26px;height:26px;border-radius:8px;background:var(--accent);display:grid;place-items:center;color:#fff}
+.appbar .name{font:700 16px 'Bricolage Grotesque',sans-serif}
+.appbar .sp{flex:1}.kbd{font-size:11px;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--muted)}
+.dgrid{display:grid;grid-template-columns:380px 1fr;min-height:0}
+.dleft{border-right:1px solid var(--line);padding:16px 20px;position:relative;overflow:hidden}
+.dleft .cap{bottom:16px;left:20px;right:20px}
+.dright{display:grid;grid-template-columns:230px 1fr;min-height:0}
+.fside{border-right:1px solid var(--line);padding:16px 12px}
+.fside h4{margin:0 0 10px;font:600 15px 'Bricolage Grotesque',sans-serif;display:flex;justify-content:space-between;align-items:center}
+.fl{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:10px;margin-bottom:2px}
+.fl.on{background:var(--surface);border:1px solid var(--line);font-weight:600}
+.fl small{margin-left:auto;color:var(--muted)}
+.dmain{padding:20px 28px;overflow:hidden}
+.dmain .ihead h3{font-size:22px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+.ic{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.ic b{display:block;font-weight:600;margin-bottom:4px}
+.ic p{margin:0;color:var(--muted);font-size:13px}
+.ic .ft{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg);border-radius:8px;padding:3px 8px;font-size:12px;color:var(--ink)}
+.ic.pin{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.hint{margin-top:18px;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<h1 class="page">Agenda: rascunho do novo visual</h1>
+<p class="lead">Mesma estrutura e mesmas cores base (B · Folha do dia). Muda o acabamento: ícones no lugar de emojis, botões com um padrão só, atrasadas mais leves, tipografia mais legível e um computador sem colunas vazias.</p>
+
+<!-- HOJE -->
+<section>
+<h2>1 · Tela Hoje (celular)</h2>
+<p>Mês visível no topo, resumo como botão discreto, atrasadas marcadas com uma faixa lateral em vez da linha inteira rosa, áreas como bolinha de cor e texto de no mínimo 12,5 px.</p>
+<div class="row">
+ <div class="col"><span class="tag before">Antes</span><img class="shot" src="mobile-light-today.png" alt="Tela Hoje atual"></div>
+ <div class="col"><span class="tag after">Depois</span>
+  <div class="ph"><div class="pad">
+   <div class="top"><span class="month disp">Novembro</span><span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Resumo da semana</span></div>
+   <div class="week">
+    <div class="d">seg<b>2</b><i><span class="g"></span></i></div>
+    <div class="d">ter<b>3</b><i><span class="r"></span></i></div>
+    <div class="d on">qua<b>4</b><i><span class="g"></span><span class="n"></span><span class="n"></span></i></div>
+    <div class="d">qui<b>5</b><i><span class="n"></span></i></div>
+    <div class="d">sex<b>6</b><i><span class="n"></span></i></div>
+    <div class="d">sáb<b>7</b><i></i></div>
+    <div class="d">dom<b>8</b><i></i></div>
+   </div>
+   <div class="title"><div><h3>Hoje</h3><small>Quarta, 4 de novembro</small></div><div class="score"><b>1 de 5</b> feitas<br><span class="x">2 atrasadas</span></div></div>
+   <div class="bar"><span class="g"></span><span class="r"></span><span class="r"></span><span class="n"></span><span class="n"></span></div>
+   <div class="list">
+    <div class="it late"><div class="box"></div><div><div class="t">Estudar Cálculo, cap. 4</div><div class="meta"><span class="area s">Faculdade</span><span class="tm">00:05 · atrasada</span></div></div></div>
+    <div class="it late"><div class="box"></div><div><div class="t">Fechar relatório mensal</div><div class="meta"><span class="area w">Trabalho</span><span class="tm">00:30 · atrasada</span></div></div></div>
+    <div class="it"><div class="box"></div><div><div class="t">Jantar com a namorada</div><div class="meta"><span class="area p">Pessoal</span><span>23:59</span></div></div></div>
+    <div class="it done"><div class="box"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M5 12l5 5 9-10"/></svg></div><div><div class="t">Responder e-mail do fornecedor</div><div class="meta"><span class="area w">Trabalho</span></div></div></div>
+   </div>
+   <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 17v5"/><path d="M9 10.76V6h6v4.76l2 3.24H7z"/><path d="M8 2h8"/></svg>Levar o carregador do notebook</div>
+  </div>
+  <div class="cap"><span>Ex.: dentista amanhã às 15h…</span><div class="ib mic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/></svg></div><div class="ib send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg></div></div>
+  <div class="tabs"><div class="on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Hoje</div><div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Ideias</div></div>
+  </div>
+ </div>
+ <ul class="changes">
+  <li>Emojis 📚💼❤️📌 trocados por ícones de traço e bolinhas de cor</li>
+  <li>Atrasada: faixa vermelha fina e só o horário em vermelho</li>
+  <li>"Resumo da semana" vira botão; mês aparece no topo</li>
+  <li>Placar mais claro: "1 de 5 feitas"</li>
+  <li>Placeholder com exemplo: "Ex.: dentista amanhã às 15h…"</li>
+  <li>Botão enviar sempre na cor principal</li>
+ </ul>
+</div>
+</section>
+
+<!-- IDEIAS -->
+<section>
+<h2>2 · Ideias e editor (celular)</h2>
+<p>Pastas com ícones de traço em vez de emoji, botão "+" na cor principal, e no editor a ação de apagar deixa de ser o botão mais chamativo.</p>
+<div class="row">
+ <div class="col"><span class="tag before">Antes</span><img class="shot" src="mobile-light-ideas-folders.png" alt="Pastas atuais"></div>
+ <div class="col"><span class="tag after">Depois</span>
+  <div class="ph"><div class="pad">
+   <div class="ihead" style="margin-top:8px"><h3>Ideias</h3><span class="btn primary" style="width:40px;padding:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></span></div>
+   <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Buscar em todas as ideias…</div>
+   <div class="fgrid">
+    <div class="fc"><div class="fi" style="background:#E5F5EE;color:var(--school)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg></div><div><b>Estudos</b><small>1 ideia</small></div></div>
+    <div class="fc"><div class="fi" style="background:#FFF4D6;color:#B7791F"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></div><div><b>Projetos</b><small>1 ideia</small></div></div>
+    <div class="fc"><div class="fi" style="background:#FCE7EF;color:var(--personal)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg></div><div><b>Vídeos TikTok</b><small>2 ideias</small></div></div>
+    <div class="fc new"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Nova pasta</div>
+   </div>
+  </div>
+  <div class="tabs"><div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Hoje</div><div class="on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Ideias</div></div>
+  </div>
+ </div>
+ <div class="col"><span class="tag before">Antes</span><img class="shot" src="mobile-light-idea-editor.png" alt="Editor atual"></div>
+ <div class="col"><span class="tag after">Depois</span>
+  <div class="ph"><div class="pad ed">
+   <div class="top"><span class="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>Vídeos TikTok</span><span class="saved"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5 9-10"/></svg>Salvo</span></div>
+   <h3>Revisão espaçada para estudar</h3>
+   <div class="when">Criada em 4 de nov.</div>
+   <div class="link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>Cole um link (https://…)</div>
+   <div class="body">Revisar no dia 1, 3, 7 e 14 depois da aula.</div>
+   <div class="edacts"><span class="btn sec"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Virar tarefa</span><span class="btn danger"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5 9-10"/></svg>Concluir e apagar</span></div>
+  </div>
+  <div class="tabs"><div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>Hoje</div><div class="on"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Ideias</div></div>
+  </div>
+ </div>
+</div>
+</section>
+
+<!-- DESKTOP -->
+<section>
+<h2>3 · Computador</h2>
+<p>Barra superior com marca e atalho, coluna do dia mais larga (380 px), e ao abrir as Ideias mostra as ideias recentes em cartões, sem duas colunas vazias. Tudo no mesmo fundo, com reação ao passar o mouse.</p>
+<div class="row">
+ <div class="col"><span class="tag before">Antes</span><img class="shot wide" src="desktop-light-main.png" alt="Computador atual"></div>
+</div>
+<div class="row" style="margin-top:18px">
+ <div class="col"><span class="tag after">Depois</span>
+  <div class="desk">
+   <div class="appbar"><div class="logo"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg></div><span class="name">Agenda</span><span class="sp"></span><span class="pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Resumo da semana</span><span class="kbd">Ctrl K</span></div>
+   <div class="dgrid">
+    <div class="dleft">
+     <div class="top" style="margin-top:0"><span class="month disp">Novembro</span></div>
+     <div class="week">
+      <div class="d">seg<b>2</b><i><span class="g"></span></i></div><div class="d">ter<b>3</b><i><span class="r"></span></i></div><div class="d on">qua<b>4</b><i><span class="g"></span><span class="n"></span></i></div><div class="d">qui<b>5</b><i><span class="n"></span></i></div><div class="d">sex<b>6</b><i></i></div><div class="d">sáb<b>7</b><i></i></div><div class="d">dom<b>8</b><i></i></div>
+     </div>
+     <div class="title"><div><h3>Hoje</h3><small>Quarta, 4 de novembro</small></div><div class="score"><b>1 de 5</b> feitas<br><span class="x">2 atrasadas</span></div></div>
+     <div class="bar"><span class="g"></span><span class="r"></span><span class="r"></span><span class="n"></span><span class="n"></span></div>
+     <div class="list">
+      <div class="it late"><div class="box"></div><div><div class="t">Estudar Cálculo, cap. 4</div><div class="meta"><span class="area s">Faculdade</span><span class="tm">00:05 · atrasada</span></div></div></div>
+      <div class="it late"><div class="box"></div><div><div class="t">Fechar relatório mensal</div><div class="meta"><span class="area w">Trabalho</span><span class="tm">00:30 · atrasada</span></div></div></div>
+      <div class="it"><div class="box"></div><div><div class="t">Jantar com a namorada</div><div class="meta"><span class="area p">Pessoal</span><span>23:59</span></div></div></div>
+     </div>
+     <div class="cap"><span>Ex.: dentista amanhã às 15h…</span><div class="ib mic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/></svg></div><div class="ib send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg></div></div>
+    </div>
+    <div class="dright">
+     <div class="fside">
+      <h4>Pastas <span class="btn primary" style="height:30px;width:30px;padding:0;border-radius:9px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></span></h4>
+      <div class="search" style="margin:0 0 10px;padding:8px 10px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Buscar…</div>
+      <div class="fl on"><span class="fi" style="width:26px;height:26px;background:var(--accent-soft);color:var(--accent)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Recentes<small>4</small></div>
+      <div class="fl"><span class="fi" style="width:26px;height:26px;background:#E5F5EE;color:var(--school)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg></span>Estudos<small>1</small></div>
+      <div class="fl"><span class="fi" style="width:26px;height:26px;background:#FFF4D6;color:#B7791F"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></span>Projetos<small>1</small></div>
+      <div class="fl"><span class="fi" style="width:26px;height:26px;background:#FCE7EF;color:var(--personal)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg></span>Vídeos TikTok<small>2</small></div>
+     </div>
+     <div class="dmain">
+      <div class="ihead"><h3>Recentes</h3><span class="btn sec"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Nova ideia</span></div>
+      <div class="cards">
+       <div class="ic pin"><b>Revisão espaçada para estudar</b><p>Revisar no dia 1, 3, 7 e 14 depois da aula.</p><div class="ft"><span class="chip">Vídeos TikTok</span><span>fixada</span></div></div>
+       <div class="ic"><b>Receita de marmita da semana</b><p>Frango, arroz integral e legumes. Fazer no domingo.</p><div class="ft"><span class="chip">tiktok.com</span><span>há 3 dias</span></div></div>
+       <div class="ic"><b>App de controle de gastos</b><p>Ideia de projeto para o portfólio.</p><div class="ft"><span class="chip">Projetos</span><span>há 5 dias</span></div></div>
+       <div class="ic"><b>Resumo de Estatística</b><p>Montar mapa mental dos capítulos 3 e 4.</p><div class="ft"><span class="chip">Estudos</span><span>há 1 semana</span></div></div>
+      </div>
+      <div class="hint"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>Clique numa ideia para abrir o editor nesta área.</div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+</section>
+
+<section>
+<h2>4 · Também entra (sem mudar o visual principal)</h2>
+<ul class="changes" style="max-width:780px;font-size:14px">
+ <li>Contorno de foco visível em todos os campos e botões; reação ao passar o mouse no computador.</li>
+ <li>Resumo semanal como janela de verdade: Esc fecha, cabeçalho com seta de voltar, mensagem amigável em semana vazia.</li>
+ <li>Teclado do iPhone não abre sozinho; aviso antes de descartar uma edição; "Desfazer" pausa ao passar o mouse.</li>
+ <li>Botões de fixar e editar pasta com área de toque de 44 px; microfone também com toque para começar e parar.</li>
+ <li>Contraste mínimo AA em textos pequenos e tarefas feitas; datas e porcentagens com Intl.</li>
+</ul>
+</section>
+</body>
+</html>

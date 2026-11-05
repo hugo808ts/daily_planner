@@ -2,36 +2,34 @@ import { dayScore, taskStatus } from "../../shared/status";
 import type { Task } from "../../shared/types";
 import { plural, STATUS_ORDER } from "../lib/format";
 
-/** Partes do placar do dia: "3 feitas · 2 atrasadas", ou "0 de 4" antes de começar. */
+const NB = " ";
+
+/** Linhas do placar: "1 de 5 feitas" e, em vermelho, "2 atrasadas" / "1 não feita". */
 export function scoreParts(tasks: Task[], now: Date): { text: string; bad: boolean }[] {
   const s = dayScore(tasks, now);
   if (s.total === 0) return [];
-  if (s.done === 0 && s.overdue === 0 && s.notDone === 0) return [{ text: `0 de ${s.total}`, bad: false }];
-  const parts = [{ text: plural(s.done, "feita", "feitas"), bad: false }];
-  if (s.overdue) parts.push({ text: plural(s.overdue, "atrasada", "atrasadas"), bad: true });
-  if (s.notDone) parts.push({ text: plural(s.notDone, "não feita", "não feitas"), bad: true });
+  const nb = (t: string) => t.replaceAll(" ", NB);
+  const parts = [{ text: nb(`${s.done} de ${s.total} ${s.total === 1 ? "feita" : "feitas"}`), bad: false }];
+  if (s.overdue) parts.push({ text: nb(plural(s.overdue, "atrasada", "atrasadas")), bad: true });
+  if (s.notDone) parts.push({ text: nb(plural(s.notDone, "não feita", "não feitas")), bad: true });
   return parts;
 }
 
-/** Texto do placar, com as partes vermelhas destacadas. */
+/** Texto do placar (aria-live), com as partes vermelhas destacadas. */
 export function ScoreText({ tasks, now }: { tasks: Task[]; now: Date }) {
   const parts = scoreParts(tasks, now);
-  if (parts.length === 0) return null;
   return (
-    <p data-testid="score" className="text-sm text-muted tabular-nums">
+    <p data-testid="score" aria-live="polite" className="text-right text-[13px] leading-snug text-muted tabular-nums">
       {parts.map((p, i) => (
-        <span key={p.text}>
-          {i > 0 && " · "}
-          <span className={p.bad ? "font-semibold text-danger-ink" : i === 0 ? "font-semibold text-ink" : ""}>
-            {p.text}
-          </span>
+        <span key={p.text} className="block">
+          <span className={p.bad ? "font-semibold text-danger-ink" : "font-semibold text-ink"}>{p.text}</span>
         </span>
       ))}
     </p>
   );
 }
 
-/** Barra com um segmento por tarefa (roxo feita, vermelho atrasada/não feita, cinza pendente). */
+/** Barra com um segmento por tarefa (roxo feita, vermelho atrasada/nao feita, cinza pendente). */
 export function ScoreBar({ tasks, now }: { tasks: Task[]; now: Date }) {
   if (tasks.length === 0) return null;
   const statuses = tasks.map((t) => taskStatus(t, now)).sort((a, b) => STATUS_ORDER[a] - STATUS_ORDER[b]);

@@ -3,39 +3,64 @@
 @import "@fontsource-variable/geist";
 
 :root {
-  --bg: #f3f1fa;
-  --ink: #24203a;
-  --accent: #6d4aff;
-  --danger: #e5484d;
-  --note: #fff6c9;
+  /* Tokens do redesign 2026-11 (docs/superpowers/mockups/redesign-2026-11.html).
+     Pares de texto conferidos para WCAG AA (>= 4,5:1) sobre --surface e --bg. */
+  --bg: #f4f2fa;
   --surface: #ffffff;
-  --muted: #6f6a8c;
-  --line: #eeebf7;
-  --dot: #cfc8ea;
-  --danger-ink: #b4232a;
+  --ink: #1f1b33;
+  --muted: #625c7a; /* 5,7:1 sobre --bg */
+  --line: #e6e1f2;
+  --dot: #cfc8e6;
+  --accent: #6d4aff; /* 4,6:1 sobre --bg; texto/ícone roxo */
+  --accent-soft: #eee9ff; /* fundo de chip/realce roxo */
+  --accent-ink: #5a36f0; /* texto roxo sobre --accent-soft (5,5:1) */
+  --danger: #d93a40; /* bordas, faixa de atrasada, ícones (4,5:1 sobre --surface) */
+  --danger-soft: #fdecec; /* fundo vermelho suave */
+  --danger-line: #f2c9cb; /* borda do botão danger */
+  --danger-ink: #b4232a; /* texto vermelho (5,9:1 sobre --bg) */
+  --note: #fff6c9;
   --note-ink: #4d4520;
+  /* Áreas: o ponto usa a cor base; o texto usa a variante -ink (AA). */
+  --work: #3b6fe0;
+  --work-ink: #2f5fcc;
+  --school: #1e9e6a;
+  --school-ink: #167a52;
+  --personal: #d6457a;
+  --personal-ink: #b8325f;
   /* Preenchimentos com texto por cima (botões roxos e vermelhos): contraste >= 4,5 com --on-accent. */
   --accent-fill: #6d4aff;
   --danger-fill: #c93339;
   --on-accent: #ffffff;
   /* Altura da barra de abas (sem a área segura); a captura fica logo acima. */
   --tabbar-h: 57px;
+  /* Espaço no fim da rolagem para barra de abas + captura fixas (celular). */
+  --fixed-bars-h: calc(var(--tabbar-h) + 72px + env(safe-area-inset-bottom));
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #16131f;
-    --ink: #ece9f7;
-    --accent: #8f74ff;
-    --danger: #ff6369;
-    --note: #3a3414;
     --surface: #211d2e;
-    --muted: #a39dbf;
+    --ink: #ece9f7;
+    --muted: #a39dbf; /* 6,3:1 sobre --surface */
     --line: #2e2942;
     --dot: #4c4568;
+    --accent: #8f74ff; /* 4,8:1 sobre --surface */
+    --accent-soft: #2b2450;
+    --accent-ink: #b3a1ff; /* 6,4:1 sobre --accent-soft */
+    --danger: #ff6369;
+    --danger-soft: #3a1d22;
+    --danger-line: #5c2a30;
     --danger-ink: #ff9a9e;
+    --note: #3a3414;
     --note-ink: #f3e7a6;
+    --work: #6e9bff;
+    --work-ink: #6e9bff; /* 6,1:1 sobre --surface */
+    --school: #3dcb92;
+    --school-ink: #3dcb92; /* 7,9:1 */
+    --personal: #ff7aab;
+    --personal-ink: #ff7aab; /* 6,7:1 */
     --accent-fill: #6b4ff5;
   }
 }
@@ -44,6 +69,7 @@
 @media (min-width: 1024px) {
   :root {
     --tabbar-h: 0px;
+    --fixed-bars-h: 0px;
   }
 }
 
@@ -51,7 +77,11 @@
   --color-bg: var(--bg);
   --color-ink: var(--ink);
   --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
   --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
   --color-note: var(--note);
   --color-surface: var(--surface);
   --color-muted: var(--muted);
@@ -62,8 +92,17 @@
   --color-accent-fill: var(--accent-fill);
   --color-danger-fill: var(--danger-fill);
   --color-on-accent: var(--on-accent);
+  --color-work: var(--work);
+  --color-work-ink: var(--work-ink);
+  --color-school: var(--school);
+  --color-school-ink: var(--school-ink);
+  --color-personal: var(--personal);
+  --color-personal-ink: var(--personal-ink);
   --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Texto de apoio: nunca menor que 12,5 px → classe text-meta. */
+  --text-meta: 12.5px;
+  --text-meta--line-height: 1.4;
 }
 
 @layer base {
@@ -75,7 +114,8 @@
 
   html {
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior: none;
+    /* Rolagem por teclado/âncora não esconde o item atrás das barras fixas. */
+    scroll-padding-bottom: var(--fixed-bars-h);
   }
 
   body {
@@ -85,7 +125,25 @@
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
-    overscroll-behavior-y: none;
+  }
+
+  /* Sem "elástico" só com mouse/trackpad; no toque o puxar-para-atualizar continua. */
+  @media (pointer: fine) {
+    html,
+    body {
+      overscroll-behavior: none;
+    }
+  }
+
+  /* Folha/diálogo aberto: a página atrás não rola. */
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
 
   /* iOS não dá zoom ao focar campos com fonte >= 16px. Em @layer base para que
@@ -105,18 +163,31 @@
     touch-action: manipulation;
   }
 
-  button,
-  [role="button"] {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-  }
-
+  /* Foco visível obrigatório (teclado) em qualquer elemento focável. */
   :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
 }
+
+/* Ícones e chips: segurar o dedo não seleciona texto nem abre o menu do iOS.
+   Botões com texto (títulos de tarefa etc.) continuam copiáveis. */
+@utility no-select {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* Texto de apoio legível: 12,5 px + cor --muted. (Só o tamanho: text-meta.) */
+@utility meta {
+  font-size: var(--text-meta);
+  line-height: 1.4;
+  color: var(--muted);
+}
+/* Fim de conteúdo rolável no celular: não fica atrás da captura + abas. */
+@utility pb-fixed-bars {
+  padding-bottom: var(--fixed-bars-h);
+}
+
 
 @utility safe-x {
   padding-left: env(safe-area-inset-left);
@@ -169,5 +240,14 @@
 @media (prefers-reduced-motion: reduce) {
   .sheet-dialog[open] {
     animation: none;
+  }
+  /* Sem deslocamentos/escalas animados: transições e animações ficam instantâneas. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
