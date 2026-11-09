@@ -15,7 +15,7 @@ interface Props {
 }
 
 function dotClass(status: TaskStatus, on: boolean): string {
-  if (status === "done") return on ? "bg-on-accent" : "bg-accent";
+  if (status === "done") return on ? "bg-on-accent" : "bg-lime shadow-[0_0_6px_var(--lime)]";
   if (status === "pending") return on ? "bg-on-accent/55" : "bg-dot";
   return on ? "bg-danger-soft" : "bg-danger";
 }
@@ -50,17 +50,17 @@ export function WeekStrip({ days, today, selected, tasks, now, onSelect }: Props
             aria-current={isToday ? "date" : undefined}
             aria-pressed={on}
             className={[
-              "flex max-w-11 min-w-0 flex-1 flex-col items-center rounded-2xl pt-1.5 pb-2 text-[12px] leading-tight transition-colors duration-150",
+              "flex max-w-12 min-w-0 flex-1 flex-col items-center rounded-2xl pt-1.5 pb-2 text-[12px] leading-tight transition-colors duration-150",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-              on ? "bg-accent-fill text-on-accent" : "text-muted hover:bg-ink/[0.06] active:bg-ink/[0.08]",
+              on ? "fill-neon" : "text-muted hover:bg-ink/[0.06] active:bg-ink/[0.08]",
               isToday && !on ? "ring-1 ring-accent/60 ring-inset" : "",
             ].join(" ")}
           >
-            <span>{weekdayShort(date)}</span>
-            <span className={`text-base font-semibold ${on ? "text-on-accent" : "text-ink"}`}>{dayNumber(date)}</span>
-            <span aria-hidden className="mt-1 flex h-1 gap-0.5">
+            <span className="font-mono text-[10.5px] tracking-[0.1em] uppercase">{weekdayShort(date)}</span>
+            <span className={`font-display text-[19px] font-bold ${on ? "text-on-accent" : "text-ink"}`}>{dayNumber(date)}</span>
+            <span aria-hidden className="mt-1 flex h-[3px] gap-0.5">
               {statuses.slice(0, MAX_DOTS).map((s, i) => (
-                <i key={i} className={`size-1 rounded-full ${dotClass(s, on)}`} />
+                <i key={i} className={`h-[3px] w-2 rounded-full ${dotClass(s, on)}`} />
               ))}
             </span>
             <span className="sr-only">{summary(statuses)}</span>

@@ -34,12 +34,12 @@ export function SundayCard({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="mb-3 flex w-full items-center justify-between gap-3 rounded-[20px] bg-accent-soft px-3.5 py-2.5 text-left transition-colors duration-150 hover:bg-accent-soft/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="mb-3 flex w-full items-center justify-between gap-3 glass rounded-[20px] px-3.5 py-2.5 text-left transition-colors duration-150 hover:bg-accent-soft/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <span className="flex min-w-0 items-center gap-3">
         <span aria-hidden className="grid size-11 shrink-0 place-items-center">
           {week?.medal ? (
-            <Medal tier={week.medal} size={week.medal === "supremo" ? 32 : 42} />
+            <Medal tier={week.medal} size={42} ribbon={false} />
           ) : (
             <MedalPlaceholder size={38} />
           )}

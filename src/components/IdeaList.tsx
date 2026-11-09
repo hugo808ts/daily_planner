@@ -66,8 +66,8 @@ export function IdeaCard({ idea, now, selected = false, folder, onOpen, onToggle
         type="button"
         aria-current={selected ? "true" : undefined}
         onClick={() => onOpen(idea)}
-        className={`flex h-full w-full gap-3 rounded-2xl border-[1.5px] bg-surface py-3 pr-14 pl-4 text-left transition-[border-color,box-shadow] duration-150 hover:border-dot hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none ${
-          selected ? "border-accent" : "border-transparent"
+        className={`flex h-full w-full glass-quiet gap-3 rounded-2xl border-[1.5px] py-3 pr-14 pl-4 text-left transition-[border-color,box-shadow] duration-150 hover:border-lime/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none ${
+          selected ? "border-lime" : ""
         }`}
       >
         {thumb && (
@@ -95,7 +95,7 @@ export function IdeaCard({ idea, now, selected = false, folder, onOpen, onToggle
               <span />
             )}
             <span className="shrink-0">
-              {idea.pinned && <span className="font-medium text-accent-ink">fixada · </span>}
+              {idea.pinned && <span className="font-mono text-[11px] font-medium tracking-[0.14em] text-lime uppercase">fixada · </span>}
               <time dateTime={idea.updatedAt}>{ago(idea.updatedAt, now)}</time>
             </span>
           </span>
@@ -118,7 +118,7 @@ function Skeleton({ cols = false }: { cols?: boolean }) {
     <div role="status" className={cols ? "grid gap-2 sm:grid-cols-2" : "space-y-2"}>
       <span className="sr-only">Carregando…</span>
       {[0, 1].map((i) => (
-        <div key={i} aria-hidden className="h-20 rounded-2xl bg-surface motion-safe:animate-pulse" />
+        <div key={i} aria-hidden className="h-20 glass-quiet rounded-2xl motion-safe:animate-pulse" />
       ))}
     </div>
   );
@@ -126,7 +126,7 @@ function Skeleton({ cols = false }: { cols?: boolean }) {
 
 function ErrorBox({ error, onReload }: { error: string; onReload: () => void }) {
   return (
-    <div role="alert" className="rounded-[20px] bg-surface px-4 py-5 text-center text-sm">
+    <div role="alert" className="glass-quiet rounded-[20px] px-4 py-5 text-center text-sm">
       <p className="mb-3 text-danger-ink">{error}</p>
       <Button variant="secondary" size="sm" onClick={onReload}>
         Tentar de novo
@@ -146,7 +146,7 @@ export function IdeaList(props: Props) {
         <div className="min-w-0">
           <Heading
             id="idea-list-title"
-            className={`flex items-center gap-2 font-display leading-tight font-semibold tracking-[-0.01em] ${wide ? "text-xl" : "text-[28px]"}`}
+            className={`flex items-center gap-2 font-display leading-tight font-extrabold tracking-[-0.03em] ${wide ? "text-xl" : "text-[28px]"}`}
           >
             <FolderGlyph folder={folder} size={wide ? 28 : 34} className="rounded-lg" />
             <span className="min-w-0 break-words">{folder.name}</span>
@@ -165,7 +165,7 @@ export function IdeaList(props: Props) {
       ) : !ideas ? (
         <Skeleton />
       ) : ideas.length === 0 ? (
-        <div className="rounded-[20px] bg-surface px-5 py-7 text-center">
+        <div className="glass-quiet rounded-[20px] px-5 py-7 text-center">
           <p className="font-semibold">Nenhuma ideia aqui ainda</p>
           <p className="mt-1 text-sm text-muted">
             {wide ? "Clique em Nova ideia para escrever a primeira, ou use a captura do Hoje." : "Toque em + para escrever a primeira, ou use a captura aí embaixo."}
@@ -213,7 +213,7 @@ export function RecentIdeas({ ideas, error, folders, now, onReload, onOpen, onTo
     <section aria-labelledby="recent-title">
       <header className="mb-3 flex items-start justify-between gap-2 pl-1">
         <div className="min-w-0">
-          <h2 id="recent-title" className="font-display text-xl leading-tight font-semibold">
+          <h2 id="recent-title" className="font-display text-xl leading-tight font-extrabold tracking-tight">
             Recentes
           </h2>
           <p className="mt-0.5 text-sm text-muted">Fixadas primeiro, depois as mais novas de todas as pastas.</p>
@@ -230,7 +230,7 @@ export function RecentIdeas({ ideas, error, folders, now, onReload, onOpen, onTo
       ) : !ideas ? (
         <Skeleton cols />
       ) : ideas.length === 0 ? (
-        <div className="rounded-[20px] bg-surface px-5 py-7 text-center">
+        <div className="glass-quiet rounded-[20px] px-5 py-7 text-center">
           <p className="font-semibold">Nenhuma ideia ainda</p>
           <p className="mt-1 text-sm text-muted">Abra uma pasta e escreva a primeira, ou use a captura do Hoje.</p>
         </div>

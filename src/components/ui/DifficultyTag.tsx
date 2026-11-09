@@ -36,7 +36,7 @@ export function DifficultyTag({ difficulty, xp, className = "" }: DifficultyTagP
   const m = META[difficulty];
   return (
     <span
-      className={`no-select inline-flex items-center gap-[3px] rounded-md px-1.5 py-px text-meta font-semibold ${m.className} ${className}`}
+      className={`no-select inline-flex items-center gap-[3px] rounded-md px-1.5 py-px font-mono text-[11px] font-semibold tracking-[0.08em] uppercase ${m.className} ${className}`}
     >
       <m.Icon size={13} strokeWidth={2.5} />
       <span>

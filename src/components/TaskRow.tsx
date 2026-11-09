@@ -31,7 +31,8 @@ export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
       data-status={status}
       className="relative -mx-4 flex items-start gap-1 border-b border-line px-4 transition-colors duration-200 last:border-b-0 hover:bg-ink/[0.025]"
     >
-      {bad && <span aria-hidden className="absolute top-2.5 bottom-2.5 left-0 w-[3px] rounded-r-[3px] bg-danger" />}
+      {bad && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-linear-to-r from-danger/15 to-transparent" />}
+      {bad && <span aria-hidden className="pointer-events-none absolute top-2.5 bottom-2.5 left-0 w-[3px] rounded-r-[3px] bg-danger shadow-[0_0_10px_var(--danger)]" />}
       <button
         type="button"
         role="checkbox"
@@ -42,7 +43,7 @@ export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
       >
         <span
           className={`grid size-5 place-items-center rounded-md border-[1.75px] transition-[background-color,border-color,transform] duration-150 group-hover:border-accent group-active:scale-90 motion-reduce:transition-none ${
-            done ? "border-accent-fill bg-accent-fill" : bad ? "border-danger" : "border-muted"
+            done ? "fill-neon border-transparent" : bad ? "border-danger" : "border-muted"
           }`}
         >
           {done && <CheckIcon size={14} strokeWidth={3.2} className="text-on-accent" />}
@@ -56,7 +57,7 @@ export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
       >
         <span
           className={`block text-[15px] leading-snug font-medium break-words ${
-            done ? "text-muted line-through decoration-muted/70" : "text-ink"
+            done ? "text-muted line-through decoration-lime decoration-2" : "text-ink"
           }`}
         >
           {task.title}
@@ -65,11 +66,11 @@ export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
           <span className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-meta text-muted">
             {task.area && <AreaTag area={task.area} muted={done} />}
             <DifficultyTag difficulty={task.difficulty} />
-            <span data-testid="task-xp" className={done ? "font-semibold" : ""}>
+            <span data-testid="task-xp" className={`font-mono ${done ? "font-semibold text-neon" : ""}`}>
               {done ? "+" : ""}
               {XP_BY_DIFFICULTY[task.difficulty]} XP
             </span>
-            {timeText && <span className={bad ? "font-semibold text-danger-ink" : ""}>{timeText}</span>}
+            {timeText && <span className={bad ? "font-mono text-[11px] font-semibold tracking-[0.1em] text-neon-danger uppercase" : ""}>{timeText}</span>}
             {origin && <span>{origin}</span>}
           </span>
         )}

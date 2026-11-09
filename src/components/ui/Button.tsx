@@ -5,10 +5,10 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 /** Cores por variante. `hover:` no Tailwind 4 só vale com @media (hover:hover). */
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: "bg-accent-fill text-on-accent enabled:hover:bg-[color-mix(in_oklab,var(--accent-fill)_86%,black)]",
-  secondary: "border border-line bg-surface text-ink enabled:hover:border-dot enabled:hover:bg-accent-soft/50",
+  primary: "fill-brand enabled:hover:brightness-110",
+  secondary: "glass-quiet text-ink enabled:hover:border-lime/40 enabled:hover:bg-accent-soft",
   ghost: "bg-transparent text-ink enabled:hover:bg-ink/[0.06]",
-  danger: "border border-danger-line bg-transparent text-danger-ink enabled:hover:bg-danger-soft",
+  danger: "bg-danger text-on-accent enabled:hover:brightness-110",
 };
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";

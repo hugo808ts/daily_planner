@@ -97,8 +97,8 @@ export default function App() {
     return (
       <div className="safe-x grid h-dvh grid-rows-[52px_minmax(0,1fr)] overflow-hidden">
         <SkipLink />
-        <header className="flex items-center gap-3 border-b border-line bg-surface px-5">
-          <span aria-hidden className="grid size-[26px] place-items-center rounded-lg bg-accent-fill text-on-accent">
+        <header className="flex items-center gap-3 glass-quiet rounded-none border-x-0 border-t-0 px-5">
+          <span aria-hidden className="grid size-[26px] place-items-center rounded-lg fill-neon">
             <CheckIcon size={15} strokeWidth={2.6} />
           </span>
           <span translate="no" className="font-display text-base font-bold">
@@ -111,7 +111,7 @@ export default function App() {
           </kbd>
         </header>
         <div className="grid min-h-0 grid-cols-[380px_minmax(0,1fr)]">
-          <aside data-testid="today-pane" aria-label="Dia" className="pane flex h-full flex-col border-r border-line">
+          <aside data-testid="today-pane" aria-label="Dia" className="pane glass-quiet flex h-full flex-col rounded-none border-y-0 border-l-0">
             <div className="flex-1">
               <Today key={todayKey} captured={captured} onOpenReport={openFromToday} wide />
             </div>
@@ -145,7 +145,7 @@ export default function App() {
 
       <nav
         aria-label="Seções"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-md"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-black/70 backdrop-blur-xl"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="mx-auto flex max-w-md">
@@ -157,11 +157,12 @@ export default function App() {
                 type="button"
                 aria-current={on ? "page" : undefined}
                 onClick={() => setTab(id)}
-                className={`flex flex-1 flex-col items-center justify-center gap-0.5 pt-2 pb-1.5 text-[12px] transition-colors duration-150 focus-visible:-outline-offset-4 motion-reduce:transition-none ${
-                  on ? "font-semibold text-accent" : "font-medium text-muted hover:text-ink active:text-ink"
+                className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 pt-2 pb-1.5 font-mono text-[10.5px] tracking-[0.12em] uppercase transition-colors duration-150 focus-visible:-outline-offset-4 motion-reduce:transition-none ${
+                  on ? "font-semibold text-lime" : "font-medium text-muted hover:text-ink active:text-ink"
                 }`}
               >
-                <Icon size={20} strokeWidth={on ? 2.2 : 1.8} />
+                {on && <span aria-hidden className="absolute top-0 h-0.5 w-8 rounded-b-full bg-lime glow-lime" />}
+                <Icon size={20} strokeWidth={on ? 2.2 : 1.8} className={on ? "drop-shadow-[0_0_6px_rgb(136_239_27/0.8)]" : ""} />
                 {label}
               </button>
             );

@@ -1,87 +1,58 @@
 @import "tailwindcss";
-@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/geist";
 
 :root {
-  /* Tokens do redesign 2026-11 (docs/superpowers/mockups/redesign-2026-11.html).
-     Pares de texto conferidos para WCAG AA (>= 4,5:1) sobre --surface e --bg. */
-  --bg: #f4f2fa;
-  --surface: #ffffff;
-  --ink: #1f1b33;
-  --muted: #625c7a; /* 5,7:1 sobre --bg */
-  --line: #e6e1f2;
-  --dot: #cfc8e6;
-  --accent: #6d4aff; /* 4,6:1 sobre --bg; texto/ícone roxo */
-  --accent-soft: #eee9ff; /* fundo de chip/realce roxo */
-  --accent-ink: #5a36f0; /* texto roxo sobre --accent-soft (5,5:1) */
-  --danger: #d93a40; /* bordas, faixa de atrasada, ícones (4,5:1 sobre --surface) */
-  --danger-soft: #fdecec; /* fundo vermelho suave */
-  --danger-line: #f2c9cb; /* borda do botão danger */
-  --danger-ink: #b4232a; /* texto vermelho (5,9:1 sobre --bg) */
-  --note: #fff6c9;
-  --note-ink: #4d4520;
-  /* Áreas: o ponto usa a cor base; o texto usa a variante -ink (AA). */
-  --work: #3b6fe0;
-  --work-ink: #2f5fcc;
-  --school: #1e9e6a;
-  --school-ink: #167a52;
-  --personal: #d6457a;
-  --personal-ink: #b8325f;
-  /* Preenchimentos com texto por cima (botões roxos e vermelhos): contraste >= 4,5 com --on-accent. */
-  --accent-fill: #6d4aff;
-  --danger-fill: #c93339;
-  --on-accent: #ffffff;
-  /* Altura da barra de abas (sem a área segura); a captura fica logo acima. */
+  /* Tema Neon 2026-11 (docs/superpowers/mockups/tema-neon-2026-11.html).
+     Sempre escuro. Paleta: Vivid Green #00B000, limão #88EF1B, Onyx, Paper White,
+     Stone Gray, Light Green. Texto sobre verde/limão é quase preto (--on-accent). */
+  --bg: #070807;
+  --surface: #111411; /* sólido: folhas, diálogos */
+  --glass: rgb(22 26 22 / 0.58); /* cartões de vidro */
+  --ink: #f0f0f0;
+  --muted: #9a9a9a; /* 7:1 sobre --bg */
+  --line: rgb(255 255 255 / 0.09);
+  --dot: #3a403a;
+  --accent: #88ef1b; /* limão: texto/ícone ativo, foco */
+  --accent-soft: rgb(136 239 27 / 0.1);
+  --accent-ink: #88ef1b;
+  --green: #00b000;
+  --green-deep: #008400;
+  --lime: #88ef1b;
+  --mint: #bfebbf;
+  --danger: #ff4d5e;
+  --danger-soft: rgb(255 77 94 / 0.1);
+  --danger-line: rgb(255 77 94 / 0.35);
+  --danger-ink: #ff8a95;
+  --note: rgb(136 239 27 / 0.06);
+  --note-ink: #e6f5d2;
+  /* Áreas: só tons da paleta. */
+  --work: #f0f0f0;
+  --work-ink: #f0f0f0;
+  --school: #bfebbf;
+  --school-ink: #bfebbf;
+  --personal: #88ef1b;
+  --personal-ink: #88ef1b;
+  /* Preenchimentos com texto por cima. */
+  --accent-fill: #00b000;
+  --danger-fill: #ff4d5e;
+  --on-accent: #061006;
+  --neon: 0 0 6px rgb(136 239 27 / 0.55), 0 0 22px rgb(0 176 0 / 0.35);
   --tabbar-h: 57px;
-  /* Espaço no fim da rolagem para barra de abas + captura fixas (celular). */
   --fixed-bars-h: calc(var(--tabbar-h) + 72px + env(safe-area-inset-bottom));
-  /* Jogo: dificuldade (texto AA sobre o fundo do chip) e selo de nível. */
-  --diff-low-ink: #1e7a55; /* 4,9:1 sobre --diff-low-bg */
-  --diff-low-bg: #e3f5ec;
-  --diff-medium-ink: #8a5a00; /* 5,2:1 sobre --diff-medium-bg */
-  --diff-medium-bg: #fff2d6;
-  --diff-high-ink: #b02a30; /* 5,5:1 sobre --diff-high-bg */
-  --diff-high-bg: #fde8e8;
-  --level-from: #8a6cff;
-  --level-to: #4b2fd6;
-  --level-track: #e6e1f2;
-  --level-fill-from: #6d4aff;
-  --level-fill-to: #a58bff;
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #16131f;
-    --surface: #211d2e;
-    --ink: #ece9f7;
-    --muted: #a39dbf; /* 6,3:1 sobre --surface */
-    --line: #2e2942;
-    --dot: #4c4568;
-    --accent: #8f74ff; /* 4,8:1 sobre --surface */
-    --accent-soft: #2b2450;
-    --accent-ink: #b3a1ff; /* 6,4:1 sobre --accent-soft */
-    --danger: #ff6369;
-    --danger-soft: #3a1d22;
-    --danger-line: #5c2a30;
-    --danger-ink: #ff9a9e;
-    --note: #3a3414;
-    --note-ink: #f3e7a6;
-    --work: #6e9bff;
-    --work-ink: #6e9bff; /* 6,1:1 sobre --surface */
-    --school: #3dcb92;
-    --school-ink: #3dcb92; /* 7,9:1 */
-    --personal: #ff7aab;
-    --personal-ink: #ff7aab; /* 6,7:1 */
-    --accent-fill: #6b4ff5;
-    --diff-low-ink: #5fd9a5; /* 8:1 sobre --diff-low-bg */
-    --diff-low-bg: #17372b;
-    --diff-medium-ink: #f5c04a; /* 8,6:1 sobre --diff-medium-bg */
-    --diff-medium-bg: #3b2e10;
-    --diff-high-ink: #ff9a9e; /* 7,2:1 sobre --diff-high-bg */
-    --diff-high-bg: #3d1f24;
-    --level-track: #2e2942;
-  }
+  /* Jogo */
+  --diff-low-ink: #d6d6d6;
+  --diff-low-bg: rgb(255 255 255 / 0.06);
+  --diff-medium-ink: #bfebbf;
+  --diff-medium-bg: rgb(0 176 0 / 0.22);
+  --diff-high-ink: #061006;
+  --diff-high-bg: #88ef1b;
+  --level-from: #88ef1b;
+  --level-to: #00b000;
+  --level-track: rgb(255 255 255 / 0.07);
+  --level-fill-from: #008400;
+  --level-fill-to: #88ef1b;
+  color-scheme: dark;
 }
 
 /* Computador: sem barra de abas (a captura mora na coluna do Hoje). */
@@ -117,7 +88,13 @@
   --color-school-ink: var(--school-ink);
   --color-personal: var(--personal);
   --color-personal-ink: var(--personal-ink);
-  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-glass: var(--glass);
+  --color-green: var(--green);
+  --color-green-deep: var(--green-deep);
+  --color-lime: var(--lime);
+  --color-mint: var(--mint);
+  --font-display: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   /* Texto de apoio: nunca menor que 12,5 px → classe text-meta. */
   --text-meta: 12.5px;
@@ -144,6 +121,31 @@
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
+  }
+
+  /* Fundo fixo: aurora verde embaixo + halo no topo + grade de HUD que some. */
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  body::before {
+    background:
+      radial-gradient(70% 40% at 12% 108%, rgb(0 176 0 / 0.42), transparent 70%),
+      radial-gradient(60% 35% at 96% 102%, rgb(136 239 27 / 0.2), transparent 70%),
+      radial-gradient(80% 30% at 50% -6%, rgb(140 219 140 / 0.08), transparent 70%),
+      var(--bg);
+  }
+  body::after {
+    background-image:
+      linear-gradient(rgb(136 239 27 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(136 239 27 / 0.045) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(90% 55% at 50% 100%, #000 10%, transparent 75%);
+    mask-image: radial-gradient(90% 55% at 50% 100%, #000 10%, transparent 75%);
   }
 
   /* Sem "elástico" só com mouse/trackpad; no toque o puxar-para-atualizar continua. */
@@ -232,13 +234,16 @@
   border: 0;
   padding: 0;
   border-radius: 24px 24px 0 0;
-  background: var(--surface);
+  background: linear-gradient(180deg, rgb(24 30 24 / 0.94), rgb(10 12 10 / 0.97));
+  -webkit-backdrop-filter: blur(26px);
+  backdrop-filter: blur(26px);
+  box-shadow: 0 -1px 0 rgb(136 239 27 / 0.5), 0 -20px 60px -20px rgb(0 176 0 / 0.5);
   color: var(--ink);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 .sheet-dialog::backdrop {
-  background: rgb(22 19 31 / 0.45);
+  background: rgb(0 0 0 / 0.62);
 }
 .sheet-dialog[open] {
   animation: sheet-up 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -256,24 +261,72 @@
     border-radius: 24px;
   }
 }
+/* ===== Tema Neon: vidro, neon e preenchimentos ===== */
+@layer components {
+/* Cartão de vidro com borda em degradê limão (destaque). */
+.glass {
+  background:
+    linear-gradient(var(--glass), var(--glass)) padding-box,
+    linear-gradient(140deg, rgb(136 239 27 / 0.45), rgb(255 255 255 / 0.06) 35%, rgb(255 255 255 / 0.04) 65%, rgb(0 176 0 / 0.35)) border-box;
+  border: 1px solid transparent;
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 18px 40px -22px #000;
+}
+/* Vidro discreto: borda fina neutra (listas, cartões secundários). */
+.glass-quiet {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 18px 40px -22px #000;
+}
+/* Preenchimento verde→limão com texto escuro (botão principal, selecionado). */
+.fill-neon {
+  background: linear-gradient(150deg, var(--lime), var(--green)) var(--green);
+  color: var(--on-accent);
+  box-shadow: 0 0 20px -4px rgb(136 239 27 / 0.65), inset 0 1px 0 rgb(255 255 255 / 0.35);
+}
+.fill-brand {
+  background: linear-gradient(120deg, var(--green-deep), var(--green) 45%, var(--lime)) var(--green);
+  color: var(--on-accent);
+  box-shadow: 0 0 24px -6px rgb(136 239 27 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.35);
+}
+.text-neon { color: var(--lime); text-shadow: var(--neon); }
+.text-neon-danger { color: var(--danger); text-shadow: 0 0 12px rgb(255 77 94 / 0.45); }
+.glow-lime { box-shadow: 0 0 12px rgb(136 239 27 / 0.6); }
+/* Rótulo pequeno em mono, caixa alta (\"HUD\"). */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+}
+
 /* Jogo: chips de dificuldade, selo/barra de nível e animações. */
 .diff-low { color: var(--diff-low-ink); background: var(--diff-low-bg); }
 .diff-medium { color: var(--diff-medium-ink); background: var(--diff-medium-bg); }
-.diff-high { color: var(--diff-high-ink); background: var(--diff-high-bg); }
+.diff-high { color: var(--diff-high-ink); background: var(--diff-high-bg); box-shadow: 0 0 10px rgb(136 239 27 / 0.5); }
+.diff-medium { box-shadow: inset 0 0 0 1px rgb(0 176 0 / 0.6); }
+.diff-low { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14); }
 .level-badge {
   background: linear-gradient(160deg, var(--level-from), var(--level-to));
-  box-shadow: inset 0 1px 0 #ffffff55, 0 4px 10px -4px var(--accent);
-  color: #fff;
+  box-shadow: inset 0 1px 0 #ffffff66, 0 0 14px rgb(136 239 27 / 0.45);
+  color: var(--on-accent);
 }
-.level-track { background: var(--level-track); }
+.level-track { background: var(--level-track); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05); }
 .level-fill {
-  background: linear-gradient(90deg, var(--level-fill-from), var(--level-fill-to));
+  background: linear-gradient(90deg, var(--level-fill-from), var(--green), var(--level-fill-to));
+  box-shadow: 0 0 12px rgb(136 239 27 / 0.65);
   transition: width 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .xp-pop {
-  background: linear-gradient(180deg, #8a6cff, #6d4aff);
-  color: #fff;
-  box-shadow: 0 4px 12px -4px #6d4aff;
+  background: var(--lime);
+  color: var(--on-accent);
+  box-shadow: 0 0 18px rgb(136 239 27 / 0.8);
   animation: xp-pop 900ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 .medal-in { animation: medal-in 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }

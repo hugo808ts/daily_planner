@@ -19,13 +19,39 @@ export function scoreParts(tasks: Task[], now: Date): { text: string; bad: boole
 export function ScoreText({ tasks, now }: { tasks: Task[]; now: Date }) {
   const parts = scoreParts(tasks, now);
   return (
-    <p data-testid="score" aria-live="polite" className="text-right text-[13px] leading-snug text-muted tabular-nums">
+    <p data-testid="score" aria-live="polite" className="sr-only">
       {parts.map((p, i) => (
         <span key={p.text} className="block">
           <span className={p.bad ? "font-semibold text-danger-ink" : "font-semibold text-ink"}>{p.text}</span>
         </span>
       ))}
     </p>
+  );
+}
+
+/** Mostrador circular do placar (visual; o texto acessível é o ScoreText). */
+export function ScoreDial({ tasks, now }: { tasks: Task[]; now: Date }) {
+  const s = dayScore(tasks, now);
+  if (s.total === 0) return null;
+  const pct = Math.round((s.done / s.total) * 100);
+  return (
+    <div
+      aria-hidden
+      className="grid size-[84px] shrink-0 place-items-center rounded-full p-[5px]"
+      style={{
+        background: `conic-gradient(from 0deg, var(--green) 0%, var(--lime) ${pct}%, rgb(255 255 255 / 0.08) ${pct}% 100%)`,
+        boxShadow: "0 0 22px -6px rgb(136 239 27 / 0.55)",
+      }}
+    >
+      <div className="grid size-full place-items-center rounded-full bg-bg">
+        <div className="text-center leading-none">
+          <div className="font-display text-[22px] font-extrabold tracking-[-0.02em] tabular-nums">
+            {s.done}/{s.total}
+          </div>
+          <div className="eyebrow mt-1 text-[9px]! text-lime!">feitas</div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -39,7 +65,7 @@ export function ScoreBar({ tasks, now }: { tasks: Task[]; now: Date }) {
         <span
           key={i}
           className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
-            s === "done" ? "bg-accent" : s === "pending" ? "bg-dot" : "bg-danger"
+            s === "done" ? "bg-lime glow-lime" : s === "pending" ? "bg-dot" : "bg-danger"
           }`}
         />
       ))}

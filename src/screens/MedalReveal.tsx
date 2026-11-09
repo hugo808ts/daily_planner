@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { addDays } from "../../shared/dates";
 import type { MedalTier } from "../../shared/xp";
-import { Medal, MedalPlaceholder } from "../components/game/Medal";
+import { Medal, MedalPlaceholder, MEDAL_GLOW } from "../components/game/Medal";
 import { ArrowUpIcon, ChevronsUpIcon, CloseIcon, StarIcon } from "../components/ui/Icon";
 import { api, ApiError, type ReportData } from "../lib/api";
 
@@ -25,76 +25,28 @@ export const WEEK_TITLE: Record<MedalTier, string> = {
 /** "+90", "−30" ou "0" (sinal de menos tipográfico). */
 export const signedXp = (n: number) => (n > 0 ? `+${intFmt.format(n)}` : n < 0 ? `−${intFmt.format(-n)}` : "0");
 
-interface Theme {
-  /** Fundo radial da tela. */
-  bg: string;
-  /** Gradiente do título. */
-  title: string;
-  /** Preenchimento da barra de nível. */
-  fill: string;
-  /** Cor do brilho em volta da medalha e da barra. */
-  glow: string;
-  /** Borda e texto do selo ("Subiu de nível"). */
-  chip: string;
-  chipInk: string;
-  sparks: string[];
-}
+/** Fundo da revelação (tema Neon): preto com halo limão no centro e aurora verde embaixo. */
+const BG_WON =
+  "radial-gradient(60% 40% at 50% 38%, rgb(136 239 27 / 0.26), transparent 70%), radial-gradient(100% 60% at 50% 110%, rgb(0 176 0 / 0.5), transparent 70%), #030403";
+/** Semana sem medalha (e carregando): mesmo fundo, sem o halo. */
+const BG_CALM = "radial-gradient(100% 50% at 50% 115%, rgb(0 176 0 / 0.28), transparent 70%), #030403";
 
-const THEMES: Record<MedalTier, Theme> = {
-  bronze: {
-    bg: "radial-gradient(circle at 50% 30%, #A2552B 0, #4A2414 40%, #140D10 78%)",
-    title: "linear-gradient(180deg, #FFE1C7, #E0A27A 55%, #B8693A)",
-    fill: "linear-gradient(90deg, #C9814F, #F3C29A)",
-    glow: "#F3C29A",
-    chip: "#F3C29A80",
-    chipInk: "#FFD9BD",
-    sparks: ["#F3C29A", "#fff", "#FFD9BD", "#E0A27A"],
-  },
-  prata: {
-    bg: "radial-gradient(circle at 50% 30%, #6B7894 0, #2C3247 40%, #0F1018 78%)",
-    title: "linear-gradient(180deg, #FFFFFF, #D5DCE7 55%, #8691A3)",
-    fill: "linear-gradient(90deg, #9AA6C2, #F2F5FA)",
-    glow: "#D5DCE7",
-    chip: "#D5DCE780",
-    chipInk: "#E9EEF5",
-    sparks: ["#fff", "#CFE6FF", "#D5DCE7", "#fff"],
-  },
-  ouro: {
-    bg: "radial-gradient(circle at 50% 30%, #5B3FD9 0, #2A1F66 38%, #120F26 75%)",
-    title: "linear-gradient(180deg, #FFF1B8, #F5B400 60%, #C47F00)",
-    fill: "linear-gradient(90deg, #F5B400, #FFE27A)",
-    glow: "#FFD34A",
-    chip: "#FFD34A80",
-    chipInk: "#FFE27A",
-    sparks: ["#FFE27A", "#9FD8FF", "#FF8AD0", "#fff"],
-  },
-  diamante: {
-    bg: "radial-gradient(circle at 50% 30%, #2F6BEA 0, #15306E 40%, #0A1024 78%)",
-    title: "linear-gradient(180deg, #E8F3FF, #7FB4FF 55%, #3D8BFF)",
-    fill: "linear-gradient(90deg, #3D8BFF, #CFE6FF)",
-    glow: "#7FB4FF",
-    chip: "#7FB4FF80",
-    chipInk: "#CFE6FF",
-    sparks: ["#CFE6FF", "#fff", "#7FB4FF", "#9FD8FF"],
-  },
-  supremo: {
-    bg: "radial-gradient(circle at 50% 30%, #C14BFF 0, #4A1F8C 40%, #120F26 78%)",
-    title: "linear-gradient(90deg, #FFE27A, #FF8AD0, #9FD8FF)",
-    fill: "linear-gradient(90deg, #FF8AD0, #9FD8FF)",
-    glow: "#FF8AD0",
-    chip: "#FF8AD0",
-    chipInk: "#FFC6E6",
-    sparks: ["#FFE27A", "#9FD8FF", "#FF8AD0", "#fff", "#FFE27A"],
-  },
-};
+const LEVEL_FILL = "linear-gradient(90deg, var(--green-deep), var(--green), var(--lime))";
 
-/** Posição dos brilhos em volta da medalha (em % da área da medalha). */
+/** Faíscas que sobem pela tela (posições fixas, em % da tela). */
 const SPARKS = [
-  { left: "8%", top: "22%", delay: "0s" },
-  { left: "88%", top: "10%", delay: ".6s" },
-  { left: "84%", top: "78%", delay: "1.2s" },
-  { left: "12%", top: "84%", delay: ".3s" },
-  { left: "50%", top: "-6%", delay: ".9s" },
+  { left: 12, top: 62, delay: 0 },
+  { left: 86, top: 70, delay: 1.4 },
+  { left: 24, top: 82, delay: 2.6 },
+  { left: 70, top: 58, delay: 0.8 },
+  { left: 48, top: 88, delay: 3.2 },
+  { left: 92, top: 84, delay: 2.1 },
+  { left: 8, top: 76, delay: 3.7 },
+  { left: 60, top: 74, delay: 1.9 },
+  { left: 34, top: 66, delay: 0.4 },
+  { left: 78, top: 90, delay: 2.9 },
+  { left: 18, top: 92, delay: 1.1 },
+  { left: 54, top: 60, delay: 3.5 },
 ];
 
 const reducedMotion = () =>
@@ -160,7 +112,6 @@ export function MedalReveal({ start, onClose, onDetails }: Props) {
   }, [load]);
 
   const tier = data?.report.medal ?? null;
-  const theme = tier ? THEMES[tier] : null;
 
   return (
     <dialog
@@ -171,12 +122,10 @@ export function MedalReveal({ start, onClose, onDetails }: Props) {
         e.preventDefault();
         onClose();
       }}
-      className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-x-hidden overflow-y-auto overscroll-contain border-0 p-0 text-white"
-      style={{
-        background: theme?.bg ?? "radial-gradient(circle at 50% 30%, #2E2A52 0, #1A1730 45%, #100E1C 80%)",
-        colorScheme: "dark",
-      }}
+      className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-x-hidden overflow-y-auto overscroll-contain border-0 p-0 text-ink"
+      style={{ background: tier ? BG_WON : BG_CALM, colorScheme: "dark" }}
     >
+      {tier && <Sparks />}
       <div
         className="relative mx-auto flex min-h-full w-full max-w-[26rem] flex-col items-center px-4 text-center"
         style={{
@@ -188,35 +137,39 @@ export function MedalReveal({ start, onClose, onDetails }: Props) {
           type="button"
           aria-label="Fechar"
           onClick={onClose}
-          className="absolute top-[calc(env(safe-area-inset-top,0px)+0.5rem)] right-2 z-10 grid size-11 place-items-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="absolute top-[calc(env(safe-area-inset-top,0px)+0.5rem)] right-2 z-10 grid size-11 place-items-center rounded-full text-ink/80 transition-colors hover:bg-white/10 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <CloseIcon size={22} />
         </button>
 
         {/* Conteúdo centrado na altura que sobra; o botão principal fica no pé da tela. */}
         <div className="flex w-full flex-1 flex-col items-center justify-center pb-4">
-          <p className="mt-5 text-[12px] font-semibold tracking-[0.14em] text-[#CFC6FF] uppercase">
+          <p className="eyebrow relative mt-6 text-neon">Domingo · semana encerrada</p>
+          <p className="relative mt-1.5 font-mono text-[12px] tracking-[0.06em] text-muted">
             Semana de {range(start, addDays(start, 5))}
           </p>
 
           {error ? (
             <div role="alert" className="my-auto flex flex-col items-center gap-3 py-10">
-              <p className="text-[#FFC6C8]">{error}</p>
+              <p className="text-danger-ink">{error}</p>
               <button
                 type="button"
                 onClick={() => void load()}
-                className="min-h-11 rounded-xl border border-white/25 px-4 font-semibold hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="glass-quiet min-h-11 rounded-xl px-4 font-semibold hover:brightness-125 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 Tentar de novo
               </button>
             </div>
           ) : !data ? (
             <div role="status" aria-busy="true" className="my-auto py-10">
-              <div className="mx-auto size-[150px] rounded-full bg-white/[0.06] motion-safe:animate-pulse" />
+              <div
+                className="mx-auto h-[180px] w-[154px] bg-white/[0.06] motion-safe:animate-pulse"
+                style={{ clipPath: "path('M77 0 L154 22 V96 C154 140 120 166 77 180 C34 166 0 140 0 96 V22 Z')" }}
+              />
               <span className="sr-only">Carregando…</span>
             </div>
-          ) : tier && theme ? (
-            <Won data={data} tier={tier} theme={theme} />
+          ) : tier ? (
+            <Won data={data} tier={tier} />
           ) : (
             <NoMedal data={data} />
           )}
@@ -226,8 +179,7 @@ export function MedalReveal({ start, onClose, onDetails }: Props) {
           ref={cta}
           type="button"
           onClick={() => onDetails(start)}
-          className="flex min-h-12 shrink-0 w-full items-center justify-center rounded-[14px] font-bold text-white shadow-[0_6px_18px_-6px_#6D4AFF] transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-white"
-          style={{ background: "linear-gradient(180deg, #8A6CFF, #6D4AFF)" }}
+          className="fill-brand relative flex min-h-[52px] w-full shrink-0 items-center justify-center rounded-2xl text-[15px] font-bold transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-accent"
         >
           Ver detalhes da semana
         </button>
@@ -236,7 +188,38 @@ export function MedalReveal({ start, onClose, onDetails }: Props) {
   );
 }
 
-function LevelProgress({ data, fill, glow }: { data: ReportData; fill: string; glow: string }) {
+/** Faíscas limão subindo (Web Animations; nenhuma com movimento reduzido). */
+function Sparks() {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = box.current;
+    if (!el || reducedMotion() || typeof el.animate !== "function") return;
+    const anims = Array.from(el.children).map((c, i) =>
+      (c as HTMLElement).animate(
+        [
+          { transform: "translateY(0)", opacity: 0 },
+          { opacity: 1, offset: 0.2 },
+          { transform: "translateY(-260px)", opacity: 0 },
+        ],
+        { duration: 4000, delay: SPARKS[i].delay * 1000, iterations: Infinity, easing: "linear" },
+      ),
+    );
+    return () => anims.forEach((a) => a.cancel());
+  }, []);
+  return (
+    <div ref={box} aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden motion-reduce:hidden">
+      {SPARKS.map((s, i) => (
+        <i
+          key={i}
+          className="absolute size-1 rounded-full bg-lime opacity-0 shadow-[0_0_10px_var(--lime)]"
+          style={{ left: `${s.left}%`, top: `${s.top}%` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function LevelProgress({ data }: { data: ReportData }) {
   const { level, into, needed } = data.level;
   const pct = needed > 0 ? Math.min(100, Math.max(0, (into / needed) * 100)) : 0;
   // A barra parte do zero e cresce depois que a medalha entra (a transição some com movimento reduzido).
@@ -253,21 +236,21 @@ function LevelProgress({ data, fill, glow }: { data: ReportData; fill: string; g
       aria-valuemax={needed}
       aria-valuenow={Math.min(into, needed)}
       aria-valuetext={`Nível ${level}, ${into} de ${needed} XP`}
-      className="mt-4 w-full px-1.5 text-left"
+      className="relative mt-5 w-full px-1.5 text-left"
     >
-      <div className="flex justify-between text-[12.5px] text-[#CFC6FF]">
-        <span className="font-semibold text-white">Nível {level}</span>
-        <span className="tabular-nums">
-          {intFmt.format(into)} / {intFmt.format(needed)} XP
+      <div className="flex items-baseline justify-between">
+        <span className="eyebrow text-ink">Nível {level}</span>
+        <span className="font-mono text-[12px] text-muted tabular-nums">
+          <b className="text-neon font-semibold">{intFmt.format(into)}</b> / {intFmt.format(needed)} XP
         </span>
       </div>
-      <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-white/[0.12]">
+      <div className="level-track mt-2 h-2 overflow-hidden rounded-md">
         <div
-          className="h-full rounded-full transition-[width] duration-[1100ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]"
+          className="h-full rounded-md transition-[width] duration-[1100ms] ease-[cubic-bezier(0.2,0.8,0.2,1)]"
           style={{
             width: `${width}%`,
-            background: fill,
-            boxShadow: `0 0 12px ${glow}`,
+            background: LEVEL_FILL,
+            boxShadow: "0 0 12px rgb(136 239 27 / 0.7)",
           }}
         />
       </div>
@@ -275,13 +258,17 @@ function LevelProgress({ data, fill, glow }: { data: ReportData; fill: string; g
   );
 }
 
-function Stat({ value, label }: { value: ReactNode; label: string }) {
+function Stat({ value, label, hl = false }: { value: ReactNode; label: string; hl?: boolean }) {
   return (
-    <div className="rounded-[14px] border border-white/[0.12] bg-white/[0.07] px-1 py-2.5">
-      <b className="font-display flex items-center justify-center gap-0.5 text-[19px] leading-tight font-extrabold tabular-nums">
+    <div className="glass-quiet rounded-[18px] px-1 pt-3 pb-2.5">
+      <b
+        className={`font-display flex items-center justify-center gap-0.5 text-[24px] leading-[1.05] font-extrabold tracking-[-0.04em] tabular-nums ${hl ? "text-neon" : ""}`}
+      >
         {value}
       </b>
-      <small className="text-[12px] text-[#CFC6FF]">{label}</small>
+      <small className="mt-1 block font-mono text-[10px] font-medium tracking-[0.12em] text-muted uppercase">
+        {label}
+      </small>
     </div>
   );
 }
@@ -290,8 +277,8 @@ function Stats({ data }: { data: ReportData }) {
   const { report, previousXp } = data;
   const high = report.byDifficulty.high;
   return (
-    <div className="mt-4 grid w-full grid-cols-3 gap-2" data-testid="reveal-stats">
-      <Stat value={report.done} label="feitas" />
+    <div className="relative mt-4 grid w-full grid-cols-3 gap-2" data-testid="reveal-stats">
+      <Stat value={report.done} label="feitas" hl />
       <Stat
         value={
           <>
@@ -306,95 +293,76 @@ function Stats({ data }: { data: ReportData }) {
   );
 }
 
-function Won({ data, tier, theme }: { data: ReportData; tier: MedalTier; theme: Theme }) {
+const PILL = "glass-quiet inline-flex items-center gap-1.5 rounded-xl px-3 py-2 font-mono text-[12px] font-semibold";
+
+function Won({ data, tier }: { data: ReportData; tier: MedalTier }) {
   const xp = data.report.xp;
   const shown = useCountUp(xp);
   const levelUp = data.level.level > data.levelBefore;
   const best = xp > 0 && xp >= data.bestWeekXp;
   const supremo = tier === "supremo";
-  const titleStyle: CSSProperties = {
-    backgroundImage: theme.title,
+  const glow = MEDAL_GLOW[tier];
+  const tierStyle: CSSProperties = {
+    backgroundImage: "linear-gradient(180deg, #fff, var(--lime))",
     WebkitBackgroundClip: "text",
     backgroundClip: "text",
     color: "transparent",
+    filter: "drop-shadow(0 0 12px rgb(136 239 27 / 0.6))",
   };
 
   return (
     <>
-      {/* Palco da medalha: raios girando atrás, brilhos e a medalha entrando. */}
-      <div className="relative mt-4 grid h-[200px] w-full place-items-center">
+      <p className="font-display relative mt-3 text-[30px] leading-[1.1] font-extrabold tracking-[-0.04em]">
+        Nova medalha!
+      </p>
+
+      {/* Palco do brasão: raios girando atrás, halo na cor do nível e o brasão entrando. */}
+      <div className="relative mt-2 grid h-[250px] w-full place-items-center">
         <div
           aria-hidden
-          className="rays-spin pointer-events-none absolute top-1/2 left-1/2 -mt-[260px] -ml-[260px] size-[520px] rounded-full"
+          className="rays-spin pointer-events-none absolute top-1/2 left-1/2 -mt-[340px] -ml-[340px] size-[680px] rounded-full"
           style={{
-            background: `repeating-conic-gradient(from 0deg, #ffffff${supremo ? "1c" : "14"} 0 8deg, transparent 8deg 22deg)`,
-            mask: "radial-gradient(circle, #000 20%, transparent 65%)",
-            WebkitMask: "radial-gradient(circle, #000 20%, transparent 65%)",
+            background: `repeating-conic-gradient(from 0deg, rgb(136 239 27 / ${supremo ? 0.18 : 0.14}) 0 6deg, transparent 6deg 18deg)`,
+            mask: "radial-gradient(circle, #000 0 18%, transparent 55%)",
+            WebkitMask: "radial-gradient(circle, #000 0 18%, transparent 55%)",
           }}
         />
         <div
           aria-hidden
           className="pointer-events-none absolute top-1/2 left-1/2 size-[220px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
-          style={{
-            background: `radial-gradient(circle, ${theme.glow}55, transparent 70%)`,
-          }}
+          style={{ background: `radial-gradient(circle, ${glow}4d, transparent 70%)` }}
         />
-        <div aria-hidden className="pointer-events-none absolute inset-x-[12%] inset-y-0">
-          {SPARKS.slice(0, supremo ? 5 : 4).map((s, i) => (
-            <span
-              key={i}
-              className="absolute size-1.5 rotate-45 rounded-[2px] motion-safe:animate-pulse"
-              style={{
-                left: s.left,
-                top: s.top,
-                background: theme.sparks[i % theme.sparks.length],
-                animationDelay: s.delay,
-              }}
-            />
-          ))}
-        </div>
-        <div
-          className="medal-in relative"
-          style={{
-            filter: `drop-shadow(0 0 ${supremo ? 26 : 22}px ${theme.glow}aa)`,
-          }}
-        >
-          <Medal tier={tier} size={supremo ? 150 : 170} />
+        <div className="medal-in relative" style={{ filter: `drop-shadow(0 0 ${supremo ? 26 : 20}px ${glow}80)` }}>
+          <Medal tier={tier} size={230} />
         </div>
       </div>
 
-      <h1 className="font-display mt-1 text-[36px] leading-[1.05] font-extrabold text-balance" style={titleStyle}>
+      <h1 className="font-display relative mt-1 text-[38px] leading-[1.05] font-extrabold tracking-[-0.04em] text-balance" style={tierStyle}>
         {WEEK_TITLE[tier]}
       </h1>
-      <p className="font-display mt-0.5 text-[24px] font-extrabold tabular-nums">
-        <span aria-hidden>+{intFmt.format(shown)} XP</span>
-        <span className="sr-only">{intFmt.format(xp)} XP nesta semana</span>
-      </p>
 
-      {(levelUp || best) && (
-        <div className="mt-2.5 flex flex-wrap justify-center gap-2">
-          {levelUp && (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full border bg-white/10 px-3 py-1 text-[13px] font-bold"
-              style={{ borderColor: "#FFD34A80", color: "#FFE27A" }}
-            >
-              <ChevronsUpIcon size={15} strokeWidth={2.75} aria-hidden />
-              Subiu para o nível {data.level.level}!
-            </span>
-          )}
-          {best && (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full border bg-white/10 px-3 py-1 text-[13px] font-bold"
-              style={{ borderColor: theme.chip, color: theme.chipInk }}
-            >
-              <StarIcon size={14} strokeWidth={2.5} aria-hidden />
-              Melhor semana até agora
-            </span>
-          )}
-        </div>
-      )}
+      <div className="relative mt-3 flex flex-wrap justify-center gap-2">
+        <span className={`${PILL} text-neon`}>
+          <span aria-hidden>+{intFmt.format(shown)} XP</span>
+          <span className="sr-only">{intFmt.format(xp)} XP nesta semana</span>
+        </span>
+        {levelUp ? (
+          <span className={`${PILL} text-lime`}>
+            <ChevronsUpIcon size={15} strokeWidth={2.75} aria-hidden />
+            Subiu para o nível {data.level.level}!
+          </span>
+        ) : (
+          <span className={PILL}>Nível {data.level.level}</span>
+        )}
+        {best && (
+          <span className={`${PILL} text-mint`}>
+            <StarIcon size={14} strokeWidth={2.5} aria-hidden />
+            Melhor semana até agora
+          </span>
+        )}
+      </div>
 
-      <LevelProgress data={data} fill={theme.fill} glow={theme.glow} />
+      <LevelProgress data={data} />
       <Stats data={data} />
     </>
   );
@@ -404,15 +372,17 @@ function Won({ data, tier, theme }: { data: ReportData; tier: MedalTier; theme: 
 function NoMedal({ data }: { data: ReportData }) {
   return (
     <>
-      <div className="mt-8 grid h-[170px] place-items-center opacity-80">
-        <MedalPlaceholder size={150} />
+      <div className="mt-8 grid h-[190px] place-items-center opacity-80">
+        <MedalPlaceholder size={180} />
       </div>
-      <h1 className="font-display mt-3 text-[30px] leading-tight font-extrabold text-balance">Semana sem medalha</h1>
-      <p className="mt-2 max-w-[30ch] text-[15px] text-[#CFC6FF] text-pretty">
+      <h1 className="font-display mt-3 text-[30px] leading-tight font-extrabold tracking-[-0.03em] text-balance">
+        Semana sem medalha
+      </h1>
+      <p className="mt-2 max-w-[30ch] text-[15px] text-muted text-pretty">
         Nenhuma tarefa feita de segunda a sábado. Tudo bem: amanhã começa uma semana nova, e cada tarefa feita já conta
         para a próxima medalha.
       </p>
-      <LevelProgress data={data} fill="linear-gradient(90deg, #6D4AFF, #A58BFF)" glow="#8A6CFF" />
+      <LevelProgress data={data} />
     </>
   );
 }

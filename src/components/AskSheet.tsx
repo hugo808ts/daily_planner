@@ -48,7 +48,7 @@ export function AskSheet({ question, detail, confirmLabel, busyLabel = "Excluind
     >
       <div className="px-5 pt-2.5" style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}>
         <div aria-hidden className="mx-auto mb-4 h-1 w-10 rounded-full bg-ink/15" />
-        <h2 id={`${id}-q`} className="font-display text-xl leading-snug font-semibold text-balance">
+        <h2 id={`${id}-q`} className="font-display text-xl leading-snug font-extrabold tracking-tight text-balance">
           {question}
         </h2>
         {detail && (

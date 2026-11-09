@@ -17,7 +17,7 @@ export function XpPop({ amount, onDone }: XpPopProps) {
     <span
       role="status"
       aria-live="polite"
-      className="xp-pop no-select pointer-events-none absolute right-3.5 top-1 rounded-full px-[9px] py-[3px] font-display text-[13px] font-extrabold"
+      className="xp-pop no-select pointer-events-none absolute right-3.5 top-1 rounded-lg px-2 py-[3px] font-mono text-[13px] font-bold tabular-nums"
     >
       +{amount} XP
     </span>

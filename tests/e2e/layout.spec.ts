@@ -291,9 +291,10 @@ test.describe("celular", () => {
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hoje");
       await expectReadable(page);
       const theme = await page.evaluate(() =>
-        Array.from(document.querySelectorAll('meta[name="theme-color"]')).map((m) => m.getAttribute("media")),
+        Array.from(document.querySelectorAll('meta[name="theme-color"]')).map((m) => m.getAttribute("content")),
       );
-      expect(theme).toEqual(expect.arrayContaining(["(prefers-color-scheme: light)", "(prefers-color-scheme: dark)"]));
+      // Tema Neon: sempre escuro, uma cor só para a barra do sistema.
+      expect(theme).toEqual(["#070807"]);
       await page.screenshot({ path: "test-results/layout-mobile-dark.png", animations: "disabled" });
     });
   });

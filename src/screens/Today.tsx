@@ -3,7 +3,7 @@ import { addDays, formatDayTitle, isSunday, todayISO, weekDays, weekStart } from
 import type { Task } from "../../shared/types";
 import { SundayCard } from "../components/SundayCard";
 import { DayNote } from "../components/DayNote";
-import { ScoreBar, ScoreText } from "../components/ScoreBar";
+import { ScoreBar, ScoreDial, ScoreText } from "../components/ScoreBar";
 import { TaskList } from "../components/TaskList";
 import { TaskSheet } from "../components/TaskSheet";
 import { showToast } from "../components/Toast";
@@ -57,6 +57,7 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
   const tasks = data?.tasks ?? [];
   const dayTasks = tasks.filter((t) => t.date === selected);
   const note = data?.notes.find((n) => n.date === selected) ?? null;
+  const dayXp = dayTasks.reduce((sum, t) => sum + (t.doneAt ? XP_BY_DIFFICULTY[t.difficulty] : 0), 0);
   const title = formatDayTitle(selected, today);
   const relative = title === "Hoje" || title === "Amanhã" || title === "Ontem";
 
@@ -128,7 +129,7 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
   return (
     <div className={wide ? "px-[18px] pt-4 pb-2" : "mx-auto w-full max-w-md px-4"} style={wide ? undefined : MOBILE_PAD}>
       <div className="mb-1 flex min-h-11 items-center justify-between gap-3">
-        <span className="font-display text-base font-semibold text-ink capitalize">{monthName(selected)}</span>
+        <span className="eyebrow">{monthName(selected)}</span>
         {onOpenReport && !wide && !isSunday(today) && (
           <ProgressPill progress={progress} onClick={() => onOpenReport(addDays(days[0], -7))} />
         )}
@@ -136,27 +137,37 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
       {onOpenReport && isSunday(today) && <SundayCard onOpen={() => onOpenReport(days[0])} />}
       <WeekStrip days={days} today={today} selected={selected} tasks={tasks} now={now} onSelect={setPicked} />
 
-      <header className="relative mt-5 mb-3">
+      <header className="glass relative mt-5 mb-4 rounded-[24px] p-4">
         {pop && <XpPop key={pop.key} amount={pop.amount} onDone={() => setPop(null)} />}
-        <div className="flex items-end justify-between gap-3">
-          <h1 className="font-display text-[28px] leading-tight font-semibold tracking-[-0.01em]">{title}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="font-display text-[34px] leading-none font-extrabold tracking-[-0.04em]">{title}</h1>
+            {relative && <p className="mt-1.5 text-[13px] text-muted first-letter:uppercase">{longDate(selected)}</p>}
+          </div>
+          <ScoreDial tasks={dayTasks} now={now} />
           <ScoreText tasks={dayTasks} now={now} />
         </div>
-        {relative && <p className="mt-1 text-[13px] text-muted first-letter:uppercase">{longDate(selected)}</p>}
-        <div className="mt-3">
+        <div className="mt-4">
           <ScoreBar tasks={dayTasks} now={now} />
         </div>
       </header>
 
+      {data && (
+        <div className="mb-2 flex min-h-6 items-center justify-between gap-3 px-1">
+          <span className="eyebrow">Missões do dia</span>
+          {dayXp > 0 && <span className="font-mono text-[12px] font-medium tracking-[0.06em] text-neon">+{dayXp} XP hoje</span>}
+        </div>
+      )}
+
       {error && !data ? (
-        <div role="alert" className="rounded-[18px] border border-line bg-surface px-4 py-5 text-center text-sm">
+        <div role="alert" className="glass-quiet rounded-[18px] px-4 py-5 text-center text-sm">
           <p className="mb-2 text-danger-ink">{error}</p>
           <Button variant="secondary" size="sm" onClick={() => void reload()}>
             Tentar de novo
           </Button>
         </div>
       ) : !data ? (
-        <div role="status" aria-busy="true" className="space-y-px overflow-hidden rounded-[18px] border border-line bg-surface px-4 py-3">
+        <div role="status" aria-busy="true" className="glass-quiet space-y-px overflow-hidden rounded-[18px] px-4 py-3">
           <span className="sr-only">Carregando…</span>
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-11 rounded-lg bg-ink/[0.04] motion-safe:animate-pulse" />

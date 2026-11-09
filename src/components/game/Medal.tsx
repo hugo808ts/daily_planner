@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 
 /** Mesmo union de shared/xp.ts (Fase 1A); manter idêntico. */
 export type MedalTier = "bronze" | "prata" | "ouro" | "diamante" | "supremo";
@@ -11,112 +11,304 @@ export const MEDAL_LABEL: Record<MedalTier, string> = {
   supremo: "Supremo",
 };
 
+interface TierColors {
+  hi: string;
+  mid: string;
+  lo: string;
+  edge: string;
+  glow: string;
+  gem: string | null;
+}
+
+/** Cores dos brasões (docs/superpowers/mockups/tema-neon-2026-11.html). */
+const TIERS: Record<MedalTier, TierColors> = {
+  bronze: { hi: "#ffd2a6", mid: "#c9773a", lo: "#5a2a0c", edge: "#2e1405", glow: "#e08a45", gem: null },
+  prata: { hi: "#ffffff", mid: "#b8c2cc", lo: "#545d68", edge: "#22272d", glow: "#cfd8e2", gem: null },
+  ouro: { hi: "#fff4b8", mid: "#e8b320", lo: "#7a4a03", edge: "#3a2300", glow: "#ffc93a", gem: "#ff4d5e" },
+  diamante: { hi: "#eafcff", mid: "#55d3ff", lo: "#14508f", edge: "#06223f", glow: "#5fd6ff", gem: "#bff5ff" },
+  supremo: { hi: "#f1ffd6", mid: "#88ef1b", lo: "#006b00", edge: "#022402", glow: "#88ef1b", gem: "#eaffc0" },
+};
+
+/** Cor do brilho de cada nível (para halos em volta do brasão). */
+export const MEDAL_GLOW: Record<MedalTier, string> = {
+  bronze: TIERS.bronze.glow,
+  prata: TIERS.prata.glow,
+  ouro: TIERS.ouro.glow,
+  diamante: TIERS.diamante.glow,
+  supremo: TIERS.supremo.glow,
+};
+
+const ORDER: MedalTier[] = ["bronze", "prata", "ouro", "diamante", "supremo"];
+const SHIELD = "M60 22 L94 32 V66 C94 92 78 108 60 116 C42 108 26 92 26 66 V32 Z";
+const SHIELD_IN = "M60 30 L87 38 V66 C87 87 74 100 60 107 C46 100 33 87 33 66 V38 Z";
+const VB_W = 120;
+const VB_H = 140;
+
+/** Folhas dos louros: posição fixa, calculada uma vez. */
+const LAUREL = [-1, 1].flatMap((side) =>
+  Array.from({ length: 7 }, (_, i) => {
+    const a = ((200 + i * 19) * Math.PI) / 180;
+    const r = 46;
+    const x = +(60 + side * Math.cos(a) * -r).toFixed(1);
+    const y = +(74 - Math.sin(a) * -r * 0.98).toFixed(1);
+    return { x, y, rot: Math.round(side * (i * 19 - 30)) };
+  }),
+);
+
+type Ref = (n: string) => string;
+
+function Sword({ rot, c, r }: { rot: number; c: TierColors; r: Ref }) {
+  return (
+    <g transform={`rotate(${rot} 60 70)`}>
+      <path d="M57.5 0 L62.5 0 L63 84 L60 90 L57 84 Z" fill={r("bl")} stroke={c.edge} strokeWidth="1" />
+      <rect x="48" y="84" width="24" height="5" rx="2" fill={r("m")} stroke={c.edge} strokeWidth="1" />
+      <rect x="57.5" y="89" width="5" height="16" rx="2" fill={c.edge} />
+      <circle cx="60" cy="108" r="4" fill={r("m")} stroke={c.edge} strokeWidth="1" />
+    </g>
+  );
+}
+
+const WING_FEATHERS = [
+  "M30 44 C14 40 4 30 0 16 C10 24 20 26 30 28 Z",
+  "M30 56 C12 54 0 46 -6 32 C6 40 18 42 30 42 Z",
+  "M30 68 C14 70 2 64 -4 52 C8 58 20 58 30 56 Z",
+];
+const WING_BIG = "M30 80 C16 84 4 80 -2 70 C10 74 20 74 30 70 Z";
+
+function Wings({ c, r, big }: { c: TierColors; r: Ref; big: boolean }) {
+  const s = big ? 1.25 : 1;
+  const feathers = (big ? [...WING_FEATHERS, WING_BIG] : WING_FEATHERS).map((d) => (
+    <path key={d} d={d} fill={r("w")} stroke={c.edge} strokeWidth="1" strokeLinejoin="round" />
+  ));
+  return (
+    <>
+      <g transform={`translate(30 60) scale(${s}) translate(-30 -60)`}>{feathers}</g>
+      <g transform={`translate(120 0) scale(-1 1) translate(30 60) scale(${s}) translate(-30 -60)`}>{feathers}</g>
+    </>
+  );
+}
+
+function Laurel() {
+  return (
+    <>
+      {LAUREL.map((l, i) => (
+        <ellipse
+          key={i}
+          cx={l.x}
+          cy={l.y}
+          rx="3.4"
+          ry="8"
+          fill="#3fae2a"
+          stroke="#123d0b"
+          strokeWidth=".8"
+          transform={`rotate(${l.rot} ${l.x} ${l.y})`}
+        />
+      ))}
+    </>
+  );
+}
+
+function Crown({ c, r, y = 6, s = 1 }: { c: TierColors; r: Ref; y?: number; s?: number }) {
+  return (
+    <g transform={`translate(60 ${y}) scale(${s}) translate(-60 0)`}>
+      <path
+        d="M42 26 L39 6 L50 15 L60 0 L70 15 L81 6 L78 26 Z"
+        fill={r("m")}
+        stroke={c.edge}
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <circle cx="60" cy="18" r="3" fill={c.gem ?? "#ff4d5e"} />
+      <circle cx="39" cy="6" r="2.2" fill={r("m")} />
+      <circle cx="60" cy="0" r="2.4" fill={r("m")} />
+      <circle cx="81" cy="6" r="2.2" fill={r("m")} />
+    </g>
+  );
+}
+
+function Emblem({ tier, c, r }: { tier: MedalTier; c: TierColors; r: Ref }) {
+  if (tier === "bronze")
+    return (
+      <polygon
+        points="60,46 65,60 80,60 68,69 72,84 60,75 48,84 52,69 40,60 55,60"
+        fill={r("m")}
+        stroke={c.edge}
+        strokeWidth="1.4"
+      />
+    );
+  if (tier === "prata")
+    return (
+      <g transform="translate(0 4)">
+        <path d="M58 42 L62 42 L62.5 82 L60 86 L57.5 82 Z" fill={r("bl")} stroke={c.edge} />
+        <rect x="50" y="78" width="20" height="4" rx="2" fill={r("m")} stroke={c.edge} />
+        <path d="M44 62 L60 52 L76 62 L60 72 Z" fill="none" stroke={c.edge} strokeWidth="2" />
+      </g>
+    );
+  if (tier === "ouro")
+    return (
+      <>
+        <Crown c={c} r={r} y={52} s={0.9} />
+        <path d="M46 86 H74" stroke={c.edge} strokeWidth="2" />
+      </>
+    );
+  return (
+    <g filter={r("gl")}>
+      <path d="M60 46 L76 60 L60 90 L44 60 Z" fill={c.gem ?? "#fff"} stroke={c.edge} strokeWidth="1.4" />
+      <path
+        d="M44 60 H76 M52 60 L60 46 L68 60 L60 90 M52 60 L60 90"
+        stroke={c.edge}
+        strokeWidth=".8"
+        fill="none"
+        opacity=".6"
+      />
+      <path d="M60 46 L68 60 L60 60 Z" fill="#fff" opacity=".55" />
+    </g>
+  );
+}
+
 export interface MedalProps {
   tier: MedalTier;
-  /** Altura em px (a largura segue a proporção; Supremo é 160:120). */
+  /** Altura em px (a largura segue a proporção 120:140). */
   size?: number;
   glow?: boolean;
+  /** Faixa com o nome do nível embaixo (esconda em tamanhos pequenos, < 40 px). */
+  ribbon?: boolean;
   className?: string;
 }
 
-/** Medalha em SVG. Os ids de gradiente/filtro são únicos por instância (useId). */
-export function Medal({ tier, size = 96, glow = false, className = "" }: MedalProps) {
+/** Brasão de RPG em SVG. Os ids de gradiente/filtro são únicos por instância (useId). */
+export function Medal({ tier, size = 96, glow = false, ribbon = true, className = "" }: MedalProps) {
   const u = useId().replace(/[^a-zA-Z0-9]/g, "");
   const id = (n: string) => `${n}-${u}`;
-  const ref = (n: string) => `url(#${id(n)})`;
-  const vbW = tier === "supremo" ? 160 : 120;
-  const width = Math.round((size * vbW) / 120);
+  const r: Ref = (n) => `url(#${id(n)})`;
+  const c = TIERS[tier];
+  const lvl = ORDER.indexOf(tier);
+  const supremo = tier === "supremo";
+  const width = Math.round((size * VB_W) / VB_H);
+
+  const back: ReactNode[] = [];
+  if (supremo)
+    back.push(
+      <path
+        key="fl"
+        d="M60 -4 C70 10 64 16 74 24 C80 12 78 4 88 0 C86 14 96 22 92 36 L28 36 C24 22 34 14 32 0 C42 4 40 12 46 24 C56 16 50 10 60 -4 Z"
+        fill={r("fl")}
+        opacity=".95"
+      />,
+    );
+  if (lvl >= 3) back.push(<Wings key="wg" c={c} r={r} big={supremo} />);
+  if (lvl >= 2) back.push(<Laurel key="la" />);
+  if (lvl === 0 || lvl >= 2)
+    back.push(<Sword key="s1" rot={-38} c={c} r={r} />, <Sword key="s2" rot={38} c={c} r={r} />);
+  if (lvl === 1) back.push(<Wings key="wg" c={c} r={r} big={false} />);
+
   return (
     <svg
       role="img"
       aria-label={`Medalha ${MEDAL_LABEL[tier]}`}
-      viewBox={`0 0 ${vbW} 120`}
+      viewBox={`0 0 ${VB_W} ${VB_H}`}
       width={width}
       height={size}
-      className={`shrink-0 ${className}`}
-      style={glow ? { filter: "drop-shadow(0 0 14px rgb(255 211 74 / 0.55))" } : undefined}
+      overflow="visible"
+      className={`shrink-0 overflow-visible ${className}`}
+      style={glow ? { filter: `drop-shadow(0 0 14px ${c.glow}8c)` } : undefined}
     >
       <defs>
-        <radialGradient id={id("bzRim")} cx="35%" cy="25%" r="80%"><stop offset="0" stopColor="#F3C29A" /><stop offset=".45" stopColor="#B8693A" /><stop offset="1" stopColor="#5E2E14" /></radialGradient>
-        <radialGradient id={id("bzIn")} cx="40%" cy="30%" r="75%"><stop offset="0" stopColor="#D99366" /><stop offset="1" stopColor="#7A3E1E" /></radialGradient>
-        <radialGradient id={id("agRim")} cx="35%" cy="25%" r="80%"><stop offset="0" stopColor="#FFFFFF" /><stop offset=".45" stopColor="#B9C2D0" /><stop offset="1" stopColor="#5E6878" /></radialGradient>
-        <radialGradient id={id("agIn")} cx="40%" cy="30%" r="75%"><stop offset="0" stopColor="#E9EEF5" /><stop offset="1" stopColor="#8691A3" /></radialGradient>
-        <radialGradient id={id("auRim")} cx="35%" cy="25%" r="80%"><stop offset="0" stopColor="#FFF6C2" /><stop offset=".45" stopColor="#F2B21E" /><stop offset="1" stopColor="#8A5300" /></radialGradient>
-        <radialGradient id={id("auIn")} cx="40%" cy="30%" r="75%"><stop offset="0" stopColor="#FFD966" /><stop offset="1" stopColor="#B87400" /></radialGradient>
-        <linearGradient id={id("gemWarm")} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#FFF8E1" /><stop offset=".5" stopColor="#F7D9A8" /><stop offset="1" stopColor="#C98A4B" /></linearGradient>
-        <linearGradient id={id("gemBlue")} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#CFE6FF" /><stop offset=".45" stopColor="#3D8BFF" /><stop offset="1" stopColor="#1638A8" /></linearGradient>
-        <linearGradient id={id("gemPrism")} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#FFFFFF" /><stop offset=".35" stopColor="#E6DDFF" /><stop offset=".65" stopColor="#B7E9FF" /><stop offset="1" stopColor="#C9A6FF" /></linearGradient>
-        <linearGradient id={id("wing")} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFFFFF" /><stop offset="1" stopColor="#C9D2E6" /></linearGradient>
-        <filter id={id("glow")} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-        <symbol id={id("facet")} viewBox="0 0 40 40"><path d="M20 2 38 20 20 38 2 20Z" fill={ref("gemWarm")} /><path d="M20 2 20 38M2 20H38" stroke="#ffffff70" strokeWidth="1" /><path d="M20 2 28 20 20 38 12 20Z" fill="#ffffff35" /></symbol>
+        <linearGradient id={id("m")} x1="0" y1="0" x2=".3" y2="1">
+          <stop offset="0" stopColor={c.hi} />
+          <stop offset=".45" stopColor={c.mid} />
+          <stop offset="1" stopColor={c.lo} />
+        </linearGradient>
+        <linearGradient id={id("in")} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={c.lo} />
+          <stop offset="1" stopColor={c.edge} />
+        </linearGradient>
+        <linearGradient id={id("bl")} x1="0" x2="1">
+          <stop offset="0" stopColor="#fff" />
+          <stop offset=".5" stopColor="#cfd6dc" />
+          <stop offset="1" stopColor="#6b737b" />
+        </linearGradient>
+        <linearGradient id={id("w")} x1="1" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={c.hi} />
+          <stop offset="1" stopColor={c.mid} />
+        </linearGradient>
+        <linearGradient id={id("fl")} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor="#00b000" />
+          <stop offset=".6" stopColor="#88ef1b" />
+          <stop offset="1" stopColor="#eaffc0" stopOpacity=".2" />
+        </linearGradient>
+        <linearGradient id={id("rb")} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="#1c241c" />
+          <stop offset="1" stopColor="#0a0d0a" />
+        </linearGradient>
+        <filter id={id("gl")} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.4" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        {/* Brilho na cor do nível (equivale a drop-shadow(0 0 (4+2·nível)px glow/40%)). */}
+        <filter id={id("sh")} x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="0" stdDeviation={(4 + lvl * 2) / 2} floodColor={c.glow} floodOpacity=".4" />
+        </filter>
       </defs>
-      {tier === "bronze" && (
+      <g filter={r("sh")}>
+        {back}
+        <path d={SHIELD} fill={r("m")} stroke={c.edge} strokeWidth="2.4" strokeLinejoin="round" />
+        <path d={SHIELD_IN} fill={r("in")} stroke={c.hi} strokeOpacity=".55" strokeWidth="1.2" />
+        <path d="M36 40 L60 33 L60 70 C50 64 40 56 36 40 Z" fill="#fff" opacity=".08" />
+        {[0, 1, 2, 3].slice(0, lvl + 1).map((i) => (
+          <circle key={i} cx={60 - lvl * 4.5 + i * 9} cy="40" r="2" fill={c.hi} opacity=".9" />
+        ))}
+        <Emblem tier={tier} c={c} r={r} />
+        {lvl >= 3 && <Crown c={c} r={r} y={supremo ? 2 : 6} s={supremo ? 1.05 : 0.8} />}
+      </g>
+      {ribbon && (
         <g>
-          <circle cx="60" cy="62" r="46" fill="#00000040" />
-          <circle cx="60" cy="58" r="46" fill={ref("bzRim")} />
-          <circle cx="60" cy="58" r="36" fill={ref("bzIn")} stroke="#5E2E14" strokeOpacity=".5" />
-          <use href={`#${id("facet")}`} x="44" y="42" width="32" height="32" />
-          <path d="M30 40a36 36 0 0 1 40-18" stroke="#fff" strokeOpacity=".55" strokeWidth="4" fill="none" strokeLinecap="round" />
-        </g>
-      )}
-      {tier === "prata" && (
-        <g>
-          <path d="M60 10 74 16 90 14 96 30 108 40 104 56 110 70 98 82 96 98 80 100 68 110 54 104 38 108 30 94 14 86 16 70 8 56 18 44 20 28 36 22 46 12Z" fill="#00000040" transform="translate(0 4)" />
-          <path d="M60 10 74 16 90 14 96 30 108 40 104 56 110 70 98 82 96 98 80 100 68 110 54 104 38 108 30 94 14 86 16 70 8 56 18 44 20 28 36 22 46 12Z" fill={ref("agRim")} />
-          <circle cx="60" cy="58" r="34" fill={ref("agIn")} stroke="#5E6878" strokeOpacity=".5" />
-          <use href={`#${id("facet")}`} x="43" y="41" width="34" height="34" />
-          <path d="M32 38a34 34 0 0 1 38-16" stroke="#fff" strokeOpacity=".7" strokeWidth="4" fill="none" strokeLinecap="round" />
-        </g>
-      )}
-      {tier === "ouro" && (
-        <g>
-          <path d="M38 22 48 8 60 18 72 8 82 22Z" fill={ref("auRim")} stroke="#8A5300" strokeOpacity=".5" />
-          <circle cx="60" cy="64" r="44" fill="#00000040" />
-          <circle cx="60" cy="60" r="44" fill={ref("auRim")} />
-          <circle cx="60" cy="60" r="34" fill={ref("auIn")} stroke="#8A5300" strokeOpacity=".5" />
-          <path d="M60 36 80 60 60 84 40 60Z" fill="#FFF3B0" filter={ref("glow")} />
-          <path d="M60 36 70 60 60 84 50 60Z" fill="#ffffff70" />
-          <circle cx="60" cy="14" r="4" fill="#FFF8D6" />
-          <path d="M30 44a34 34 0 0 1 38-18" stroke="#fff" strokeOpacity=".7" strokeWidth="4" fill="none" strokeLinecap="round" />
-        </g>
-      )}
-      {tier === "diamante" && (
-        <g>
-          <path d="M34 26 30 8 46 20Z M86 26 90 8 74 20Z" fill={ref("agRim")} />
-          <path d="M60 12 106 60 60 108 14 60Z" fill="#00000040" transform="translate(0 4)" />
-          <path d="M60 12 106 60 60 108 14 60Z" fill={ref("agRim")} />
-          <path d="M60 24 94 60 60 96 26 60Z" fill={ref("gemBlue")} filter={ref("glow")} />
-          <path d="M60 24 72 60 60 96 48 60Z" fill="#ffffff40" />
-          <path d="M26 60H94" stroke="#ffffff55" />
-          <path d="M44 42 56 30" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeOpacity=".85" />
-          <circle cx="60" cy="12" r="5" fill="#E9EEF5" /><circle cx="106" cy="60" r="5" fill="#E9EEF5" /><circle cx="60" cy="108" r="5" fill="#E9EEF5" /><circle cx="14" cy="60" r="5" fill="#E9EEF5" />
-        </g>
-      )}
-      {tier === "supremo" && (
-        <g>
-          <path d="M44 52 6 36 14 50 2 52 16 62 6 68 24 72 18 80 42 76Z" fill={ref("wing")} stroke="#9AA6C2" strokeWidth="1" />
-          <path d="M116 52 154 36 146 50 158 52 144 62 154 68 136 72 142 80 118 76Z" fill={ref("wing")} stroke="#9AA6C2" strokeWidth="1" />
-          <path d="M80 6 92 16 80 22 68 16Z" fill={ref("auRim")} />
-          <circle cx="80" cy="14" r="4" fill="#FF5FA8" />
-          <path d="M80 16 118 38 118 82 80 104 42 82 42 38Z" fill="#00000040" transform="translate(0 4)" />
-          <path d="M80 16 118 38 118 82 80 104 42 82 42 38Z" fill={ref("auRim")} />
-          <path d="M80 26 108 42 108 78 80 94 52 78 52 42Z" fill={ref("gemPrism")} filter={ref("glow")} />
-          <path d="M80 26 92 60 80 94 68 60Z" fill="#ffffff60" />
-          <path d="M52 42 108 78M108 42 52 78" stroke="#ffffff50" />
-          <circle cx="80" cy="104" r="4" fill="#FF5FA8" /><circle cx="42" cy="60" r="3.5" fill="#FF5FA8" /><circle cx="118" cy="60" r="3.5" fill="#FF5FA8" />
-          <path d="M120 22 122 28 128 30 122 32 120 38 118 32 112 30 118 28Z" fill="#fff" />
-          <path d="M36 92 37.5 96 41.5 97.5 37.5 99 36 103 34.5 99 30.5 97.5 34.5 96Z" fill="#fff" />
+          <path
+            d="M24 112 H96 L90 121 L96 130 H24 L30 121 Z"
+            fill={r("rb")}
+            stroke={c.mid}
+            strokeWidth="1.3"
+          />
+          <text
+            x="60"
+            y="124.5"
+            textAnchor="middle"
+            fontFamily="'Geist Mono Variable', ui-monospace, monospace"
+            fontSize="8.5"
+            fontWeight="600"
+            letterSpacing="1.6"
+            fill={c.hi}
+          >
+            {tier.toUpperCase()}
+          </text>
         </g>
       )}
     </svg>
   );
 }
 
-/** Círculo tracejado vazio: semana sem medalha. */
+/** Contorno de escudo tracejado vazio: semana sem medalha. */
 export function MedalPlaceholder({ size = 96 }: { size?: number }) {
   return (
-    <svg role="img" aria-label="Semana sem medalha" viewBox="0 0 120 120" width={size} height={size} className="shrink-0">
-      <circle cx="60" cy="60" r="44" fill="none" stroke="var(--dot)" strokeWidth="3" strokeDasharray="7 7" />
+    <svg
+      role="img"
+      aria-label="Semana sem medalha"
+      viewBox={`0 0 ${VB_W} ${VB_H}`}
+      width={Math.round((size * VB_W) / VB_H)}
+      height={size}
+      className="shrink-0"
+    >
+      <path
+        d={SHIELD}
+        fill="none"
+        stroke="var(--dot)"
+        strokeWidth="3"
+        strokeDasharray="7 7"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

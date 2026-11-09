@@ -270,17 +270,17 @@ export function Recorder({ disabled, onText, onActiveChange }: Props) {
         <div data-testid="recorder" className="no-select flex min-w-0 flex-1 items-center gap-3 self-center py-2 pl-0.5">
           {phase === "recording" ? (
             <>
-              <span aria-hidden className="size-2.5 shrink-0 rounded-full bg-danger motion-safe:animate-pulse" />
+              <span aria-hidden className="size-2.5 shrink-0 rounded-full bg-lime shadow-[0_0_10px_rgb(136_239_27/0.8)] motion-safe:animate-pulse" />
               <div aria-hidden className="flex h-6 min-w-0 flex-1 items-center gap-[3px] overflow-hidden">
                 {levels.map((l, i) => (
                   <span
                     key={i}
-                    className="w-[3px] shrink-0 rounded-full bg-accent transition-[height] duration-100 motion-reduce:transition-none"
+                    className="w-[3px] shrink-0 rounded-full bg-lime shadow-[0_0_6px_rgb(136_239_27/0.6)] transition-[height] duration-100 motion-reduce:transition-none"
                     style={{ height: `${Math.round(4 + l * 20)}px` }}
                   />
                 ))}
               </div>
-              <span className="text-sm text-muted tabular-nums">{fmt(elapsed)}</span>
+              <span className="font-mono text-sm text-lime tabular-nums">{fmt(elapsed)}</span>
               <span className="sr-only">{toggleMode ? "Toque no microfone para enviar." : "Solte para enviar."}</span>
             </>
           ) : (

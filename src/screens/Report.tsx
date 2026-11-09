@@ -96,11 +96,13 @@ export function Report({ start: initial, onClose, onMoved }: Props) {
         <Button variant="ghost" size="sm" icon={<ChevronLeftIcon size={18} />} className="-ml-3" onClick={onClose}>
           Voltar
         </Button>
-        <h1 className="font-display mt-2 text-[28px] leading-tight font-semibold text-balance">Sua semana</h1>
-        <p className="mb-3 text-sm text-muted">{range(start, addDays(start, 5))}</p>
+        <div className="mt-2 mb-3 flex items-center justify-between gap-2">
+          <h1 className="eyebrow">Resumo da semana</h1>
+          <p className="glass-quiet rounded-full px-3 py-1 font-mono text-[12px] text-ink">{range(start, addDays(start, 5))}</p>
+        </div>
 
         {error ? (
-          <div role="alert" className="rounded-[18px] border border-line bg-surface px-4 py-5 text-center text-sm">
+          <div role="alert" className="glass-quiet rounded-[18px] px-4 py-5 text-center text-sm">
             <p className="mb-2 text-danger-ink">{error}</p>
             <Button variant="secondary" size="sm" onClick={() => void load(start)}>
               Tentar de novo
@@ -111,7 +113,7 @@ export function Report({ start: initial, onClose, onMoved }: Props) {
             <span className="sr-only">Carregando…</span>
           </div>
         ) : (
-          <WeekReportView report={data.report} previousXp={data.previousXp} level={data.level} onMove={(t) => void move(t)} />
+          <WeekReportView report={data.report} previousXp={data.previousXp} bestWeekXp={data.bestWeekXp} level={data.level} onMove={(t) => void move(t)} />
         )}
 
         <div className="mt-4 flex justify-between">

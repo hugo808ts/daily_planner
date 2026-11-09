@@ -42,7 +42,7 @@ export function AreaTag({ area, dotOnly = false, muted = false, className = "" }
     <span
       className={`no-select inline-flex items-center gap-[5px] text-meta font-medium ${muted ? "text-muted" : m.textClass} ${className}`}
     >
-      <span aria-hidden className={`size-[7px] shrink-0 rounded-full ${m.dotClass}`} />
+      <span aria-hidden style={{ color: m.color }} className={`size-[7px] shrink-0 rounded-[2px] shadow-[0_0_8px_currentColor] ${m.dotClass}`} />
       {dotOnly ? <span className="sr-only">{m.label}</span> : m.label}
     </span>
   );

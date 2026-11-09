@@ -125,7 +125,7 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved, inline = false }: Props) 
             e.preventDefault();
             void submit();
           }}
-          className={`pointer-events-auto mx-auto flex items-end gap-1 rounded-[22px] border border-line bg-surface py-1 pr-1 pl-4 shadow-[0_10px_30px_-12px_rgb(36_32_58/0.35)] transition-[border-color,box-shadow] duration-150 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25 motion-reduce:transition-none ${inline ? "" : "max-w-md"}`}
+          className={`pointer-events-auto mx-auto flex items-end gap-1 glass rounded-[22px] border-lime/40 py-1 pr-1 pl-4 shadow-[0_0_24px_-8px_rgb(136_239_27/0.55)] transition-[border-color,box-shadow] duration-150 focus-within:border-lime focus-within:ring-2 focus-within:ring-lime/25 motion-reduce:transition-none ${inline ? "" : "max-w-md"}`}
         >
           <label htmlFor="capture-input" className="sr-only">
             Captura rápida
@@ -170,7 +170,7 @@ export function CaptureBar({ onTaskSaved, onIdeaSaved, inline = false }: Props) 
             icon={<SendIcon size={20} strokeWidth={2.4} />}
             busy={busy}
             disabled={empty}
-            className={empty ? "bg-accent-soft! text-accent-ink! opacity-100! border border-accent/25" : ""}
+            className={empty ? "bg-accent-soft! text-lime! opacity-100! border border-lime/25 shadow-none!" : "fill-neon!"}
           />
         </form>
         {error && (

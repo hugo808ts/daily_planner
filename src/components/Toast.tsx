@@ -66,7 +66,7 @@ export function Toast() {
     >
       {toast && (
         <div
-          className="pointer-events-auto flex max-w-md items-center gap-1 rounded-2xl bg-ink py-1 pr-1 pl-4 text-sm text-bg shadow-lg"
+          className="pointer-events-auto flex max-w-md items-center gap-1 glass rounded-2xl py-1 pr-1 pl-4 text-sm text-ink shadow-lg"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onFocus={() => setPaused(true)}
@@ -76,7 +76,7 @@ export function Toast() {
           {toast.action && (
             <button
               type="button"
-              className="ml-2 min-h-11 rounded-xl px-3 font-semibold text-accent-soft transition-colors hover:bg-bg/15 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-soft"
+              className="ml-2 min-h-11 rounded-xl px-3 font-semibold text-lime transition-colors hover:bg-lime/10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-lime"
               onClick={() => {
                 toast.action?.onClick();
                 dismiss(toast.id);
@@ -88,7 +88,7 @@ export function Toast() {
           <button
             type="button"
             aria-label="Fechar aviso"
-            className="grid size-11 shrink-0 place-items-center rounded-xl text-bg transition-colors hover:bg-bg/15 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-soft"
+            className="grid size-11 shrink-0 place-items-center rounded-xl text-muted transition-colors hover:bg-white/10 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-lime"
             onClick={() => dismiss(toast.id)}
           >
             <CloseIcon size={18} />

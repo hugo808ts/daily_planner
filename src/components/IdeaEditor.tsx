@@ -391,7 +391,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
           }
         }}
         onBlur={() => void flush()}
-        className={`mt-2 block w-full resize-none overflow-hidden bg-transparent font-display leading-tight font-semibold text-ink placeholder:text-muted focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent/50 ${
+        className={`mt-2 block w-full resize-none overflow-hidden bg-transparent font-display leading-tight font-extrabold tracking-[-0.03em] text-ink placeholder:text-muted focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent/50 ${
           wide ? "text-[30px]" : "text-[24px]"
         }`}
       />
@@ -431,7 +431,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
             if (n && n !== draft.link) change({ link: n });
             void flush();
           }}
-          className="block min-h-11 w-full truncate rounded-xl border border-line bg-surface py-2 pr-3 pl-10 text-ink placeholder:text-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-accent aria-invalid:border-danger"
+          className="block min-h-11 w-full truncate rounded-xl border border-line bg-white/[0.035] py-2 pr-3 pl-10 text-ink placeholder:text-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-accent aria-invalid:border-danger"
         />
         </div>
         {linkError && (
@@ -444,7 +444,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
             href={preview.linkUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className={`mt-2 flex gap-3 rounded-2xl bg-surface p-2 transition-colors hover:bg-accent-soft/50 focus-visible:outline-2 focus-visible:outline-accent ${wide ? "max-w-[460px]" : ""}`}
+            className={`mt-2 flex gap-3 glass-quiet rounded-2xl p-2 transition-colors hover:border-lime/30 focus-visible:outline-2 focus-visible:outline-accent ${wide ? "max-w-[460px]" : ""}`}
           >
             {thumb ? (
               <img
@@ -490,7 +490,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
         className={`mt-4 block w-full resize-none overflow-hidden text-ink placeholder:text-muted ${
           wide
             ? "min-h-[50dvh] bg-transparent px-0 py-1 text-[16px] leading-[1.7] focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent/40"
-            : "min-h-40 rounded-2xl bg-surface px-4 py-3 leading-relaxed focus-visible:outline-2 focus-visible:outline-accent/40"
+            : "glass-quiet min-h-40 rounded-2xl px-4 py-3 leading-relaxed focus-visible:outline-2 focus-visible:outline-accent/40"
         }`}
       />
       {fields.body && (
@@ -501,7 +501,7 @@ export function IdeaEditor({ folderId, folderName, idea, onBack, wide = false, o
 
       {bodyLinks.length > 0 && (
         <div className="mt-2">
-          <p className="mb-1 text-xs font-medium text-muted">Links no texto</p>
+          <p className="eyebrow mb-1">Links no texto</p>
           <ul className="space-y-0.5">
             {bodyLinks.map((url) => (
               <li key={url}>

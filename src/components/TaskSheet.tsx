@@ -24,8 +24,8 @@ interface Props {
 type Mode = "edit" | "move";
 
 const FIELD =
-  "block w-full rounded-xl border border-line bg-bg px-3 py-2.5 text-ink focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent aria-invalid:border-danger";
-const LABEL = "mb-1 block text-sm font-medium";
+  "block w-full rounded-xl border border-line bg-white/[0.035] px-3 py-2.5 text-ink focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-lime aria-invalid:border-danger";
+const LABEL = "eyebrow mb-1.5 block";
 const AREA_OPTIONS: (Area | null)[] = [...AREA_ORDER, null];
 
 /** Folha inferior para editar, levar para outro dia ou excluir uma tarefa. */
@@ -329,7 +329,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
                       className={`inline-flex min-h-11 items-center rounded-xl border px-3 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                         on
                           ? "border-accent bg-accent-soft text-ink"
-                          : "border-line bg-bg text-ink hover:border-dot hover:bg-accent-soft/50"
+                          : "border-line bg-white/[0.035] text-ink hover:border-dot hover:bg-accent-soft/50"
                       }`}
                     >
                       {value ? <AreaTag area={value} className="text-ink!" /> : "Sem área"}
@@ -361,7 +361,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
                       className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-1.5 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                         on
                           ? "border-accent bg-accent-soft text-ink"
-                          : "border-line bg-bg text-ink hover:border-dot hover:bg-accent-soft/50"
+                          : "border-line bg-white/[0.035] text-ink hover:border-dot hover:bg-accent-soft/50"
                       }`}
                     >
                       <span aria-hidden className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px font-semibold ${m.className}`}>

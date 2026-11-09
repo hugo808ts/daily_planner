@@ -13,11 +13,11 @@ export function LevelBar({ level, into, needed, compact = false }: LevelBarProps
   const size = compact ? "size-8 text-[14px] rounded-[10px]" : "size-[38px] text-[16px] rounded-xl";
   return (
     <div
-      className={`flex items-center gap-2.5 rounded-2xl border border-line bg-surface ${compact ? "px-2.5 py-2" : "px-3 py-2.5"}`}
+      className={`glass-quiet flex items-center gap-2.5 rounded-2xl ${compact ? "px-2.5 py-2" : "px-3 py-2.5"}`}
     >
       <span
         aria-hidden
-        className={`level-badge no-select grid shrink-0 place-items-center font-display font-extrabold ${size}`}
+        className={`level-badge no-select grid shrink-0 place-items-center font-mono font-bold tabular-nums ${size}`}
       >
         {level}
       </span>
@@ -32,8 +32,8 @@ export function LevelBar({ level, into, needed, compact = false }: LevelBarProps
       >
         <div className="flex justify-between gap-2 text-meta text-muted">
           <b className="font-semibold text-ink">Nível {level}</b>
-          <span>
-            {into} / {needed} XP
+          <span className="font-mono text-[12px] tabular-nums">
+            <b className="text-neon font-semibold">{into}</b> / {needed} XP
           </span>
         </div>
         <div className="level-track mt-1.5 h-2 overflow-hidden rounded-full">

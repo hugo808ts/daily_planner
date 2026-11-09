@@ -241,8 +241,9 @@ describe("POST /api/tasks/:id/move", () => {
     const res = await post(`/api/tasks/${id}/move`, { date: addDays(today(), 1) });
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({ error: "Essa tarefa já foi levada para outro dia." });
-    const all = (await week(today())).tasks.filter((t: any) => t.title === "t");
-    expect(all).toHaveLength(2); // hoje + ontem (mesma semana, a menos que ontem seja domingo)
+    const all = [...(await week(today())).tasks, ...(await week(yesterday())).tasks].filter((t: any) => t.title === "t");
+    // hoje + ontem; na segunda, ontem (domingo) é da semana anterior — por isso as duas semanas, sem repetir
+    expect(new Set(all.map((t: any) => t.id)).size).toBe(2);
   });
 
   it("404 e 400", async () => {

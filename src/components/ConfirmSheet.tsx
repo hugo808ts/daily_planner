@@ -25,14 +25,14 @@ interface Props {
 type Field = "title" | "date" | "time" | "area" | "difficulty" | "folder";
 
 const FIELD =
-  "block w-full rounded-xl border border-line bg-bg px-3 py-2.5 text-ink focus-visible:border-accent aria-invalid:border-danger";
-const LABEL = "mb-1 block text-sm font-medium";
+  "block w-full rounded-xl border border-line bg-white/[0.035] px-3 py-2.5 text-ink focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-lime aria-invalid:border-danger";
+const LABEL = "eyebrow mb-1.5 block";
 const ERROR = "mt-1 text-sm text-danger-ink";
 const OPTION = (on: boolean) =>
   `no-select inline-flex items-center gap-1.5 rounded-xl border px-3 text-sm transition-colors duration-150 motion-reduce:transition-none ${
     on
       ? "border-accent bg-accent-soft font-semibold text-accent-ink"
-      : "border-line bg-surface text-ink hover:border-dot active:bg-ink/5"
+      : "border-line bg-white/[0.035] text-ink hover:border-dot active:bg-ink/5"
   }`;
 
 /** Toque (sem mouse) abriria o teclado e cobriria a folha: autoFocus só com ponteiro fino. */
@@ -54,7 +54,7 @@ function Chip({ label, open, onClick, children }: { label: string; open: boolean
       aria-expanded={open}
       onClick={onClick}
       className={`no-select inline-flex max-w-full items-center gap-1.5 rounded-xl border px-3 text-sm transition-colors duration-150 hover:border-dot active:bg-ink/5 motion-reduce:transition-none ${
-        open ? "border-accent bg-accent-soft" : "border-line bg-surface"
+        open ? "border-accent bg-accent-soft" : "border-line bg-white/[0.035]"
       }`}
     >
       {children}
@@ -233,9 +233,15 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
         </h2>
         <div aria-hidden className="mx-auto mb-3 h-1 w-10 rounded-full bg-ink/15" />
 
+        {initial.source === "ai" && (
+          <p className="eyebrow mb-3 inline-flex items-center gap-1.5 rounded-full border border-lime/40 px-2.5 py-1 !text-lime">
+            <span aria-hidden>✦</span> IA entendeu
+          </p>
+        )}
+
         {said && <p className="mb-3 text-sm break-words text-pretty text-muted italic">“{said}”</p>}
 
-        <RadioGroup label="Tipo" className="mb-3 inline-flex rounded-xl bg-ink/[0.06] p-0.5">
+        <RadioGroup label="Tipo" className="mb-3 inline-flex rounded-xl border border-line bg-white/[0.035] p-0.5">
           {(
             [
               ["task", "Tarefa", CheckIcon],
@@ -252,7 +258,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
                 tabIndex={on ? 0 : -1}
                 onClick={() => chooseKind(k)}
                 className={`no-select inline-flex min-h-10 items-center gap-1.5 rounded-[10px] px-3.5 text-[13.5px] font-semibold transition-colors duration-150 motion-reduce:transition-none ${
-                  on ? "bg-surface text-accent-ink shadow-sm" : "text-muted hover:text-ink"
+                  on ? "fill-neon" : "text-muted hover:text-ink"
                 }`}
               >
                 <Icon size={16} />
@@ -446,12 +452,12 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
                   tabIndex={on ? 0 : -1}
                   onClick={() => setDifficulty(d)}
                   className={`no-select flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl border px-2 py-1.5 text-sm transition-colors duration-150 motion-reduce:transition-none ${
-                    on ? `border-2 font-semibold ${m.className}` : "border-line bg-surface text-ink hover:border-dot active:bg-ink/5"
+                    on ? "fill-neon border-transparent font-semibold" : "border-line bg-white/[0.035] text-ink hover:border-dot active:bg-ink/5"
                   }`}
                 >
                   <m.Icon size={16} strokeWidth={2.5} />
                   <span>{m.label}</span>
-                  <span className="text-meta font-normal opacity-80">{XP_BY_DIFFICULTY[d]} XP</span>
+                  <span className="font-mono text-meta font-normal opacity-80">{XP_BY_DIFFICULTY[d]} XP</span>
                 </button>
               );
             })}
@@ -493,8 +499,8 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
         )}
 
         {creatingFolder && (
-          <fieldset className="mb-4 rounded-2xl bg-bg p-3">
-            <legend className="float-left mb-2 w-full text-sm font-semibold">
+          <fieldset className="mb-4 glass-quiet rounded-2xl p-3">
+            <legend className="eyebrow float-left mb-2 w-full">
               {noFolders ? "Crie sua primeira pasta" : "Nova pasta"}
             </legend>
             {noFolders && <p className="mb-3 text-sm text-muted">Toda ideia mora numa pasta. Dê um nome para guardar esta.</p>}

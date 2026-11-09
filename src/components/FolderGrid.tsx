@@ -28,7 +28,7 @@ import {
 const SEARCH_DEBOUNCE_MS = 250;
 
 const FIELD =
-  "block w-full min-h-11 rounded-xl border border-line bg-bg px-3 py-2.5 text-ink placeholder:text-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent aria-invalid:border-danger";
+  "block w-full min-h-11 rounded-xl border border-line bg-white/[0.035] px-3 py-2.5 text-ink placeholder:text-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-accent aria-invalid:border-danger";
 
 const StarIcon: IconComponent = ({ size = 20, strokeWidth = 2, className, ...rest }: IconProps) => (
   <Star size={size} strokeWidth={strokeWidth} aria-hidden focusable="false" className={className ? `shrink-0 ${className}` : "shrink-0"} {...rest} />
@@ -86,8 +86,9 @@ export function FolderGlyph({
 }) {
   const Icon = iconFor(folder.emoji) ?? (isIconKey(folder.emoji) || !folder.emoji ? FolderIcon : null);
   const style: CSSProperties = {
-    background: plain ? "transparent" : folderTint(folder.id),
-    color: folderInk(folder.id),
+    background: plain ? "transparent" : "rgb(0 176 0 / 0.18)",
+    boxShadow: plain ? undefined : "inset 0 0 0 1px rgb(136 239 27 / 0.35)",
+    color: plain ? folderInk(folder.id) : "var(--lime)",
     width: size,
     height: size,
   };
@@ -143,8 +144,8 @@ export function FolderGrid(props: Props) {
           id="ideas-title"
           className={
             sidebar
-              ? "font-display text-xl leading-tight font-semibold"
-              : "font-display text-[28px] leading-tight font-semibold tracking-[-0.01em]"
+              ? "font-display text-xl leading-tight font-extrabold tracking-tight"
+              : "font-display text-[28px] leading-tight font-extrabold tracking-[-0.03em]"
           }
         >
           Ideias
@@ -173,7 +174,7 @@ export function FolderGrid(props: Props) {
           spellCheck={false}
           placeholder="Buscar em todas as ideias…"
           onChange={(e) => onQuery(e.target.value)}
-          className="block min-h-11 w-full truncate rounded-2xl border border-transparent bg-surface py-2.5 pr-11 pl-10 text-ink placeholder:text-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-accent [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-cancel-button]:appearance-none"
+          className="block min-h-11 w-full truncate rounded-2xl border border-line bg-white/[0.035] py-2.5 pr-11 pl-10 text-ink placeholder:text-muted focus-visible:border-accent focus-visible:outline-2 focus-visible:outline-accent [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-cancel-button]:appearance-none"
         />
         {query && (
           <IconButton
@@ -189,7 +190,7 @@ export function FolderGrid(props: Props) {
       {searching ? (
         <SearchResults query={query.trim()} folders={folders ?? []} onOpen={props.onOpenIdea} />
       ) : error && !folders ? (
-        <div role="alert" className="rounded-[20px] bg-surface px-4 py-5 text-center text-sm">
+        <div role="alert" className="glass-quiet rounded-[20px] px-4 py-5 text-center text-sm">
           <p className="mb-3 text-danger-ink">{error}</p>
           <Button variant="secondary" size="sm" onClick={onReload}>
             Tentar de novo
@@ -199,15 +200,15 @@ export function FolderGrid(props: Props) {
         <div role="status" className={sidebar ? "space-y-1" : "grid grid-cols-2 gap-2.5"}>
           <span className="sr-only">Carregando…</span>
           {[0, 1].map((i) => (
-            <div key={i} aria-hidden className={`rounded-[20px] bg-surface motion-safe:animate-pulse ${sidebar ? "h-10" : "h-[104px]"}`} />
+            <div key={i} aria-hidden className={`glass-quiet rounded-[20px] motion-safe:animate-pulse ${sidebar ? "h-10" : "h-[104px]"}`} />
           ))}
         </div>
       ) : folders.length === 0 ? (
-        <div className="rounded-[20px] bg-surface px-5 py-7 text-center">
+        <div className="glass-quiet rounded-[20px] px-5 py-7 text-center">
           <span aria-hidden className="mx-auto grid size-12 place-items-center rounded-2xl bg-accent-soft text-accent-ink">
             <FolderPlusIcon size={24} />
           </span>
-          <h2 className="mt-3 font-display text-xl font-semibold">Crie sua primeira pasta</h2>
+          <h2 className="mt-3 font-display text-xl font-extrabold tracking-tight">Crie sua primeira pasta</h2>
           <p className="mx-auto mt-1 max-w-[30ch] text-sm text-muted">
             Toda ideia mora numa pasta: estudos, vídeos para ver, projetos… Você escolhe os nomes.
           </p>
@@ -217,7 +218,7 @@ export function FolderGrid(props: Props) {
         </div>
       ) : sidebar ? (
         <>
-          <h2 className="mx-2 mb-1.5 text-xs font-medium text-muted">Pastas</h2>
+          <h2 className="eyebrow mx-2 mb-1.5">Pastas</h2>
           <ul aria-label="Pastas" className="space-y-0.5">
             <li>
               <button
@@ -225,7 +226,7 @@ export function FolderGrid(props: Props) {
                 aria-current={recentSelected ? "true" : undefined}
                 onClick={() => onOpenRecent?.()}
                 className={`flex min-h-11 w-full items-center gap-2 rounded-xl py-1.5 pr-2 pl-2 text-left text-[14px] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-accent ${
-                  recentSelected ? "bg-surface font-semibold shadow-[0_1px_2px_rgb(36_32_58/0.08)]" : "hover:bg-ink/[0.05] active:bg-ink/[0.07]"
+                  recentSelected ? "glass-quiet font-semibold" : "hover:bg-ink/[0.05] active:bg-ink/[0.07]"
                 }`}
               >
                 <span aria-hidden className="no-select grid size-7 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent-ink">
@@ -244,7 +245,7 @@ export function FolderGrid(props: Props) {
                     aria-current={on ? "true" : undefined}
                     onClick={() => onOpenFolder(f)}
                     className={`flex min-h-11 w-full items-center gap-2 rounded-xl py-1.5 pr-11 pl-2 text-left text-[14px] transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-accent ${
-                      on ? "bg-surface font-semibold shadow-[0_1px_2px_rgb(36_32_58/0.08)]" : "hover:bg-ink/[0.05] active:bg-ink/[0.07]"
+                      on ? "glass-quiet font-semibold" : "hover:bg-ink/[0.05] active:bg-ink/[0.07]"
                     }`}
                   >
                     <FolderGlyph folder={f} size={28} className="rounded-lg" />
@@ -277,12 +278,12 @@ export function FolderGrid(props: Props) {
                 type="button"
                 aria-label={`Abrir pasta ${f.name}, ${ideaCount(f.openCount)}`}
                 onClick={() => onOpenFolder(f)}
-                className="flex min-h-[104px] w-full flex-col justify-between rounded-[20px] bg-surface p-3 text-left transition-[transform,box-shadow] duration-150 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.98] motion-reduce:transition-none"
+                className="flex min-h-[104px] w-full flex-col justify-between glass-quiet rounded-[20px] p-3 text-left transition-[transform,box-shadow] duration-150 hover:border-lime/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.98] motion-reduce:transition-none"
               >
                 <FolderGlyph folder={f} size={38} />
                 <span className="mt-2 block min-w-0">
                   <b className="block truncate pr-1 text-[15px] font-semibold">{f.name}</b>
-                  <small className="text-meta text-muted">{ideaCount(f.openCount)}</small>
+                  <small className="font-mono text-meta text-muted">{ideaCount(f.openCount)}</small>
                 </span>
               </button>
               <IconButton
@@ -379,7 +380,7 @@ function SearchResults({ query, folders, onOpen }: { query: string; folders: Fol
               <button
                 type="button"
                 onClick={() => onOpen(idea)}
-                className="block w-full rounded-2xl bg-surface px-4 py-3 text-left transition-colors hover:bg-accent-soft/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:bg-surface/70"
+                className="block w-full glass-quiet rounded-2xl px-4 py-3 text-left transition-colors hover:bg-accent-soft/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:bg-surface/70"
               >
                 <span className="mb-1 flex max-w-full items-center gap-1.5 text-xs font-medium text-muted">
                   {folder && <FolderGlyph folder={folder} size={16} plain />}
@@ -475,7 +476,7 @@ function FolderSheet({ folder, onClose, onSaved, onDeleted }: SheetProps) {
         style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <div aria-hidden className="mx-auto mb-3 h-1 w-10 rounded-full bg-ink/15" />
-        <h2 id="folder-sheet-title" className="mb-3 font-display text-xl font-semibold">
+        <h2 id="folder-sheet-title" className="mb-3 font-display text-xl font-extrabold tracking-tight">
           {title}
         </h2>
 

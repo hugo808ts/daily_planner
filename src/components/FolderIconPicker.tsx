@@ -36,7 +36,7 @@ export function FolderIconPicker({ value, onChange, legacy = null, label = "Íco
               title={o.label}
               onClick={() => onChange(o.key)}
               className={`no-select grid size-11 place-items-center rounded-xl border-[1.5px] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                on ? "border-accent bg-accent-soft text-accent-ink" : "border-line bg-bg text-ink hover:border-dot"
+                on ? "border-accent bg-accent-soft text-accent-ink" : "border-line bg-white/[0.035] text-ink hover:border-dot"
               }`}
             >
               {o.node}

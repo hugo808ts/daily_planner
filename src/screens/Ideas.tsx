@@ -34,10 +34,10 @@ function EmptyPane({ title, text }: { title: string; text: string }) {
   return (
     <div className="grid h-full place-items-center px-6 text-center">
       <div>
-        <span aria-hidden className="mx-auto grid size-12 place-items-center rounded-2xl bg-accent-soft text-accent-ink">
+        <span aria-hidden className="mx-auto grid size-12 place-items-center rounded-2xl border border-lime/35 bg-green/20 text-lime">
           <LightbulbIcon size={24} />
         </span>
-        <h2 className="mt-3 font-display text-lg font-semibold">{title}</h2>
+        <h2 className="mt-3 font-display text-lg font-extrabold tracking-tight">{title}</h2>
         <p className="mx-auto mt-1 max-w-[32ch] text-sm text-muted">{text}</p>
       </div>
     </div>

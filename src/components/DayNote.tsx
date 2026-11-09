@@ -63,7 +63,7 @@ export function DayNote({ date, note, onSaved }: Props) {
   if (editing) {
     return (
       <form
-        className="rounded-2xl bg-note p-3 text-note-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent"
+        className="glass-quiet rounded-2xl p-3 text-note-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent"
         onSubmit={(e) => {
           e.preventDefault();
           void save();
@@ -141,9 +141,9 @@ export function DayNote({ date, note, onSaved }: Props) {
       <button
         type="button"
         onClick={start}
-        className={`flex min-h-11 w-full items-center gap-2 rounded-2xl border border-dashed border-ink/25 px-3 text-left text-sm text-muted transition-colors duration-150 hover:bg-ink/[0.04] active:bg-ink/5 ${FOCUS}`}
+        className={`flex min-h-11 w-full items-center gap-2 glass-quiet rounded-2xl border-dashed px-3 text-left text-sm text-muted transition-colors duration-150 hover:bg-ink/[0.04] active:bg-ink/5 ${FOCUS}`}
       >
-        <PinIcon size={16} />
+        <PinIcon size={16} className="text-lime" />
         Fixar uma anotação
       </button>
     );
@@ -155,9 +155,9 @@ export function DayNote({ date, note, onSaved }: Props) {
       data-testid="day-note"
       onClick={start}
       aria-label={`Editar anotação do dia: ${note.text}`}
-      className={`flex w-full items-start gap-2 rounded-2xl bg-note px-3 py-2.5 text-left text-[15px] leading-snug break-words whitespace-pre-wrap text-note-ink transition-opacity hover:opacity-90 active:opacity-80 ${FOCUS}`}
+      className={`flex w-full items-start gap-2 glass-quiet rounded-2xl px-3 py-2.5 text-left text-[15px] leading-snug break-words whitespace-pre-wrap text-note-ink transition-opacity hover:opacity-90 active:opacity-80 ${FOCUS}`}
     >
-      <PinIcon size={16} className="mt-0.5" />
+      <PinIcon size={16} className="mt-0.5 shrink-0 text-lime" />
       <span className="min-w-0">{note.text}</span>
     </button>
   );
