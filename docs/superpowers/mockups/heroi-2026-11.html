@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda — Herói, Hoje e Torre (rascunho 3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --onyx: #131313;
+    --void: #070807;
+    --green: #00b000;
+    --green-d: #008400;
+    --lime: #88ef1b;
+    --mint: #bfebbf;
+    --paper: #f0f0f0;
+    --stone: #9a9a9a;
+    --late: #ff4d5e;
+    --on-green: #061006;
+    --glass: rgb(22 26 22 / .55);
+    --line: rgb(255 255 255 / .09);
+    --neon: 0 0 6px rgb(136 239 27 / .55), 0 0 22px rgb(0 176 0 / .35);
+    --sans: "Geist", system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #040504; color: var(--paper); font-family: var(--sans); padding: 36px 16px 80px; }
+  .mono { font-family: var(--mono); }
+
+  .intro { max-width: 1180px; margin: 0 auto 30px; }
+  .intro h1 { font-size: 30px; font-weight: 800; letter-spacing: -.03em; margin: 0 0 8px; }
+  .intro h1 span { color: var(--lime); text-shadow: var(--neon); }
+  .intro p { color: var(--stone); max-width: 78ch; line-height: 1.55; margin: 0; }
+
+  .row { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; max-width: 1240px; margin: 0 auto; }
+  .label { text-align: center; color: var(--stone); font: 500 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; margin-top: 12px; }
+
+  /* ===== Fundo: onyx + aurora verde + grade de "HUD" que some nas bordas ===== */
+  .phone {
+    width: 370px; height: 790px; border-radius: 44px; overflow: hidden; position: relative;
+    border: 1px solid #1d1f1d; box-shadow: 0 40px 90px -40px #000, 0 0 0 6px #0b0c0b, 0 0 0 7px #1c1e1c;
+    background:
+      radial-gradient(70% 40% at 15% 108%, rgb(0 176 0 / .55), transparent 70%),
+      radial-gradient(60% 35% at 95% 100%, rgb(136 239 27 / .28), transparent 70%),
+      radial-gradient(80% 30% at 50% -6%, rgb(140 219 140 / .10), transparent 70%),
+      var(--void);
+    display: flex; flex-direction: column;
+  }
+  .phone::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgb(136 239 27 / .05) 1px, transparent 1px), linear-gradient(90deg, rgb(136 239 27 / .05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(90% 60% at 50% 100%, #000 10%, transparent 75%);
+            mask-image: radial-gradient(90% 60% at 50% 100%, #000 10%, transparent 75%);
+  }
+  .status { display: flex; justify-content: space-between; padding: 14px 26px 0; font: 600 13px var(--sans); position: relative; }
+  .scroll { flex: 1; padding: 14px 16px 0; position: relative; overflow: hidden; }
+
+  /* Vidro com borda em degradê neon */
+  .glass {
+    position: relative; border-radius: 22px;
+    background: linear-gradient(var(--glass), var(--glass)) padding-box,
+                linear-gradient(140deg, rgb(136 239 27 / .45), rgb(255 255 255 / .06) 35%, rgb(255 255 255 / .04) 65%, rgb(0 176 0 / .35)) border-box;
+    border: 1px solid transparent;
+    backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .07), 0 18px 40px -22px #000;
+  }
+  .glass.quiet { background: linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(var(--line), var(--line)) border-box; }
+
+  /* Cabeçalho */
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .eyebrow { font: 500 11px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--stone); }
+  .player { display: flex; align-items: center; gap: 10px; padding: 5px 12px 5px 5px; border-radius: 999px; }
+  .player .ring { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--lime) 0 62%, rgb(255 255 255 / .1) 0); box-shadow: 0 0 14px rgb(136 239 27 / .35); }
+  .player .ring b { width: 28px; height: 28px; border-radius: 50%; background: #0c0e0c; display: grid; place-items: center; font: 700 12px var(--mono); color: var(--lime); }
+  .player small { display: block; font: 500 10px var(--mono); letter-spacing: .12em; color: var(--stone); }
+  .player strong { font-size: 13px; }
+  .player svg { width: 26px; height: 30px; margin-left: 2px; }
+
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 16px; }
+  .day { text-align: center; padding: 8px 0 8px; border-radius: 14px; color: var(--stone); font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .day b { display: block; font: 700 17px var(--sans); color: var(--paper); margin-top: 4px; letter-spacing: -.02em; }
+  .day i { display: flex; gap: 2px; justify-content: center; margin-top: 6px; height: 4px; }
+  .day i::before { content: ""; width: 14px; height: 3px; border-radius: 2px; background: rgb(255 255 255 / .16); }
+  .day.ok i::before { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .day.on { background: linear-gradient(180deg, var(--lime), var(--green)); color: var(--on-green);
+    box-shadow: 0 0 0 1px rgb(136 239 27 / .6), 0 8px 26px -6px rgb(136 239 27 / .7); }
+  .day.on b { color: var(--on-green); }
+  .day.on i::before { background: rgb(0 0 0 / .45); box-shadow: none; }
+
+  /* Painel do dia */
+  .hud { margin-top: 16px; padding: 16px; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; overflow: hidden; }
+  .hud::after { content: ""; position: absolute; right: -40px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(rgb(136 239 27 / .18), transparent 65%); pointer-events: none; }
+  .hud h2 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.035em; }
+  .hud .date { color: var(--stone); font-size: 13px; }
+  .dial { grid-row: span 2; width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(from -90deg, var(--green-d), var(--lime) 40%, rgb(255 255 255 / .08) 40% 100%);
+    filter: drop-shadow(0 0 10px rgb(136 239 27 / .45)); }
+  .dial > div { width: 76px; height: 76px; border-radius: 50%; background: #0b0d0b; display: grid; place-items: center; text-align: center; }
+  .dial strong { font: 800 30px/1 var(--sans); letter-spacing: -.05em; }
+  .dial strong span { font-size: 15px; color: var(--stone); font-weight: 600; }
+  .dial em { display: block; font: 500 9px var(--mono); letter-spacing: .16em; color: var(--lime); font-style: normal; margin-top: 3px; }
+  .xpline { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .xpline .track { flex: 1; height: 8px; border-radius: 6px; background: rgb(255 255 255 / .07); overflow: hidden; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .05); }
+  .xpline .track i { display: block; height: 100%; width: 61%; border-radius: 6px; background: linear-gradient(90deg, var(--green-d), var(--green), var(--lime)); box-shadow: 0 0 12px rgb(136 239 27 / .7); position: relative; }
+  .xpline span { font: 500 11px var(--mono); color: var(--stone); white-space: nowrap; }
+  .xpline span b { color: var(--lime); font-weight: 600; text-shadow: var(--neon); }
+
+  .section { display: flex; justify-content: space-between; align-items: center; margin: 18px 4px 8px; }
+
+  .task { display: flex; gap: 12px; padding: 13px 14px; align-items: flex-start; position: relative; }
+  .task + .task { border-top: 1px solid rgb(255 255 255 / .06); }
+  .task.late::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--late); box-shadow: 0 0 10px var(--late); }
+  .box { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid rgb(255 255 255 / .28); flex: none; margin-top: 1px; display: grid; place-items: center; }
+  .box.ok { background: linear-gradient(160deg, var(--lime), var(--green)); border-color: transparent; box-shadow: 0 0 12px rgb(136 239 27 / .6); }
+  .box.ok::after { content: ""; width: 9px; height: 5px; border: 2.2px solid var(--on-green); border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px,-1px); }
+  .t { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+  .done .t { color: var(--stone); text-decoration: line-through; text-decoration-color: rgb(136 239 27 / .6); }
+  .meta { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 12.5px; color: var(--stone); flex-wrap: wrap; }
+  .area::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; background: currentColor; box-shadow: 0 0 6px currentColor; }
+  .a-work { color: var(--paper); } .a-school { color: var(--mint); } .a-personal { color: var(--lime); }
+  .chip { padding: 2px 8px; border-radius: 6px; font: 600 11px var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+  .c-high { background: var(--lime); color: var(--on-green); box-shadow: 0 0 10px rgb(136 239 27 / .5); }
+  .c-med { background: rgb(0 176 0 / .22); color: var(--mint); box-shadow: inset 0 0 0 1px rgb(0 176 0 / .6); }
+  .c-low { background: rgb(255 255 255 / .06); color: #d6d6d6; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .14); }
+  .xp { font: 600 12px var(--mono); color: var(--lime); text-shadow: 0 0 8px rgb(136 239 27 / .6); }
+  .xp.off { color: var(--stone); text-shadow: none; }
+  .late-tag { font: 600 11px var(--mono); color: var(--late); text-shadow: 0 0 8px rgb(255 77 94 / .5); text-transform: uppercase; letter-spacing: .04em; }
+  .xp-float { position: absolute; right: 14px; top: 8px; font: 700 13px var(--mono); color: var(--on-green); background: var(--lime); padding: 3px 8px; border-radius: 8px; box-shadow: 0 0 18px rgb(136 239 27 / .8); }
+
+  .note { margin-top: 10px; padding: 12px 14px; display: flex; gap: 10px; align-items: center; font-size: 14px; }
+  .note svg { color: var(--lime); filter: drop-shadow(0 0 4px var(--lime)); flex: none; }
+
+  .capture { margin: 10px 16px 10px; padding: 7px 7px 7px 16px; display: flex; align-items: center; gap: 6px; border-radius: 20px; position: relative;
+    box-shadow: 0 0 0 1px rgb(136 239 27 / .25), 0 0 24px -6px rgb(136 239 27 / .45), inset 0 1px 0 rgb(255 255 255 / .06); }
+  .capture > span:first-child { flex: 1; color: var(--stone); font-size: 14px; }
+  .capture .mic, .capture .send { flex: none; }
+  .mic { width: 40px; height: 40px; display: grid; place-items: center; color: var(--lime); }
+  .send { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; color: var(--on-green);
+    background: linear-gradient(150deg, var(--lime), var(--green)); box-shadow: 0 0 18px rgb(136 239 27 / .6), inset 0 1px 0 rgb(255 255 255 / .4); }
+  .tabs { display: flex; justify-content: space-around; padding: 8px 0 24px; border-top: 1px solid var(--line); background: rgb(4 5 4 / .6); backdrop-filter: blur(16px); position: relative; }
+  .tab { text-align: center; font: 500 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--stone); position: relative; padding-top: 6px; }
+  .tab svg { display: block; margin: 0 auto 4px; }
+  .tab.on { color: var(--paper); }
+  .tab.on svg { color: var(--lime); filter: drop-shadow(0 0 6px var(--lime)); }
+  .tab.on::before { content: ""; position: absolute; top: -9px; left: 50%; translate: -50% 0; width: 26px; height: 2px; border-radius: 2px; background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+
+  /* Captura */
+  .dim { position: absolute; inset: 0; background: rgb(0 0 0 / .62); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 18px 30px; border-radius: 30px 30px 0 0;
+    background: linear-gradient(180deg, rgb(26 32 26 / .88), rgb(12 14 12 / .94)); backdrop-filter: blur(26px);
+    box-shadow: 0 -1px 0 rgb(136 239 27 / .5), 0 -20px 60px -20px rgb(0 176 0 / .5); }
+  .grab { width: 40px; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .25); margin: 0 auto 14px; }
+  .ai { display: inline-flex; gap: 6px; align-items: center; font: 500 10px var(--mono); letter-spacing: .14em; color: var(--lime); padding: 4px 9px; border-radius: 999px; background: rgb(136 239 27 / .08); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .35); }
+  .sheet h3 { margin: 10px 0 14px; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+  .quote { color: var(--stone); font-size: 13px; margin: -8px 0 14px; font-style: italic; }
+  .field { padding: 11px 14px; border-radius: 14px; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); font-size: 15px; margin-bottom: 9px; }
+  .field small { display: block; color: var(--stone); font: 500 10px var(--mono); letter-spacing: .16em; text-transform: uppercase; margin-bottom: 3px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 12px; }
+  .seg span { text-align: center; padding: 10px 0 8px; border-radius: 13px; font-size: 13px; font-weight: 600; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); color: var(--stone); }
+  .seg span small { display: block; font: 500 10px var(--mono); margin-top: 2px; opacity: .8; }
+  .seg span.on { background: linear-gradient(160deg, var(--lime), var(--green)); color: var(--on-green); box-shadow: 0 0 20px -2px rgb(136 239 27 / .6); }
+  .btns { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 6px; }
+  .btn { text-align: center; padding: 15px; border-radius: 16px; font-weight: 700; font-size: 15px; }
+  .btn.ghost { background: rgb(255 255 255 / .05); box-shadow: inset 0 0 0 1px var(--line); }
+  .btn.primary { color: var(--on-green); background: linear-gradient(120deg, var(--green-d), var(--green) 45%, var(--lime)); box-shadow: 0 0 26px -4px rgb(136 239 27 / .7), inset 0 1px 0 rgb(255 255 255 / .35); }
+
+  /* Resumo */
+  .medal-card { margin-top: 14px; padding: 18px 16px 16px; display: flex; gap: 14px; align-items: center; overflow: hidden; }
+  .medal-card svg { width: 96px; height: 112px; flex: none; }
+  .medal-card .tier { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+  .medal-card p { margin: 2px 0 10px; color: var(--stone); font-size: 13px; }
+  .bigxp { font: 800 36px/1 var(--sans); letter-spacing: -.05em; color: var(--lime); text-shadow: var(--neon); }
+  .bigxp small { font: 500 12px var(--mono); color: var(--stone); text-shadow: none; letter-spacing: .1em; margin-left: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .stat { padding: 12px 10px 10px; border-radius: 18px; }
+  .stat strong { display: block; font: 800 32px/1.05 var(--sans); letter-spacing: -.05em; }
+  .stat span { font: 500 10px var(--mono); color: var(--stone); letter-spacing: .14em; text-transform: uppercase; }
+  .stat.hl strong { color: var(--lime); text-shadow: var(--neon); }
+  .stat.bad strong { color: var(--late); text-shadow: 0 0 14px rgb(255 77 94 / .45); }
+  .chart { margin-top: 10px; padding: 14px 14px 10px; }
+  .cols { display: flex; align-items: flex-end; gap: 9px; height: 112px; margin-top: 24px; position: relative; }
+  .cols::before { content: ""; position: absolute; inset: 0 0 18px; background: repeating-linear-gradient(0deg, transparent 0 27px, rgb(255 255 255 / .05) 27px 28px); }
+  .col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; text-align: center; font: 500 10px var(--mono); color: var(--stone); text-transform: uppercase; position: relative; }
+  .col div { border-radius: 7px 7px 3px 3px; margin-bottom: 6px; background: linear-gradient(180deg, var(--lime), var(--green) 40%, rgb(0 132 0 / .35)); box-shadow: 0 0 16px -2px rgb(136 239 27 / .55); }
+  .col.low div { background: rgb(255 255 255 / .1); box-shadow: none; }
+  .col.best div::before { content: "MVP"; position: absolute; top: -16px; left: 0; right: 0; font: 600 9px var(--mono); color: var(--lime); text-shadow: var(--neon); }
+  .col.best div { position: relative; }
+
+  /* Revelação de domingo */
+  .reveal { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 70px 24px 0; text-align: center;
+    background: radial-gradient(60% 40% at 50% 42%, rgb(136 239 27 / .28), transparent 70%), radial-gradient(100% 60% at 50% 110%, rgb(0 176 0 / .5), transparent 70%), #030403; }
+  .rays { position: absolute; left: 50%; top: 38%; width: 720px; height: 720px; translate: -50% -50%;
+    background: repeating-conic-gradient(from 0deg, rgb(136 239 27 / .14) 0 6deg, transparent 6deg 18deg);
+    -webkit-mask-image: radial-gradient(circle, #000 0 18%, transparent 55%); mask-image: radial-gradient(circle, #000 0 18%, transparent 55%);
+    animation: spin 50s linear infinite; }
+  @keyframes spin { to { rotate: 360deg; } }
+  .sparks i { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); animation: rise 4s linear infinite; opacity: 0; }
+  @keyframes rise { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-260px); opacity: 0; } }
+  .reveal .eyebrow { color: var(--lime); text-shadow: var(--neon); position: relative; }
+  .reveal h2 { margin: 10px 0 0; font-size: 34px; font-weight: 800; letter-spacing: -.04em; position: relative; }
+  .reveal .big-medal { width: 230px; height: 268px; margin: 18px 0 4px; position: relative; animation: drop 900ms cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes drop { from { transform: scale(.4) rotate(-14deg); opacity: 0; } }
+  .reveal .tier { font-size: 40px; font-weight: 800; letter-spacing: -.04em; background: linear-gradient(180deg, #fff, var(--lime)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 12px rgb(136 239 27 / .6)); position: relative; }
+  .reveal p { color: var(--stone); margin: 4px 0 18px; font-size: 14px; position: relative; }
+  .reveal .pills { display: flex; gap: 8px; position: relative; }
+  .reveal .pills span { padding: 8px 12px; border-radius: 12px; font: 600 12px var(--mono); }
+  .reveal .btn { position: absolute; left: 24px; right: 24px; bottom: 36px; }
+
+  /* Galeria de medalhas */
+  .gallery { max-width: 1240px; margin: 46px auto 0; padding: 26px; border-radius: 28px;
+    background: radial-gradient(80% 120% at 50% 120%, rgb(0 176 0 / .25), transparent 60%), #0a0b0a; border: 1px solid #1a1c1a; }
+  .gallery h3 { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .gallery > p { margin: 0 0 22px; color: var(--stone); font-size: 14px; }
+  .tiers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  @media (max-width: 900px) { .tiers { grid-template-columns: repeat(2, 1fr); } }
+  .tierbox { text-align: center; padding: 18px 10px 16px; border-radius: 22px; }
+  .tierbox svg { width: 140px; height: 164px; }
+  .tierbox b { display: block; font-size: 17px; font-weight: 800; letter-spacing: -.02em; margin-top: 6px; }
+  .tierbox span { font: 500 11px var(--mono); color: var(--stone); letter-spacing: .1em; }
+</style>
+</head>
+<body>
+<style>
+  .topbar { display: flex; align-items: center; gap: 10px; }
+  .topbar .eyebrow { flex: 1; }
+  .menu-btn { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--paper); }
+  .streak { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font: 700 13px var(--mono); color: #ffb347; }
+  .streak svg { filter: drop-shadow(0 0 6px #ff8a1f); }
+  .plan { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 16px; }
+  .pd { text-align: center; padding: 8px 0 9px; border-radius: 14px; font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--stone); background: rgb(255 255 255 / .03); box-shadow: inset 0 0 0 1px var(--line); }
+  .pd b { display: block; margin-top: 5px; font: 700 11px var(--sans); color: var(--paper); letter-spacing: 0; text-transform: none; }
+  .pd .dot { width: 8px; height: 8px; border-radius: 50%; margin: 6px auto 0; background: rgb(255 255 255 / .14); }
+  .pd.ok .dot { background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+  .pd.miss .dot { background: var(--late); box-shadow: 0 0 8px var(--late); }
+  .pd.rest { opacity: .55; } .pd.rest b { color: var(--stone); }
+  .pd.on { background: linear-gradient(180deg, var(--lime), var(--green)); color: var(--on-green); box-shadow: 0 0 0 1px rgb(136 239 27 / .6), 0 8px 26px -6px rgb(136 239 27 / .7); }
+  .pd.on b { color: var(--on-green); } .pd.on .dot { background: rgb(0 0 0 / .4); box-shadow: none; }
+  .wo { margin-top: 14px; padding: 16px; overflow: hidden; }
+  .wo::after { content: ""; position: absolute; right: -50px; top: -60px; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(rgb(136 239 27 / .2), transparent 65%); pointer-events: none; }
+  .wo h2 { margin: 6px 0 2px; font-size: 26px; font-weight: 800; letter-spacing: -.035em; }
+  .wo p { margin: 0; color: var(--stone); font-size: 13px; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .kpis div { padding: 10px; border-radius: 14px; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); }
+  .kpis strong { display: block; font: 800 22px/1 var(--sans); letter-spacing: -.04em; }
+  .kpis span { font: 500 9px var(--mono); letter-spacing: .14em; color: var(--stone); text-transform: uppercase; }
+  .kpis .hl strong { color: var(--lime); text-shadow: var(--neon); }
+  .go { margin-top: 12px; text-align: center; padding: 14px; border-radius: 16px; font-weight: 800; font-size: 15px; color: var(--on-green); background: linear-gradient(120deg, var(--green-d), var(--green) 45%, var(--lime)); box-shadow: 0 0 26px -4px rgb(136 239 27 / .7), inset 0 1px 0 rgb(255 255 255 / .35); }
+  .ex { display: flex; gap: 12px; align-items: center; padding: 12px 14px; }
+  .ex + .ex { border-top: 1px solid rgb(255 255 255 / .06); }
+  .ex .n { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; font: 700 12px var(--mono); color: var(--lime); background: rgb(136 239 27 / .08); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .3); flex: none; }
+  .ex .t { font-size: 14.5px; }
+  .ex small { display: block; color: var(--stone); font: 500 11.5px var(--mono); margin-top: 3px; }
+  .ex .xp { margin-left: auto; }
+  .sets { display: flex; gap: 6px; margin-top: 8px; }
+  .set { flex: 1; text-align: center; padding: 8px 0 7px; border-radius: 12px; font: 600 12px var(--mono); background: rgb(255 255 255 / .04); box-shadow: inset 0 0 0 1px var(--line); color: var(--stone); }
+  .set b { display: block; font: 700 14px var(--sans); color: var(--paper); }
+  .set.ok { background: linear-gradient(160deg, rgb(136 239 27 / .25), rgb(0 176 0 / .12)); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .55), 0 0 14px -4px var(--lime); color: var(--lime); }
+  .set.now { box-shadow: inset 0 0 0 1.5px var(--lime); color: var(--paper); }
+  .pr { display: inline-flex; gap: 5px; align-items: center; font: 700 10px var(--mono); letter-spacing: .1em; padding: 3px 8px; border-radius: 7px; color: #1b1000; background: linear-gradient(120deg, #ffd34d, #ffb347); box-shadow: 0 0 14px rgb(255 190 60 / .7); }
+  .timer { margin: 12px 0 0; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .timer strong { font: 800 28px/1 var(--mono); letter-spacing: -.03em; color: var(--lime); text-shadow: var(--neon); }
+  .timer span { color: var(--stone); font-size: 13px; flex: 1; }
+  .bar { height: 8px; border-radius: 6px; background: rgb(255 255 255 / .07); overflow: hidden; margin-top: 10px; }
+  .bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--green-d), var(--green), var(--lime)); box-shadow: 0 0 12px rgb(136 239 27 / .7); }
+  .ed { display: flex; align-items: center; gap: 12px; padding: 11px 14px; }
+  .ed + .ed { border-top: 1px solid rgb(255 255 255 / .06); }
+  .ed .d { width: 42px; font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--stone); }
+  .ed .g { flex: 1; }
+  .ed .g b { font-size: 14.5px; display: block; }
+  .ed .g small { color: var(--stone); font-size: 12px; }
+  .ed .ed-ch { font: 600 10px var(--mono); padding: 3px 8px; border-radius: 6px; background: rgb(0 176 0 / .2); color: var(--mint); box-shadow: inset 0 0 0 1px rgb(0 176 0 / .55); }
+  .ed.rest b { color: var(--stone); font-weight: 600; }
+  .ed .grip { color: rgb(255 255 255 / .25); }
+  .add { margin-top: 10px; text-align: center; padding: 13px; border-radius: 16px; font-weight: 700; font-size: 14px; color: var(--lime); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .4); background: rgb(136 239 27 / .05); }
+  .ach { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .ach div { text-align: center; padding: 12px 6px 10px; border-radius: 16px; }
+  .ach svg { width: 28px; height: 28px; color: var(--lime); filter: drop-shadow(0 0 6px var(--lime)); }
+  .ach b { display: block; font-size: 12px; margin-top: 6px; }
+  .ach span { font: 500 9.5px var(--mono); color: var(--stone); letter-spacing: .06em; }
+  .ach .locked { opacity: .38; } .ach .locked svg { color: var(--stone); filter: none; }
+  .tabs .tab.on svg { color: var(--lime); }
+</style>
+<style>
+  .hero { margin-top: 12px; padding: 16px 16px 14px; display: grid; grid-template-columns: 128px 1fr; gap: 12px; align-items: center; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; left: -30px; bottom: -60px; width: 220px; height: 200px; border-radius: 50%; background: radial-gradient(rgb(136 239 27 / .28), transparent 65%); pointer-events: none; }
+  .hero .fig { width: 128px; height: 168px; position: relative; z-index: 1; }
+  .hero .fig svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 6px rgb(136 239 27 / .8)) drop-shadow(0 0 18px rgb(0 176 0 / .5)); }
+  .hero .ttl { font: 500 10px var(--mono); letter-spacing: .18em; color: var(--lime); text-shadow: var(--neon); }
+  .hero h2 { margin: 4px 0 2px; font-size: 26px; font-weight: 800; letter-spacing: -.035em; }
+  .hero .lv { display: flex; gap: 8px; align-items: baseline; }
+  .hero .lv strong { font: 800 44px/1 var(--sans); letter-spacing: -.05em; color: var(--lime); text-shadow: var(--neon); }
+  .hero .lv span { font: 500 11px var(--mono); color: var(--stone); letter-spacing: .12em; }
+  .hero .xpline { margin-top: 8px; grid-column: auto; }
+  .chips { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .chips span { display: inline-flex; gap: 5px; align-items: center; padding: 5px 9px; border-radius: 999px; font: 600 11px var(--mono); background: rgb(255 255 255 / .05); box-shadow: inset 0 0 0 1px var(--line); }
+  .chips .fire { color: #ffb347; }
+  .gear { display: flex; gap: 6px; margin-top: 10px; }
+  .gear i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-style: normal; font: 600 9px var(--mono); color: var(--lime); background: rgb(136 239 27 / .08); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .35); }
+  .gear i.off { color: var(--stone); background: rgb(255 255 255 / .03); box-shadow: inset 0 0 0 1px var(--line); }
+
+  .radar { margin-top: 12px; padding: 14px 10px 8px; }
+  .radar svg { display: block; width: 100%; height: 210px; overflow: visible; }
+  .radar .hd { display: flex; justify-content: space-between; padding: 0 6px; }
+
+  .tower { margin-top: 12px; padding: 14px 14px 16px; }
+  .floors { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 12px; position: relative; }
+  .floor { width: 78%; height: 34px; border-radius: 6px; display: flex; align-items: center; gap: 4px; padding: 0 8px; position: relative; }
+  .floor b { font: 600 9px var(--mono); letter-spacing: .1em; width: 38px; color: rgb(0 0 0 / .7); }
+  .floor .w { flex: 1; height: 12px; border-radius: 2px; background: rgb(0 0 0 / .45); }
+  .floor .w.on { background: #fff8c8; box-shadow: 0 0 8px #fff3a0; }
+  .floor .w.x { background: repeating-linear-gradient(135deg, rgb(0 0 0 / .55) 0 2px, rgb(255 255 255 / .12) 2px 4px); }
+  .floor.ouro { background: linear-gradient(180deg, #ffe680, #d99a10); box-shadow: 0 0 16px -2px rgb(255 201 58 / .6); }
+  .floor.prata { background: linear-gradient(180deg, #f2f6fa, #8c97a3); box-shadow: 0 0 14px -4px rgb(207 216 226 / .6); }
+  .floor.bronze { background: linear-gradient(180deg, #f2b27c, #9b5223); }
+  .floor.diamante { background: linear-gradient(180deg, #bff1ff, #2b8ed6); box-shadow: 0 0 18px -2px rgb(95 214 255 / .7); }
+  .floor.build { background: rgb(136 239 27 / .06); box-shadow: inset 0 0 0 1.5px var(--lime), 0 0 18px -4px var(--lime); }
+  .floor.build b { color: var(--lime); }
+  .floor.build .w { background: rgb(255 255 255 / .08); }
+  .floor.build .w.on { background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+  .floor.none { background: rgb(255 255 255 / .06); box-shadow: inset 0 0 0 1px var(--line); }
+  .floor.none b { color: var(--stone); }
+  .floor .flag { position: absolute; right: -26px; top: 50%; translate: 0 -50%; width: 20px; height: 22px; }
+  .roof { width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-bottom: 26px solid rgb(136 239 27 / .25); filter: drop-shadow(0 0 8px var(--lime)); margin-bottom: -2px; }
+  .ground { width: 92%; height: 4px; border-radius: 2px; background: var(--green); box-shadow: 0 0 14px var(--green); margin-top: 2px; }
+
+  .missions { margin-top: 14px; padding: 12px 12px 10px; }
+  .mrow { display: flex; gap: 8px; margin-top: 10px; }
+  .mis { flex: 1; padding: 10px 10px; border-radius: 16px; display: flex; gap: 10px; align-items: center; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); }
+  .mis .c { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgb(255 255 255 / .3); flex: none; display: grid; place-items: center; }
+  .mis.ok { background: linear-gradient(160deg, rgb(136 239 27 / .2), rgb(0 176 0 / .08)); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .5); }
+  .mis.ok .c { border: 0; background: linear-gradient(160deg, var(--lime), var(--green)); box-shadow: 0 0 12px rgb(136 239 27 / .7); }
+  .mis.ok .c::after { content: ""; width: 9px; height: 5px; border: 2.2px solid var(--on-green); border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px,-1px); }
+  .mis b { display: block; font-size: 13px; }
+  .mis small { font: 500 10.5px var(--mono); color: var(--stone); }
+  .mis small em { font-style: normal; color: var(--lime); }
+  .dots7 { display: flex; gap: 4px; }
+  .dots7 i { width: 14px; height: 6px; border-radius: 3px; background: rgb(255 255 255 / .12); }
+  .dots7 i.on { background: var(--lime); box-shadow: 0 0 6px var(--lime); }
+  .dots7 i.now { background: rgb(136 239 27 / .35); box-shadow: inset 0 0 0 1px var(--lime); }
+  .commit-wo { display: flex; gap: 12px; padding: 13px 14px; align-items: center; }
+  .commit-wo .ic { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; color: var(--on-green); background: linear-gradient(150deg, var(--lime), var(--green)); box-shadow: 0 0 14px rgb(136 239 27 / .5); flex: none; }
+  .commit-wo .go2 { margin-left: auto; padding: 8px 14px; border-radius: 12px; font: 700 12px var(--mono); letter-spacing: .08em; color: var(--on-green); background: linear-gradient(120deg, var(--green), var(--lime)); box-shadow: 0 0 16px rgb(136 239 27 / .6); }
+
+  .trail { position: relative; margin-top: 14px; padding-left: 8px; }
+  .trail::before { content: ""; position: absolute; left: 30px; top: 20px; bottom: 30px; width: 3px; border-radius: 2px; background: linear-gradient(180deg, var(--lime) 0 46%, rgb(255 255 255 / .1) 46%); box-shadow: 0 0 10px rgb(136 239 27 / .5); }
+  .node { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 12px; position: relative; }
+  .node .dot { width: 46px; height: 46px; border-radius: 14px; flex: none; display: grid; place-items: center; font: 800 14px var(--mono); position: relative; z-index: 1; }
+  .node.done .dot { color: var(--on-green); background: linear-gradient(150deg, var(--lime), var(--green)); box-shadow: 0 0 18px rgb(136 239 27 / .7); }
+  .node.cur .dot { color: var(--lime); background: #0b0e0b; box-shadow: inset 0 0 0 2px var(--lime), 0 0 18px -2px var(--lime); }
+  .node.lock .dot { color: var(--stone); background: #0d0f0d; box-shadow: inset 0 0 0 1px var(--line); }
+  .node .card { flex: 1; padding: 11px 13px; border-radius: 16px; }
+  .node .card b { font-size: 14.5px; display: block; }
+  .node .card p { margin: 3px 0 0; color: var(--stone); font-size: 12.5px; line-height: 1.4; }
+  .node .card .rw { display: inline-block; margin-top: 7px; font: 600 10.5px var(--mono); letter-spacing: .06em; padding: 3px 8px; border-radius: 7px; color: var(--lime); background: rgb(136 239 27 / .08); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .35); }
+  .node.lock .card { opacity: .55; }
+  .node.cur .bar { margin-top: 8px; }
+  .attr-head { margin-top: 14px; padding: 16px; display: flex; gap: 14px; align-items: center; }
+  .attr-head .big-ic { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; color: var(--on-green); background: linear-gradient(150deg, var(--lime), var(--green)); box-shadow: 0 0 26px rgb(136 239 27 / .6); flex: none; }
+  .attr-head h2 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.03em; }
+  .attr-head p { margin: 2px 0 0; color: var(--stone); font-size: 12.5px; }
+  .src { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .src span { font: 500 10.5px var(--mono); padding: 4px 8px; border-radius: 8px; color: var(--stone); background: rgb(255 255 255 / .04); box-shadow: inset 0 0 0 1px var(--line); }
+  .src span b { color: var(--lime); font-weight: 600; }
+
+  .wk { margin-top: 12px; padding: 14px; }
+  .wk-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+  .wk-days div { text-align: center; padding: 8px 0; border-radius: 12px; font: 500 10px var(--mono); color: var(--stone); background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); text-transform: uppercase; }
+  .wk-days div i { display: block; width: 14px; height: 18px; margin: 5px auto 0; border-radius: 3px; background: rgb(0 0 0 / .5); box-shadow: inset 0 0 0 1px var(--line); }
+  .wk-days div.on i { background: #fff8c8; box-shadow: 0 0 10px #fff3a0; }
+  .wk-days div.x i { background: repeating-linear-gradient(135deg, rgb(0 0 0 / .55) 0 2px, rgb(255 255 255 / .14) 2px 4px); }
+  .tabs4 .tab { flex: 1; }
+</style>
+
+<div class="intro">
+  <h1>Agenda · <span>Herói, Hoje e Torre</span> — rascunho 3</h1>
+  <p>Barra de baixo nova: <b>Herói · Hoje · Treino · Ideias</b> (Financeiro, Quadro da semana e Configurações no ☰). No Herói: personagem em silhueta neon que evolui com o nível e ganha peças pelos brasões, radar dos 5 atributos (Física, Mental, Profissional, Financeira, Espiritual) e a torre — 1 andar por semana na cor do brasão, 7 janelas que acendem quando você faz todas as missões do dia. No Hoje: missões diárias em cima (marcar com um toque), compromissos embaixo, com o treino do dia e o botão Iniciar.</p>
+</div>
+
+<div class="row">
+  <!-- 1. HERÓI -->
+  <div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮ ◔</span></div>
+      <div class="scroll">
+        <div class="topbar">
+          <span class="menu-btn glass quiet"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h11M4 17h16"/></svg></span>
+          <span class="eyebrow">Herói</span>
+          <span class="streak glass quiet"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ff8a1f"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3-1-3 0-6 1-9.5z"/></svg>12 dias</span>
+        </div>
+        <div class="glass hero">
+          <div class="fig">
+            <svg viewBox="0 0 120 160" fill="none" stroke="#88ef1b" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+              <!-- capa -->
+              <path d="M38 52 C30 90 26 120 22 150 L60 140 L98 150 C94 120 90 90 82 52" stroke="#00b000" fill="rgb(0 176 0 / .12)"/>
+              <!-- elmo -->
+              <path d="M44 30 C44 14 76 14 76 30 L76 42 C76 48 70 52 60 52 C50 52 44 48 44 42 Z" fill="rgb(136 239 27 / .1)"/>
+              <path d="M48 34 H72 M60 34 V46" />
+              <path d="M60 14 C58 6 64 2 68 4" stroke="#bfebbf"/>
+              <!-- ombros e tronco -->
+              <path d="M36 60 C40 54 48 52 60 52 C72 52 80 54 84 60 L80 74 L76 70 L74 100 H46 L44 70 L40 74 Z" fill="rgb(136 239 27 / .08)"/>
+              <path d="M50 64 L60 74 L70 64 M60 74 V96"/>
+              <!-- cinto -->
+              <path d="M46 98 H74"/><rect x="56" y="95" width="8" height="6" rx="1.5"/>
+              <!-- pernas -->
+              <path d="M48 102 L46 140 L54 140 L58 104 M62 104 L66 140 L74 140 L72 102"/>
+              <!-- espada -->
+              <path d="M90 66 L104 20" stroke="#f0f0f0"/><path d="M86 70 L96 74 M88 62 L92 72" stroke="#f0f0f0"/>
+              <!-- escudo -->
+              <path d="M22 70 L38 66 L40 88 C40 98 32 104 28 106 C22 102 18 96 18 88 Z" fill="rgb(255 201 58 / .15)" stroke="#ffc93a"/>
+              <path d="M29 76 V96 M22 84 H36" stroke="#ffc93a" stroke-width="1.6"/>
+            </svg>
+          </div>
+          <div>
+            <span class="ttl">GUARDIÃO DE OURO</span>
+            <div class="lv"><strong>7</strong><span>NÍVEL</span></div>
+            <div class="xpline"><div class="track"><i style="width:61%"></i></div></div>
+            <div style="font:500 11px var(--mono);color:var(--stone);margin-top:6px"><b style="color:var(--lime)">2.340</b> XP · faltam 410</div>
+            <div class="gear" title="peças"><i>ELMO</i><i>ESC</i><i>ESP</i><i class="off">ASA</i><i class="off">COR</i></div>
+          </div>
+        </div>
+
+        <div class="glass quiet radar">
+          <div class="hd"><span class="eyebrow">Atributos</span><span class="eyebrow" style="color:var(--lime)">abrir trilha ›</span></div>
+          <svg viewBox="0 0 300 220">
+            <g transform="translate(150 118)" font-family="Geist Mono, monospace" font-size="9.5" letter-spacing="1.2">
+              <g stroke="rgb(255 255 255 / .10)" fill="none">
+                <polygon points="0,-88 83.7,-27.2 51.7,71.2 -51.7,71.2 -83.7,-27.2"/>
+                <polygon points="0,-66 62.8,-20.4 38.8,53.4 -38.8,53.4 -62.8,-20.4"/>
+                <polygon points="0,-44 41.8,-13.6 25.9,35.6 -25.9,35.6 -41.8,-13.6"/>
+                <polygon points="0,-22 20.9,-6.8 12.9,17.8 -12.9,17.8 -20.9,-6.8"/>
+                <path d="M0 0 L0 -88 M0 0 L83.7 -27.2 M0 0 L51.7 71.2 M0 0 L-51.7 71.2 M0 0 L-83.7 -27.2"/>
+              </g>
+              <polygon points="0,-74 54.4,-17.7 33.6,46.3 -18.1,24.9 -50.2,-16.3" fill="rgb(136 239 27 / .22)" stroke="#88ef1b" stroke-width="2" style="filter:drop-shadow(0 0 8px rgb(136 239 27 / .8))"/>
+              <g fill="#88ef1b"><circle cx="0" cy="-74" r="3.5"/><circle cx="54.4" cy="-17.7" r="3.5"/><circle cx="33.6" cy="46.3" r="3.5"/><circle cx="-18.1" cy="24.9" r="3.5"/><circle cx="-50.2" cy="-16.3" r="3.5"/></g>
+              <text x="0" y="-98" text-anchor="middle" fill="#f0f0f0">FÍSICA <tspan fill="#88ef1b">Nv 6</tspan></text>
+              <text x="92" y="-30" text-anchor="start" fill="#f0f0f0">MENTAL</text><text x="92" y="-18" fill="#88ef1b">Nv 4</text>
+              <text x="58" y="88" text-anchor="middle" fill="#f0f0f0">PROFISSIONAL <tspan fill="#88ef1b">5</tspan></text>
+              <text x="-58" y="88" text-anchor="middle" fill="#f0f0f0">ESPIRITUAL <tspan fill="#88ef1b">2</tspan></text>
+              <text x="-92" y="-30" text-anchor="end" fill="#f0f0f0">FINANCEIRA</text><text x="-92" y="-18" text-anchor="end" fill="#88ef1b">Nv 4</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="tabs tabs4">
+        <div class="tab on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/></svg>Herói</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Hoje</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>Treino</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Ideias</div>
+      </div>
+    </div>
+    <div class="label">1 · Herói (topo: personagem + radar)</div>
+  </div>
+
+  <!-- 2. HERÓI rolado: torre -->
+  <div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮ ◔</span></div>
+      <div class="scroll">
+        <div class="glass tower" style="margin-top:6px">
+          <div style="display:flex;justify-content:space-between"><span class="eyebrow">Torre · 9 andares</span><span class="eyebrow">toque num andar</span></div>
+          <div class="floors">
+            <div class="roof"></div>
+            <div class="floor build"><b>SEM 46</b><i class="w on"></i><i class="w on"></i><i class="w on"></i><i class="w on"></i><i class="w"></i><i class="w"></i><i class="w"></i></div>
+            <div class="floor ouro"><b>SEM 45</b><i class="w on"></i><i class="w on"></i><i class="w on"></i><i class="w x"></i><i class="w on"></i><i class="w on"></i><i class="w on"></i><svg class="flag" viewBox="0 0 20 22"><path d="M3 2v18M3 3h13l-3 4 3 4H3" fill="rgb(136 239 27 / .3)" stroke="#88ef1b" stroke-width="1.6"/></svg></div>
+            <div class="floor diamante"><b>SEM 44</b><i class="w on"></i><i class="w on"></i><i class="w on"></i><i class="w on"></i><i class="w on"></i><i class="w on"></i><i class="w on"></i></div>
+            <div class="floor ouro"><b>SEM 43</b><i class="w on"></i><i class="w on"></i><i class="w x"></i><i class="w on"></i><i class="w on"></i><i class="w on"></i><i class="w x"></i></div>
+            <div class="floor prata"><b>SEM 42</b><i class="w on"></i><i class="w x"></i><i class="w on"></i><i class="w on"></i><i class="w x"></i><i class="w on"></i><i class="w x"></i></div>
+            <div class="floor none"><b>SEM 41</b><i class="w x"></i><i class="w x"></i><i class="w on"></i><i class="w x"></i><i class="w x"></i><i class="w x"></i><i class="w x"></i></div>
+            <div class="floor prata"><b>SEM 40</b><i class="w on"></i><i class="w on"></i><i class="w x"></i><i class="w on"></i><i class="w on"></i><i class="w x"></i><i class="w on"></i></div>
+            <div class="floor bronze"><b>SEM 39</b><i class="w on"></i><i class="w x"></i><i class="w x"></i><i class="w on"></i><i class="w x"></i><i class="w on"></i><i class="w x"></i></div>
+            <div class="ground"></div>
+          </div>
+          <div style="display:flex;gap:12px;justify-content:center;margin-top:12px;font:500 10px var(--mono);color:var(--stone)">
+            <span><i style="display:inline-block;width:10px;height:8px;background:#fff8c8;box-shadow:0 0 6px #fff3a0;border-radius:2px;margin-right:4px"></i>missões feitas</span>
+            <span><i style="display:inline-block;width:10px;height:8px;background:repeating-linear-gradient(135deg,#000 0 2px,#555 2px 4px);border-radius:2px;margin-right:4px"></i>janela rachada</span>
+            <span style="color:var(--lime)">⚑ bandeira = treino</span>
+          </div>
+        </div>
+        <div class="glass quiet wk">
+          <div style="display:flex;align-items:center;gap:10px"><svg data-medal="ouro" viewBox="0 0 120 140" style="width:40px;height:46px"></svg><div style="flex:1"><b style="font-size:15px">Semana 45 · Ouro</b><div style="color:var(--stone);font-size:12px">6 de 7 dias · 412 XP · treino 4/5</div></div><span class="eyebrow" style="color:var(--lime)">abrir ›</span></div>
+          <div class="wk-days"><div class="on">seg<i></i></div><div class="on">ter<i></i></div><div class="on">qua<i></i></div><div class="x">qui<i></i></div><div class="on">sex<i></i></div><div class="on">sáb<i></i></div><div class="on">dom<i></i></div></div>
+        </div>
+      </div>
+      <div class="tabs tabs4">
+        <div class="tab on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/></svg>Herói</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Hoje</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>Treino</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Ideias</div>
+      </div>
+    </div>
+    <div class="label">2 · Herói rolado: a torre</div>
+  </div>
+
+  <!-- 3. HOJE -->
+  <div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮ ◔</span></div>
+      <div class="scroll">
+        <div class="topbar">
+          <span class="menu-btn glass quiet"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h11M4 17h16"/></svg></span>
+          <span class="eyebrow">Quinta · 13 nov</span>
+          <span class="player glass"><span class="ring"><b>7</b></span><span><small>NÍVEL</small><strong>2.340 XP</strong></span></span>
+        </div>
+        <div class="glass missions">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow" style="color:var(--lime)">Missões do dia · 1/2</span><span class="dots7"><i class="on"></i><i class="on"></i><i class="on"></i><i class="now"></i><i></i><i></i><i></i></span></div>
+          <div class="mrow">
+            <div class="mis ok"><span class="c"></span><div><b>Ler 10 páginas</b><small><em>+20</em> · Mental · 9 dias</small></div></div>
+            <div class="mis"><span class="c"></span><div><b>Meditar 10 min</b><small><em>+10</em> · Espiritual · 3 dias</small></div></div>
+          </div>
+          <div style="font:500 11px var(--mono);color:var(--stone);margin-top:9px">Faça as 2 para acender a janela de hoje na torre.</div>
+        </div>
+
+        <div class="section"><span class="eyebrow">Compromissos</span><span class="eyebrow" style="color:var(--lime)">+85 XP hoje</span></div>
+        <div class="glass quiet">
+          <div class="commit-wo"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span><div><div class="t">Treino C · Perna</div><div class="meta">6 exercícios · Física · +50 XP</div></div><span class="go2">INICIAR</span></div>
+          <div class="task late"><span class="box"></span><div><div class="t">Revisar slides da apresentação</div><div class="meta"><span class="area a-work">Trabalho</span><span class="chip c-high">Difícil</span><span class="late-tag">Atrasada</span></div></div></div>
+          <div class="task"><span class="box"></span><div><div class="t">Lista de exercícios de Cálculo</div><div class="meta"><span class="area a-school">Faculdade</span><span class="chip c-med">Média</span><span class="xp">+25</span></div></div></div>
+          <div class="task done"><span class="box ok"></span><div><div class="t">Pagar fatura do cartão</div><div class="meta"><span class="area a-personal">Pessoal</span><span class="xp">+10</span></div></div></div>
+        </div>
+      </div>
+      <div class="capture glass"><span>Anotar tarefa ou ideia…</span><span class="mic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span class="send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <div class="tabs tabs4">
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/></svg>Herói</div>
+        <div class="tab on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Hoje</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>Treino</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Ideias</div>
+      </div>
+    </div>
+    <div class="label">3 · Hoje: missões em cima, compromissos embaixo</div>
+  </div>
+
+  <!-- 4. TRILHA -->
+  <div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮ ◔</span></div>
+      <div class="scroll">
+        <div class="topbar">
+          <span class="menu-btn glass quiet"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+          <span class="eyebrow">Trilha do atributo</span>
+        </div>
+        <div class="glass attr-head">
+          <span class="big-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span>
+          <div style="flex:1"><h2>Física · Nv 6</h2><p>1.180 XP neste atributo</p>
+            <div class="src"><span>Treino <b>78%</b></span><span>Missões <b>12%</b></span><span>Tarefas <b>10%</b></span></div></div>
+        </div>
+        <div class="trail">
+          <div class="node done"><span class="dot">I</span><div class="card glass quiet"><b>Primeiro passo</b><p>Concluir 1 treino.</p><span class="rw">TÍTULO · Iniciante</span></div></div>
+          <div class="node done"><span class="dot">II</span><div class="card glass quiet"><b>Constância</b><p>4 semanas seguidas com a meta de treino.</p><span class="rw">PEÇA · Elmo</span></div></div>
+          <div class="node cur"><span class="dot">III</span><div class="card glass"><b>Força crescente</b><p>5 recordes pessoais.</p><div class="bar"><i style="width:60%"></i></div><div style="font:500 11px var(--mono);color:var(--stone);margin-top:6px">3 de 5</div><span class="rw">PEÇA · Ombreiras</span></div></div>
+          <div class="node lock"><span class="dot">IV</span><div class="card glass quiet"><b>Tonelada</b><p>10 t de volume em um treino.</p><span class="rw">PEÇA · Capa longa</span></div></div>
+          <div class="node lock"><span class="dot">V</span><div class="card glass quiet"><b>Inquebrável</b><p>12 semanas seguidas.</p><span class="rw">TÍTULO · Guardião</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="label">4 · Trilha da Física (toque no radar)</div>
+  </div>
+</div>
+<script>
+/* Brasões RPG em SVG. Cada nível soma peças: espadas, asas, louros, gema, chamas. */
+const TIERS = {
+  bronze:   { hi: "#ffd2a6", mid: "#c9773a", lo: "#5a2a0c", edge: "#2e1405", glow: "#e08a45", gem: null },
+  prata:    { hi: "#ffffff", mid: "#b8c2cc", lo: "#545d68", edge: "#22272d", glow: "#cfd8e2", gem: null },
+  ouro:     { hi: "#fff4b8", mid: "#e8b320", lo: "#7a4a03", edge: "#3a2300", glow: "#ffc93a", gem: "#ff4d5e" },
+  diamante: { hi: "#eafcff", mid: "#55d3ff", lo: "#14508f", edge: "#06223f", glow: "#5fd6ff", gem: "#bff5ff" },
+  supremo:  { hi: "#f1ffd6", mid: "#88ef1b", lo: "#006b00", edge: "#022402", glow: "#88ef1b", gem: "#eaffc0" },
+};
+const SHIELD = "M60 22 L94 32 V66 C94 92 78 108 60 116 C42 108 26 92 26 66 V32 Z";
+const SHIELD_IN = "M60 30 L87 38 V66 C87 87 74 100 60 107 C46 100 33 87 33 66 V38 Z";
+
+function sword(rot, c, id) {
+  return `<g transform="rotate(${rot} 60 70)">
+    <path d="M57.5 0 L62.5 0 L63 84 L60 90 L57 84 Z" fill="url(#bl${id})" stroke="${c.edge}" stroke-width="1"/>
+    <rect x="48" y="84" width="24" height="5" rx="2" fill="url(#m${id})" stroke="${c.edge}" stroke-width="1"/>
+    <rect x="57.5" y="89" width="5" height="16" rx="2" fill="${c.edge}"/>
+    <circle cx="60" cy="108" r="4" fill="url(#m${id})" stroke="${c.edge}" stroke-width="1"/></g>`;
+}
+function wing(c, id, big) {
+  const s = big ? 1.25 : 1;
+  const f = (d) => `<path d="${d}" fill="url(#w${id})" stroke="${c.edge}" stroke-width="1" stroke-linejoin="round"/>`;
+  const w = f("M30 44 C14 40 4 30 0 16 C10 24 20 26 30 28 Z") +
+            f("M30 56 C12 54 0 46 -6 32 C6 40 18 42 30 42 Z") +
+            f("M30 68 C14 70 2 64 -4 52 C8 58 20 58 30 56 Z") +
+            (big ? f("M30 80 C16 84 4 80 -2 70 C10 74 20 74 30 70 Z") : "");
+  return `<g transform="translate(30 60) scale(${s}) translate(-30 -60)">${w}</g>
+          <g transform="translate(120 0) scale(-1 1) translate(30 60) scale(${s}) translate(-30 -60)">${w}</g>`;
+}
+function laurel(c) {
+  let out = "";
+  for (let side of [-1, 1]) for (let i = 0; i < 7; i++) {
+    const a = (200 + i * 19) * Math.PI / 180, r = 46;
+    const x = 60 + side * Math.cos(a) * -r, y = 74 - Math.sin(a) * -r * 0.98;
+    out += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="3.4" ry="8" fill="#3fae2a" stroke="#123d0b" stroke-width=".8"
+      transform="rotate(${(side * (i * 19 - 30)).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+  }
+  return out;
+}
+function crown(c, id, y = 6, s = 1) {
+  return `<g transform="translate(60 ${y}) scale(${s}) translate(-60 0)">
+    <path d="M42 26 L39 6 L50 15 L60 0 L70 15 L81 6 L78 26 Z" fill="url(#m${id})" stroke="${c.edge}" stroke-width="1.4" stroke-linejoin="round"/>
+    <circle cx="60" cy="18" r="3" fill="${c.gem || '#ff4d5e'}"/><circle cx="39" cy="6" r="2.2" fill="url(#m${id})"/><circle cx="60" cy="0" r="2.4" fill="url(#m${id})"/><circle cx="81" cy="6" r="2.2" fill="url(#m${id})"/></g>`;
+}
+function flames(id) {
+  return `<path d="M60 -4 C70 10 64 16 74 24 C80 12 78 4 88 0 C86 14 96 22 92 36 L28 36 C24 22 34 14 32 0 C42 4 40 12 46 24 C56 16 50 10 60 -4 Z"
+    fill="url(#fl${id})" opacity=".95"/>`;
+}
+function emblem(t, c, id) {
+  if (t === "bronze") return `<polygon points="60,46 65,60 80,60 68,69 72,84 60,75 48,84 52,69 40,60 55,60" fill="url(#m${id})" stroke="${c.edge}" stroke-width="1.4"/>`;
+  if (t === "prata") return `<g transform="translate(0 4)"><path d="M58 42 L62 42 L62.5 82 L60 86 L57.5 82 Z" fill="url(#bl${id})" stroke="${c.edge}"/><rect x="50" y="78" width="20" height="4" rx="2" fill="url(#m${id})" stroke="${c.edge}"/><path d="M44 62 L60 52 L76 62 L60 72 Z" fill="none" stroke="${c.edge}" stroke-width="2"/></g>`;
+  if (t === "ouro") return crown(c, id, 52, .9) + `<path d="M46 86 H74" stroke="${c.edge}" stroke-width="2"/>`;
+  const gem = c.gem;
+  return `<g filter="url(#gl${id})"><path d="M60 46 L76 60 L60 90 L44 60 Z" fill="${gem}" stroke="${c.edge}" stroke-width="1.4"/>
+    <path d="M44 60 H76 M52 60 L60 46 L68 60 L60 90 M52 60 L60 90" stroke="${c.edge}" stroke-width=".8" fill="none" opacity=".6"/>
+    <path d="M60 46 L68 60 L60 60 Z" fill="#fff" opacity=".55"/></g>`;
+}
+let n = 0;
+function medal(t) {
+  const c = TIERS[t], id = ++n;
+  const lvl = ["bronze", "prata", "ouro", "diamante", "supremo"].indexOf(t);
+  const defs = `<defs>
+    <linearGradient id="m${id}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${c.hi}"/><stop offset=".45" stop-color="${c.mid}"/><stop offset="1" stop-color="${c.lo}"/></linearGradient>
+    <linearGradient id="in${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.lo}"/><stop offset="1" stop-color="${c.edge}"/></linearGradient>
+    <linearGradient id="bl${id}" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#cfd6dc"/><stop offset="1" stop-color="#6b737b"/></linearGradient>
+    <linearGradient id="w${id}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.hi}"/><stop offset="1" stop-color="${c.mid}"/></linearGradient>
+    <linearGradient id="fl${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#00b000"/><stop offset=".6" stop-color="#88ef1b"/><stop offset="1" stop-color="#eaffc0" stop-opacity=".2"/></linearGradient>
+    <linearGradient id="rb${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1c241c"/><stop offset="1" stop-color="#0a0d0a"/></linearGradient>
+    <filter id="gl${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>`;
+  let back = "";
+  if (t === "supremo") back += flames(id);
+  if (lvl >= 3) back += wing(c, id, t === "supremo");
+  if (lvl >= 2) back += laurel(c);
+  if (lvl === 0 || lvl >= 2) back += sword(-38, c, id) + sword(38, c, id);
+  if (lvl === 1) back += wing(c, id, false);
+  const shield = `
+    <path d="${SHIELD}" fill="url(#m${id})" stroke="${c.edge}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="${SHIELD_IN}" fill="url(#in${id})" stroke="${c.hi}" stroke-opacity=".55" stroke-width="1.2"/>
+    <path d="M36 40 L60 33 L60 70 C50 64 40 56 36 40 Z" fill="#fff" opacity=".08"/>
+    ${[0,1,2,3].slice(0, lvl + 1).map(i => `<circle cx="${60 - lvl * 4.5 + i * 9}" cy="40" r="2" fill="${c.hi}" opacity=".9"/>`).join("")}`;
+  const top = lvl >= 3 ? crown(c, id, t === "supremo" ? 2 : 6, t === "supremo" ? 1.05 : .8) : "";
+  const label = t.toUpperCase();
+  const ribbon = `<g><path d="M24 112 H96 L90 121 L96 130 H24 L30 121 Z" fill="url(#rb${id})" stroke="${c.mid}" stroke-width="1.3"/>
+    <text x="60" y="124.5" text-anchor="middle" font-family="Geist Mono, monospace" font-size="8.5" font-weight="600" letter-spacing="1.6" fill="${c.hi}">${label}</text></g>`;
+  return defs + `<g style="filter: drop-shadow(0 0 ${4 + lvl * 2}px ${c.glow}66)">${back}${shield}${emblem(t, c, id)}${top}</g>` + ribbon;
+}
+document.querySelectorAll("svg[data-medal]").forEach(s => { s.innerHTML = medal(s.dataset.medal); s.setAttribute("overflow", "visible"); });
+</script>
+</body>
+</html>

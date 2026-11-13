@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda — painel financeiro (rascunho)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --onyx: #131313;
+    --void: #070807;
+    --green: #00b000;
+    --green-d: #008400;
+    --lime: #88ef1b;
+    --mint: #bfebbf;
+    --paper: #f0f0f0;
+    --stone: #9a9a9a;
+    --late: #ff4d5e;
+    --on-green: #061006;
+    --glass: rgb(22 26 22 / .55);
+    --line: rgb(255 255 255 / .09);
+    --neon: 0 0 6px rgb(136 239 27 / .55), 0 0 22px rgb(0 176 0 / .35);
+    --sans: "Geist", system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #040504; color: var(--paper); font-family: var(--sans); padding: 36px 16px 80px; }
+  .mono { font-family: var(--mono); }
+
+  .intro { max-width: 1180px; margin: 0 auto 30px; }
+  .intro h1 { font-size: 30px; font-weight: 800; letter-spacing: -.03em; margin: 0 0 8px; }
+  .intro h1 span { color: var(--lime); text-shadow: var(--neon); }
+  .intro p { color: var(--stone); max-width: 78ch; line-height: 1.55; margin: 0; }
+
+  .row { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; max-width: 1240px; margin: 0 auto; }
+  .label { text-align: center; color: var(--stone); font: 500 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; margin-top: 12px; }
+
+  /* ===== Fundo: onyx + aurora verde + grade de "HUD" que some nas bordas ===== */
+  .phone {
+    width: 370px; height: 790px; border-radius: 44px; overflow: hidden; position: relative;
+    border: 1px solid #1d1f1d; box-shadow: 0 40px 90px -40px #000, 0 0 0 6px #0b0c0b, 0 0 0 7px #1c1e1c;
+    background:
+      radial-gradient(70% 40% at 15% 108%, rgb(0 176 0 / .55), transparent 70%),
+      radial-gradient(60% 35% at 95% 100%, rgb(136 239 27 / .28), transparent 70%),
+      radial-gradient(80% 30% at 50% -6%, rgb(140 219 140 / .10), transparent 70%),
+      var(--void);
+    display: flex; flex-direction: column;
+  }
+  .phone::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgb(136 239 27 / .05) 1px, transparent 1px), linear-gradient(90deg, rgb(136 239 27 / .05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(90% 60% at 50% 100%, #000 10%, transparent 75%);
+            mask-image: radial-gradient(90% 60% at 50% 100%, #000 10%, transparent 75%);
+  }
+  .status { display: flex; justify-content: space-between; padding: 14px 26px 0; font: 600 13px var(--sans); position: relative; }
+  .scroll { flex: 1; padding: 14px 16px 0; position: relative; overflow: hidden; }
+
+  /* Vidro com borda em degradê neon */
+  .glass {
+    position: relative; border-radius: 22px;
+    background: linear-gradient(var(--glass), var(--glass)) padding-box,
+                linear-gradient(140deg, rgb(136 239 27 / .45), rgb(255 255 255 / .06) 35%, rgb(255 255 255 / .04) 65%, rgb(0 176 0 / .35)) border-box;
+    border: 1px solid transparent;
+    backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .07), 0 18px 40px -22px #000;
+  }
+  .glass.quiet { background: linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(var(--line), var(--line)) border-box; }
+
+  /* Cabeçalho */
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .eyebrow { font: 500 11px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--stone); }
+  .player { display: flex; align-items: center; gap: 10px; padding: 5px 12px 5px 5px; border-radius: 999px; }
+  .player .ring { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--lime) 0 62%, rgb(255 255 255 / .1) 0); box-shadow: 0 0 14px rgb(136 239 27 / .35); }
+  .player .ring b { width: 28px; height: 28px; border-radius: 50%; background: #0c0e0c; display: grid; place-items: center; font: 700 12px var(--mono); color: var(--lime); }
+  .player small { display: block; font: 500 10px var(--mono); letter-spacing: .12em; color: var(--stone); }
+  .player strong { font-size: 13px; }
+  .player svg { width: 26px; height: 30px; margin-left: 2px; }
+
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 16px; }
+  .day { text-align: center; padding: 8px 0 8px; border-radius: 14px; color: var(--stone); font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .day b { display: block; font: 700 17px var(--sans); color: var(--paper); margin-top: 4px; letter-spacing: -.02em; }
+  .day i { display: flex; gap: 2px; justify-content: center; margin-top: 6px; height: 4px; }
+  .day i::before { content: ""; width: 14px; height: 3px; border-radius: 2px; background: rgb(255 255 255 / .16); }
+  .day.ok i::before { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .day.on { background: linear-gradient(180deg, var(--lime), var(--green)); color: var(--on-green);
+    box-shadow: 0 0 0 1px rgb(136 239 27 / .6), 0 8px 26px -6px rgb(136 239 27 / .7); }
+  .day.on b { color: var(--on-green); }
+  .day.on i::before { background: rgb(0 0 0 / .45); box-shadow: none; }
+
+  /* Painel do dia */
+  .hud { margin-top: 16px; padding: 16px; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; overflow: hidden; }
+  .hud::after { content: ""; position: absolute; right: -40px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(rgb(136 239 27 / .18), transparent 65%); pointer-events: none; }
+  .hud h2 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.035em; }
+  .hud .date { color: var(--stone); font-size: 13px; }
+  .dial { grid-row: span 2; width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(from -90deg, var(--green-d), var(--lime) 40%, rgb(255 255 255 / .08) 40% 100%);
+    filter: drop-shadow(0 0 10px rgb(136 239 27 / .45)); }
+  .dial > div { width: 76px; height: 76px; border-radius: 50%; background: #0b0d0b; display: grid; place-items: center; text-align: center; }
+  .dial strong { font: 800 30px/1 var(--sans); letter-spacing: -.05em; }
+  .dial strong span { font-size: 15px; color: var(--stone); font-weight: 600; }
+  .dial em { display: block; font: 500 9px var(--mono); letter-spacing: .16em; color: var(--lime); font-style: normal; margin-top: 3px; }
+  .xpline { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .xpline .track { flex: 1; height: 8px; border-radius: 6px; background: rgb(255 255 255 / .07); overflow: hidden; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .05); }
+  .xpline .track i { display: block; height: 100%; width: 61%; border-radius: 6px; background: linear-gradient(90deg, var(--green-d), var(--green), var(--lime)); box-shadow: 0 0 12px rgb(136 239 27 / .7); position: relative; }
+  .xpline span { font: 500 11px var(--mono); color: var(--stone); white-space: nowrap; }
+  .xpline span b { color: var(--lime); font-weight: 600; text-shadow: var(--neon); }
+
+  .section { display: flex; justify-content: space-between; align-items: center; margin: 18px 4px 8px; }
+
+  .task { display: flex; gap: 12px; padding: 13px 14px; align-items: flex-start; position: relative; }
+  .task + .task { border-top: 1px solid rgb(255 255 255 / .06); }
+  .task.late::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--late); box-shadow: 0 0 10px var(--late); }
+  .box { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid rgb(255 255 255 / .28); flex: none; margin-top: 1px; display: grid; place-items: center; }
+  .box.ok { background: linear-gradient(160deg, var(--lime), var(--green)); border-color: transparent; box-shadow: 0 0 12px rgb(136 239 27 / .6); }
+  .box.ok::after { content: ""; width: 9px; height: 5px; border: 2.2px solid var(--on-green); border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px,-1px); }
+  .t { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+  .done .t { color: var(--stone); text-decoration: line-through; text-decoration-color: rgb(136 239 27 / .6); }
+  .meta { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 12.5px; color: var(--stone); flex-wrap: wrap; }
+  .area::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; background: currentColor; box-shadow: 0 0 6px currentColor; }
+  .a-work { color: var(--paper); } .a-school { color: var(--mint); } .a-personal { color: var(--lime); }
+  .chip { padding: 2px 8px; border-radius: 6px; font: 600 11px var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+  .c-high { background: var(--lime); color: var(--on-green); box-shadow: 0 0 10px rgb(136 239 27 / .5); }
+  .c-med { background: rgb(0 176 0 / .22); color: var(--mint); box-shadow: inset 0 0 0 1px rgb(0 176 0 / .6); }
+  .c-low { background: rgb(255 255 255 / .06); color: #d6d6d6; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .14); }
+  .xp { font: 600 12px var(--mono); color: var(--lime); text-shadow: 0 0 8px rgb(136 239 27 / .6); }
+  .xp.off { color: var(--stone); text-shadow: none; }
+  .late-tag { font: 600 11px var(--mono); color: var(--late); text-shadow: 0 0 8px rgb(255 77 94 / .5); text-transform: uppercase; letter-spacing: .04em; }
+  .xp-float { position: absolute; right: 14px; top: 8px; font: 700 13px var(--mono); color: var(--on-green); background: var(--lime); padding: 3px 8px; border-radius: 8px; box-shadow: 0 0 18px rgb(136 239 27 / .8); }
+
+  .note { margin-top: 10px; padding: 12px 14px; display: flex; gap: 10px; align-items: center; font-size: 14px; }
+  .note svg { color: var(--lime); filter: drop-shadow(0 0 4px var(--lime)); flex: none; }
+
+  .capture { margin: 10px 16px 10px; padding: 7px 7px 7px 16px; display: flex; align-items: center; gap: 6px; border-radius: 20px; position: relative;
+    box-shadow: 0 0 0 1px rgb(136 239 27 / .25), 0 0 24px -6px rgb(136 239 27 / .45), inset 0 1px 0 rgb(255 255 255 / .06); }
+  .capture > span:first-child { flex: 1; color: var(--stone); font-size: 14px; }
+  .capture .mic, .capture .send { flex: none; }
+  .mic { width: 40px; height: 40px; display: grid; place-items: center; color: var(--lime); }
+  .send { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; color: var(--on-green);
+    background: linear-gradient(150deg, var(--lime), var(--green)); box-shadow: 0 0 18px rgb(136 239 27 / .6), inset 0 1px 0 rgb(255 255 255 / .4); }
+  .tabs { display: flex; justify-content: space-around; padding: 8px 0 24px; border-top: 1px solid var(--line); background: rgb(4 5 4 / .6); backdrop-filter: blur(16px); position: relative; }
+  .tab { text-align: center; font: 500 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--stone); position: relative; padding-top: 6px; }
+  .tab svg { display: block; margin: 0 auto 4px; }
+  .tab.on { color: var(--paper); }
+  .tab.on svg { color: var(--lime); filter: drop-shadow(0 0 6px var(--lime)); }
+  .tab.on::before { content: ""; position: absolute; top: -9px; left: 50%; translate: -50% 0; width: 26px; height: 2px; border-radius: 2px; background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+
+  /* Captura */
+  .dim { position: absolute; inset: 0; background: rgb(0 0 0 / .62); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 18px 30px; border-radius: 30px 30px 0 0;
+    background: linear-gradient(180deg, rgb(26 32 26 / .88), rgb(12 14 12 / .94)); backdrop-filter: blur(26px);
+    box-shadow: 0 -1px 0 rgb(136 239 27 / .5), 0 -20px 60px -20px rgb(0 176 0 / .5); }
+  .grab { width: 40px; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .25); margin: 0 auto 14px; }
+  .ai { display: inline-flex; gap: 6px; align-items: center; font: 500 10px var(--mono); letter-spacing: .14em; color: var(--lime); padding: 4px 9px; border-radius: 999px; background: rgb(136 239 27 / .08); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .35); }
+  .sheet h3 { margin: 10px 0 14px; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+  .quote { color: var(--stone); font-size: 13px; margin: -8px 0 14px; font-style: italic; }
+  .field { padding: 11px 14px; border-radius: 14px; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); font-size: 15px; margin-bottom: 9px; }
+  .field small { display: block; color: var(--stone); font: 500 10px var(--mono); letter-spacing: .16em; text-transform: uppercase; margin-bottom: 3px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 12px; }
+  .seg span { text-align: center; padding: 10px 0 8px; border-radius: 13px; font-size: 13px; font-weight: 600; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); color: var(--stone); }
+  .seg span small { display: block; font: 500 10px var(--mono); margin-top: 2px; opacity: .8; }
+  .seg span.on { background: linear-gradient(160deg, var(--lime), var(--green)); color: var(--on-green); box-shadow: 0 0 20px -2px rgb(136 239 27 / .6); }
+  .btns { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 6px; }
+  .btn { text-align: center; padding: 15px; border-radius: 16px; font-weight: 700; font-size: 15px; }
+  .btn.ghost { background: rgb(255 255 255 / .05); box-shadow: inset 0 0 0 1px var(--line); }
+  .btn.primary { color: var(--on-green); background: linear-gradient(120deg, var(--green-d), var(--green) 45%, var(--lime)); box-shadow: 0 0 26px -4px rgb(136 239 27 / .7), inset 0 1px 0 rgb(255 255 255 / .35); }
+
+  /* Resumo */
+  .medal-card { margin-top: 14px; padding: 18px 16px 16px; display: flex; gap: 14px; align-items: center; overflow: hidden; }
+  .medal-card svg { width: 96px; height: 112px; flex: none; }
+  .medal-card .tier { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+  .medal-card p { margin: 2px 0 10px; color: var(--stone); font-size: 13px; }
+  .bigxp { font: 800 36px/1 var(--sans); letter-spacing: -.05em; color: var(--lime); text-shadow: var(--neon); }
+  .bigxp small { font: 500 12px var(--mono); color: var(--stone); text-shadow: none; letter-spacing: .1em; margin-left: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .stat { padding: 12px 10px 10px; border-radius: 18px; }
+  .stat strong { display: block; font: 800 32px/1.05 var(--sans); letter-spacing: -.05em; }
+  .stat span { font: 500 10px var(--mono); color: var(--stone); letter-spacing: .14em; text-transform: uppercase; }
+  .stat.hl strong { color: var(--lime); text-shadow: var(--neon); }
+  .stat.bad strong { color: var(--late); text-shadow: 0 0 14px rgb(255 77 94 / .45); }
+  .chart { margin-top: 10px; padding: 14px 14px 10px; }
+  .cols { display: flex; align-items: flex-end; gap: 9px; height: 112px; margin-top: 24px; position: relative; }
+  .cols::before { content: ""; position: absolute; inset: 0 0 18px; background: repeating-linear-gradient(0deg, transparent 0 27px, rgb(255 255 255 / .05) 27px 28px); }
+  .col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; text-align: center; font: 500 10px var(--mono); color: var(--stone); text-transform: uppercase; position: relative; }
+  .col div { border-radius: 7px 7px 3px 3px; margin-bottom: 6px; background: linear-gradient(180deg, var(--lime), var(--green) 40%, rgb(0 132 0 / .35)); box-shadow: 0 0 16px -2px rgb(136 239 27 / .55); }
+  .col.low div { background: rgb(255 255 255 / .1); box-shadow: none; }
+  .col.best div::before { content: "MVP"; position: absolute; top: -16px; left: 0; right: 0; font: 600 9px var(--mono); color: var(--lime); text-shadow: var(--neon); }
+  .col.best div { position: relative; }
+
+  /* Revelação de domingo */
+  .reveal { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 70px 24px 0; text-align: center;
+    background: radial-gradient(60% 40% at 50% 42%, rgb(136 239 27 / .28), transparent 70%), radial-gradient(100% 60% at 50% 110%, rgb(0 176 0 / .5), transparent 70%), #030403; }
+  .rays { position: absolute; left: 50%; top: 38%; width: 720px; height: 720px; translate: -50% -50%;
+    background: repeating-conic-gradient(from 0deg, rgb(136 239 27 / .14) 0 6deg, transparent 6deg 18deg);
+    -webkit-mask-image: radial-gradient(circle, #000 0 18%, transparent 55%); mask-image: radial-gradient(circle, #000 0 18%, transparent 55%);
+    animation: spin 50s linear infinite; }
+  @keyframes spin { to { rotate: 360deg; } }
+  .sparks i { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); animation: rise 4s linear infinite; opacity: 0; }
+  @keyframes rise { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-260px); opacity: 0; } }
+  .reveal .eyebrow { color: var(--lime); text-shadow: var(--neon); position: relative; }
+  .reveal h2 { margin: 10px 0 0; font-size: 34px; font-weight: 800; letter-spacing: -.04em; position: relative; }
+  .reveal .big-medal { width: 230px; height: 268px; margin: 18px 0 4px; position: relative; animation: drop 900ms cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes drop { from { transform: scale(.4) rotate(-14deg); opacity: 0; } }
+  .reveal .tier { font-size: 40px; font-weight: 800; letter-spacing: -.04em; background: linear-gradient(180deg, #fff, var(--lime)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 12px rgb(136 239 27 / .6)); position: relative; }
+  .reveal p { color: var(--stone); margin: 4px 0 18px; font-size: 14px; position: relative; }
+  .reveal .pills { display: flex; gap: 8px; position: relative; }
+  .reveal .pills span { padding: 8px 12px; border-radius: 12px; font: 600 12px var(--mono); }
+  .reveal .btn { position: absolute; left: 24px; right: 24px; bottom: 36px; }
+
+  /* Galeria de medalhas */
+  .gallery { max-width: 1240px; margin: 46px auto 0; padding: 26px; border-radius: 28px;
+    background: radial-gradient(80% 120% at 50% 120%, rgb(0 176 0 / .25), transparent 60%), #0a0b0a; border: 1px solid #1a1c1a; }
+  .gallery h3 { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .gallery > p { margin: 0 0 22px; color: var(--stone); font-size: 14px; }
+  .tiers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  @media (max-width: 900px) { .tiers { grid-template-columns: repeat(2, 1fr); } }
+  .tierbox { text-align: center; padding: 18px 10px 16px; border-radius: 22px; }
+  .tierbox svg { width: 140px; height: 164px; }
+  .tierbox b { display: block; font-size: 17px; font-weight: 800; letter-spacing: -.02em; margin-top: 6px; }
+  .tierbox span { font: 500 11px var(--mono); color: var(--stone); letter-spacing: .1em; }
+</style>
+</head>
+<body>
+<style>
+  .phone { height: 820px; }
+  .menu-btn { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--paper); flex: none; }
+  .topbar { display: flex; align-items: center; gap: 10px; }
+  .topbar .eyebrow { flex: 1; }
+  .eye { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--stone); }
+  .months { display: flex; gap: 6px; margin-top: 14px; overflow: hidden; }
+  .months span { padding: 7px 12px; border-radius: 999px; font: 500 12px var(--mono); color: var(--stone); background: rgb(255 255 255 / .04); box-shadow: inset 0 0 0 1px var(--line); white-space: nowrap; }
+  .months span.on { background: linear-gradient(150deg, var(--lime), var(--green)); color: var(--on-green); box-shadow: 0 0 16px -2px rgb(136 239 27 / .6); }
+  .card { margin-top: 12px; padding: 16px; }
+  .hero-num { font: 800 40px/1 var(--sans); letter-spacing: -.05em; margin-top: 8px; }
+  .hero-num small { font-size: 20px; color: var(--stone); font-weight: 600; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .mini { padding: 12px; border-radius: 16px; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); }
+  .mini b { display: block; font: 700 18px var(--sans); letter-spacing: -.03em; margin-top: 4px; }
+  .up { color: var(--lime); text-shadow: 0 0 10px rgb(136 239 27 / .5); }
+  .down { color: var(--late); text-shadow: 0 0 10px rgb(255 77 94 / .4); }
+  .head { display: flex; justify-content: space-between; align-items: baseline; }
+  .head h3 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+  .delta { font: 600 11px var(--mono); }
+
+  /* Fluxo do mês: linha acumulada vs teto */
+  .flow svg { width: 100%; height: 120px; display: block; margin-top: 10px; overflow: visible; }
+
+  /* Rosca de categorias */
+  .donut-row { display: flex; gap: 16px; align-items: center; margin-top: 12px; }
+  .donut { width: 118px; height: 118px; border-radius: 50%; flex: none; display: grid; place-items: center; position: relative;
+    background: conic-gradient(#88ef1b 0 31%, #00b000 31% 52%, #bfebbf 52% 68%, #f0f0f0 68% 80%, #2f7a2f 80% 90%, #777 90% 100%);
+    filter: drop-shadow(0 0 12px rgb(136 239 27 / .35)); }
+  .donut::after { content: ""; position: absolute; inset: 16px; border-radius: 50%; background: #0c0f0c; box-shadow: inset 0 0 0 1px var(--line); }
+  .donut div { position: relative; z-index: 1; text-align: center; }
+  .donut strong { font: 800 18px var(--sans); letter-spacing: -.03em; display: block; }
+  .cats { flex: 1; display: grid; gap: 7px; }
+  .cat { display: grid; grid-template-columns: 9px 1fr auto; gap: 8px; align-items: center; font-size: 13px; }
+  .cat i { width: 9px; height: 9px; border-radius: 3px; box-shadow: 0 0 6px currentColor; }
+  .cat span:last-child { font: 600 12px var(--mono); color: var(--stone); }
+  .catbars { margin-top: 14px; display: grid; gap: 10px; }
+  .cb .row { display: flex; justify-content: space-between; font-size: 13px; }
+  .cb .row span:last-child { font: 600 12px var(--mono); }
+  .cb .bar { height: 6px; border-radius: 4px; background: rgb(255 255 255 / .07); margin-top: 5px; overflow: hidden; }
+  .cb .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--green-d), var(--lime)); box-shadow: 0 0 8px rgb(136 239 27 / .5); }
+  .cb .bar i.over { background: linear-gradient(90deg, #a3202d, var(--late)); box-shadow: 0 0 8px rgb(255 77 94 / .6); }
+
+  /* Cartões */
+  .ccard { position: relative; margin-top: 12px; padding: 16px; border-radius: 22px; overflow: hidden; min-height: 170px;
+    background: radial-gradient(120% 90% at 100% 0%, rgb(136 239 27 / .28), transparent 55%), linear-gradient(135deg, #0f2a0f, #0a0d0a 60%);
+    box-shadow: inset 0 0 0 1px rgb(136 239 27 / .35), 0 18px 40px -20px rgb(0 176 0 / .6); }
+  .ccard.alt { background: radial-gradient(120% 90% at 100% 0%, rgb(240 240 240 / .14), transparent 55%), linear-gradient(135deg, #1b1d1b, #0a0b0a 60%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .14), 0 18px 40px -20px #000; }
+  .ccard .chip-c { width: 34px; height: 25px; border-radius: 6px; background: linear-gradient(135deg, #e9d48a, #9c7c2a); opacity: .9; }
+  .ccard .nm { display: flex; justify-content: space-between; align-items: center; }
+  .ccard .nm b { font-size: 15px; }
+  .ccard .fat { margin-top: 18px; }
+  .ccard .fat strong { font: 800 30px/1 var(--sans); letter-spacing: -.04em; }
+  .ccard .fat strong small { font-size: 15px; color: var(--stone); }
+  .ccard .due { font: 500 11px var(--mono); color: var(--stone); margin-top: 6px; letter-spacing: .06em; }
+  .meter { margin-top: 12px; }
+  .meter .bar { height: 7px; border-radius: 4px; background: rgb(255 255 255 / .08); position: relative; overflow: visible; }
+  .meter .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--green-d), var(--lime)); box-shadow: 0 0 10px rgb(136 239 27 / .6); }
+  .meter .bar em { position: absolute; top: -4px; width: 2px; height: 15px; background: var(--paper); border-radius: 1px; box-shadow: 0 0 6px #fff; }
+  .meter .lbl { display: flex; justify-content: space-between; font: 500 11px var(--mono); color: var(--stone); margin-top: 6px; }
+
+  .list .it { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid rgb(255 255 255 / .06); }
+  .list .it:first-child { border-top: 0; }
+  .ic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; flex: none; background: rgb(136 239 27 / .08); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .3); color: var(--lime); font: 700 12px var(--mono); }
+  .ic.gray { background: rgb(255 255 255 / .05); box-shadow: inset 0 0 0 1px var(--line); color: var(--paper); }
+  .it .tx { flex: 1; min-width: 0; }
+  .it .tx b { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .it .tx small { font: 500 11px var(--mono); color: var(--stone); }
+  .it .val { font: 700 14px var(--mono); text-align: right; }
+  .it .val small { display: block; font: 500 10px var(--mono); color: var(--stone); }
+  .tag { font: 600 10px var(--mono); padding: 2px 6px; border-radius: 6px; letter-spacing: .04em; }
+  .tag.soon { background: rgb(255 77 94 / .12); color: #ff8a95; box-shadow: inset 0 0 0 1px rgb(255 77 94 / .4); }
+  .tag.ok { background: rgb(136 239 27 / .1); color: var(--lime); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .35); }
+
+  /* Investimentos */
+  .alloc { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 12px; gap: 2px; }
+  .alloc i { display: block; height: 100%; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font: 500 11px var(--mono); color: var(--stone); }
+  .legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; background: var(--c); box-shadow: 0 0 6px var(--c); vertical-align: 0; }
+  .spark { width: 56px; height: 22px; }
+  .sync { display: flex; align-items: center; gap: 8px; font: 500 11px var(--mono); color: var(--stone); margin: 14px 2px 0; }
+  .sync i { width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+  .fade { position: absolute; left: 0; right: 0; bottom: 0; height: 70px; background: linear-gradient(transparent, var(--void)); pointer-events: none; }
+</style>
+
+<div class="intro">
+  <h1>Agenda · painel <span>Financeiro</span> — rascunho</h1>
+  <p>Uma tela só, rolando para baixo, aberta pelo menu ☰ → Financeiro. Os dados vêm do banco do Agente Finanças (financas.db) sincronizado; os valores aqui são de exemplo. Escolha o mês no topo; o olho esconde todos os valores (para usar em público). Mostrado em 3 partes da mesma rolagem.</p>
+</div>
+
+<div class="row">
+  <!-- ===== PARTE 1: visão geral + fluxo + categorias ===== -->
+  <div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮ ◔</span></div>
+      <div class="scroll">
+        <div class="topbar">
+          <span class="menu-btn glass quiet"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h11M4 17h16"/></svg></span>
+          <span class="eyebrow">Financeiro</span>
+          <span class="eye glass quiet"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+        </div>
+        <div class="months"><span>set</span><span>out</span><span class="on">nov 2026</span><span>dez</span></div>
+
+        <div class="glass card">
+          <span class="eyebrow">Patrimônio</span>
+          <div class="hero-num">R$ 12.480<small>,90</small></div>
+          <div class="split">
+            <div class="mini"><span class="eyebrow">Em contas</span><b>R$ 4.820</b></div>
+            <div class="mini"><span class="eyebrow">Investido</span><b>R$ 7.660</b></div>
+          </div>
+        </div>
+
+        <div class="glass quiet card flow">
+          <div class="head"><h3>Mês de novembro</h3><span class="delta up">sobra R$ 1.312</span></div>
+          <div class="split" style="margin-top:10px">
+            <div><span class="eyebrow">Entrou</span><div style="font:800 22px var(--sans);letter-spacing:-.03em;margin-top:4px" class="up">R$ 3.400</div></div>
+            <div><span class="eyebrow">Saiu</span><div style="font:800 22px var(--sans);letter-spacing:-.03em;margin-top:4px">R$ 2.088</div></div>
+          </div>
+          <svg viewBox="0 0 300 120" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#88ef1b" stop-opacity=".35"/><stop offset="1" stop-color="#00b000" stop-opacity="0"/></linearGradient>
+              <filter id="gw"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <g stroke="rgb(255 255 255 / .06)"><path d="M0 30H300M0 60H300M0 90H300"/></g>
+            <path d="M0 22H300" stroke="rgb(255 77 94 / .7)" stroke-dasharray="4 5" stroke-width="1.5"/>
+            <text x="300" y="16" text-anchor="end" font-family="Geist Mono" font-size="9" fill="#ff8a95">teto R$ 2.800</text>
+            <path d="M0 116 L20 112 L40 104 L60 101 L80 92 L100 88 L120 76 L140 72 L160 66 L180 60 L195 52 L195 120 L0 120Z" fill="url(#ar)"/>
+            <path d="M0 116 L20 112 L40 104 L60 101 L80 92 L100 88 L120 76 L140 72 L160 66 L180 60 L195 52" fill="none" stroke="#88ef1b" stroke-width="2.5" filter="url(#gw)"/>
+            <path d="M195 52 L300 26" fill="none" stroke="#88ef1b" stroke-opacity=".35" stroke-width="2" stroke-dasharray="3 5"/>
+            <circle cx="195" cy="52" r="4.5" fill="#061006" stroke="#88ef1b" stroke-width="2.5" filter="url(#gw)"/>
+          </svg>
+          <div class="meter" style="margin-top:4px"><div class="lbl" style="margin-top:0"><span>1 nov</span><span>hoje · 19</span><span>30 nov</span></div></div>
+        </div>
+
+        <div class="glass quiet card">
+          <div class="head"><h3>Gastos por categoria</h3><span class="delta down">+8% vs out</span></div>
+          <div class="donut-row">
+            <div class="donut"><div><span class="eyebrow" style="font-size:9px">Total</span><strong>R$ 2.088</strong></div></div>
+            <div class="cats">
+              <div class="cat"><i style="background:#88ef1b;color:#88ef1b"></i><span>Alimentação</span><span>31%</span></div>
+              <div class="cat"><i style="background:#00b000;color:#00b000"></i><span>Moradia</span><span>21%</span></div>
+              <div class="cat"><i style="background:#bfebbf;color:#bfebbf"></i><span>Transporte</span><span>16%</span></div>
+              <div class="cat"><i style="background:#f0f0f0;color:#f0f0f0"></i><span>Assinaturas</span><span>12%</span></div>
+              <div class="cat"><i style="background:#2f7a2f;color:#2f7a2f"></i><span>Lazer</span><span>10%</span></div>
+              <div class="cat"><i style="background:#777;color:#777"></i><span>Outros</span><span>10%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fade"></div>
+    </div>
+    <div class="label">1 · visão geral, mês e categorias</div>
+  </div>
+
+  <!-- ===== PARTE 2: cartões + contas fixas ===== -->
+  <div>
+    <div class="phone">
+      <div class="scroll" style="padding-top:20px">
+        <div class="head"><h3 style="font-size:18px">Cartões</h3><span class="eyebrow">2 ativos</span></div>
+        <div class="ccard">
+          <div class="nm"><b>Banco B crédito</b><span class="chip-c"></span></div>
+          <div class="fat"><span class="eyebrow">Fatura de dezembro</span><br><strong>R$ 1.146<small>,20</small></strong></div>
+          <div class="due">FECHA 03/12 · VENCE 10/12</div>
+          <div class="meter"><div class="bar"><i style="width:72%"></i><em style="left:80%"></em></div>
+            <div class="lbl"><span>meta R$ 1.400</span><span>restam <b class="up">R$ 254</b></span></div></div>
+        </div>
+        <div class="ccard alt">
+          <div class="nm"><b>Banco A crédito</b><span class="chip-c" style="filter:grayscale(1)"></span></div>
+          <div class="fat"><span class="eyebrow">Fatura de dezembro</span><br><strong>R$ 312<small>,90</small></strong></div>
+          <div class="due">FECHA 25/11 · VENCE 02/12</div>
+          <div class="meter"><div class="bar"><i style="width:21%"></i></div>
+            <div class="lbl"><span>limite usado 21%</span><span>disp. R$ 1.187</span></div></div>
+        </div>
+
+        <div class="glass quiet card list">
+          <div class="head" style="margin-bottom:6px"><h3>Contas fixas do mês</h3><span class="eyebrow">R$ 486</span></div>
+          <div class="it"><span class="ic gray">20</span><div class="tx"><b>Academia</b><small>Pix · dia 20</small></div><span class="tag soon">AMANHÃ</span><div class="val">R$ 99</div></div>
+          <div class="it"><span class="ic gray">22</span><div class="tx"><b>Internet</b><small>Boleto · dia 22</small></div><span class="tag soon">3 DIAS</span><div class="val">R$ 110</div></div>
+          <div class="it"><span class="ic">05</span><div class="tx"><b>Streaming</b><small>Cartão · dia 5</small></div><span class="tag ok">PAGO</span><div class="val">R$ 39</div></div>
+          <div class="it"><span class="ic">10</span><div class="tx"><b>Plano do celular</b><small>Débito · dia 10</small></div><span class="tag ok">PAGO</span><div class="val">R$ 55</div></div>
+        </div>
+      </div>
+      <div class="fade"></div>
+    </div>
+    <div class="label">2 · cartões (fatura, meta, vencimento) e contas fixas</div>
+  </div>
+
+  <!-- ===== PARTE 3: investimentos + movimentações ===== -->
+  <div>
+    <div class="phone">
+      <div class="scroll" style="padding-top:20px">
+        <div class="glass card">
+          <div class="head"><h3 style="font-size:18px">Investimentos</h3><span class="delta up">+R$ 64 rend. no mês</span></div>
+          <div class="hero-num" style="font-size:34px">R$ 7.660<small>,00</small></div>
+          <div class="alloc"><i style="width:46%;background:#88ef1b;box-shadow:0 0 10px #88ef1b"></i><i style="width:30%;background:#00b000"></i><i style="width:16%;background:#bfebbf"></i><i style="width:8%;background:#777"></i></div>
+          <div class="legend"><span style="--c:#88ef1b">Renda fixa 46%</span><span style="--c:#00b000">FII 30%</span><span style="--c:#bfebbf">Tesouro 16%</span><span style="--c:#777">Ações 8%</span></div>
+          <div class="list" style="margin-top:10px">
+            <div class="it"><span class="ic">RF</span><div class="tx"><b>CDB 110% CDI</b><small>Banco A</small></div><div class="val">R$ 3.520</div></div>
+            <div class="it"><span class="ic">FII</span><div class="tx"><b>FII exemplo 11</b><small>120 cotas · R$ 9,58 em 18/11</small></div>
+              <svg class="spark" viewBox="0 0 56 22"><path d="M0 16 L8 14 L16 15 L24 10 L32 11 L40 7 L48 8 L56 4" fill="none" stroke="#88ef1b" stroke-width="2"/></svg><div class="val">R$ 1.150</div></div>
+            <div class="it"><span class="ic gray">TD</span><div class="tx"><b>Tesouro Selic 2029</b><small>Corretora</small></div><div class="val">R$ 1.230</div></div>
+          </div>
+        </div>
+
+        <div class="glass quiet card list">
+          <div class="head" style="margin-bottom:6px"><h3>Últimas movimentações</h3><span class="eyebrow">ver todas</span></div>
+          <div class="it"><span class="ic gray">🛒</span><div class="tx"><b>Mercado</b><small>hoje · Banco B crédito</small></div><div class="val">−R$ 84,30<small>Alimentação</small></div></div>
+          <div class="it"><span class="ic gray">🚌</span><div class="tx"><b>Recarga transporte</b><small>ontem · Banco A</small></div><div class="val">−R$ 50,00<small>Transporte</small></div></div>
+          <div class="it"><span class="ic">↓</span><div class="tx"><b>Pix recebido</b><small>17/11 · Banco A</small></div><div class="val up">+R$ 120,00<small>Receita</small></div></div>
+          <div class="it"><span class="ic gray">🍔</span><div class="tx"><b>Delivery</b><small>16/11 · Banco B crédito · 1/2</small></div><div class="val">−R$ 42,90<small>Alimentação</small></div></div>
+        </div>
+        <div class="sync"><i></i>Sincronizado pelo Agente Finanças hoje às 21:40</div>
+      </div>
+      <div class="fade"></div>
+    </div>
+    <div class="label">3 · investimentos e últimas movimentações</div>
+  </div>
+</div>
+
+</body>
+</html>

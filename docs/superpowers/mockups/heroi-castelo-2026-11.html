@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda — herói e torre de castelo (rascunho 4)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --onyx: #131313;
+    --void: #070807;
+    --green: #00b000;
+    --green-d: #008400;
+    --lime: #88ef1b;
+    --mint: #bfebbf;
+    --paper: #f0f0f0;
+    --stone: #9a9a9a;
+    --late: #ff4d5e;
+    --on-green: #061006;
+    --glass: rgb(22 26 22 / .55);
+    --line: rgb(255 255 255 / .09);
+    --neon: 0 0 6px rgb(136 239 27 / .55), 0 0 22px rgb(0 176 0 / .35);
+    --sans: "Geist", system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #040504; color: var(--paper); font-family: var(--sans); padding: 36px 16px 80px; }
+  .mono { font-family: var(--mono); }
+
+  .intro { max-width: 1180px; margin: 0 auto 30px; }
+  .intro h1 { font-size: 30px; font-weight: 800; letter-spacing: -.03em; margin: 0 0 8px; }
+  .intro h1 span { color: var(--lime); text-shadow: var(--neon); }
+  .intro p { color: var(--stone); max-width: 78ch; line-height: 1.55; margin: 0; }
+
+  .row { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; max-width: 1240px; margin: 0 auto; }
+  .label { text-align: center; color: var(--stone); font: 500 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; margin-top: 12px; }
+
+  /* ===== Fundo: onyx + aurora verde + grade de "HUD" que some nas bordas ===== */
+  .phone {
+    width: 370px; height: 790px; border-radius: 44px; overflow: hidden; position: relative;
+    border: 1px solid #1d1f1d; box-shadow: 0 40px 90px -40px #000, 0 0 0 6px #0b0c0b, 0 0 0 7px #1c1e1c;
+    background:
+      radial-gradient(70% 40% at 15% 108%, rgb(0 176 0 / .55), transparent 70%),
+      radial-gradient(60% 35% at 95% 100%, rgb(136 239 27 / .28), transparent 70%),
+      radial-gradient(80% 30% at 50% -6%, rgb(140 219 140 / .10), transparent 70%),
+      var(--void);
+    display: flex; flex-direction: column;
+  }
+  .phone::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(rgb(136 239 27 / .05) 1px, transparent 1px), linear-gradient(90deg, rgb(136 239 27 / .05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(90% 60% at 50% 100%, #000 10%, transparent 75%);
+            mask-image: radial-gradient(90% 60% at 50% 100%, #000 10%, transparent 75%);
+  }
+  .status { display: flex; justify-content: space-between; padding: 14px 26px 0; font: 600 13px var(--sans); position: relative; }
+  .scroll { flex: 1; padding: 14px 16px 0; position: relative; overflow: hidden; }
+
+  /* Vidro com borda em degradê neon */
+  .glass {
+    position: relative; border-radius: 22px;
+    background: linear-gradient(var(--glass), var(--glass)) padding-box,
+                linear-gradient(140deg, rgb(136 239 27 / .45), rgb(255 255 255 / .06) 35%, rgb(255 255 255 / .04) 65%, rgb(0 176 0 / .35)) border-box;
+    border: 1px solid transparent;
+    backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .07), 0 18px 40px -22px #000;
+  }
+  .glass.quiet { background: linear-gradient(var(--glass), var(--glass)) padding-box, linear-gradient(var(--line), var(--line)) border-box; }
+
+  /* Cabeçalho */
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .eyebrow { font: 500 11px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--stone); }
+  .player { display: flex; align-items: center; gap: 10px; padding: 5px 12px 5px 5px; border-radius: 999px; }
+  .player .ring { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--lime) 0 62%, rgb(255 255 255 / .1) 0); box-shadow: 0 0 14px rgb(136 239 27 / .35); }
+  .player .ring b { width: 28px; height: 28px; border-radius: 50%; background: #0c0e0c; display: grid; place-items: center; font: 700 12px var(--mono); color: var(--lime); }
+  .player small { display: block; font: 500 10px var(--mono); letter-spacing: .12em; color: var(--stone); }
+  .player strong { font-size: 13px; }
+  .player svg { width: 26px; height: 30px; margin-left: 2px; }
+
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 16px; }
+  .day { text-align: center; padding: 8px 0 8px; border-radius: 14px; color: var(--stone); font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .day b { display: block; font: 700 17px var(--sans); color: var(--paper); margin-top: 4px; letter-spacing: -.02em; }
+  .day i { display: flex; gap: 2px; justify-content: center; margin-top: 6px; height: 4px; }
+  .day i::before { content: ""; width: 14px; height: 3px; border-radius: 2px; background: rgb(255 255 255 / .16); }
+  .day.ok i::before { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .day.on { background: linear-gradient(180deg, var(--lime), var(--green)); color: var(--on-green);
+    box-shadow: 0 0 0 1px rgb(136 239 27 / .6), 0 8px 26px -6px rgb(136 239 27 / .7); }
+  .day.on b { color: var(--on-green); }
+  .day.on i::before { background: rgb(0 0 0 / .45); box-shadow: none; }
+
+  /* Painel do dia */
+  .hud { margin-top: 16px; padding: 16px; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; overflow: hidden; }
+  .hud::after { content: ""; position: absolute; right: -40px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(rgb(136 239 27 / .18), transparent 65%); pointer-events: none; }
+  .hud h2 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.035em; }
+  .hud .date { color: var(--stone); font-size: 13px; }
+  .dial { grid-row: span 2; width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(from -90deg, var(--green-d), var(--lime) 40%, rgb(255 255 255 / .08) 40% 100%);
+    filter: drop-shadow(0 0 10px rgb(136 239 27 / .45)); }
+  .dial > div { width: 76px; height: 76px; border-radius: 50%; background: #0b0d0b; display: grid; place-items: center; text-align: center; }
+  .dial strong { font: 800 30px/1 var(--sans); letter-spacing: -.05em; }
+  .dial strong span { font-size: 15px; color: var(--stone); font-weight: 600; }
+  .dial em { display: block; font: 500 9px var(--mono); letter-spacing: .16em; color: var(--lime); font-style: normal; margin-top: 3px; }
+  .xpline { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .xpline .track { flex: 1; height: 8px; border-radius: 6px; background: rgb(255 255 255 / .07); overflow: hidden; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .05); }
+  .xpline .track i { display: block; height: 100%; width: 61%; border-radius: 6px; background: linear-gradient(90deg, var(--green-d), var(--green), var(--lime)); box-shadow: 0 0 12px rgb(136 239 27 / .7); position: relative; }
+  .xpline span { font: 500 11px var(--mono); color: var(--stone); white-space: nowrap; }
+  .xpline span b { color: var(--lime); font-weight: 600; text-shadow: var(--neon); }
+
+  .section { display: flex; justify-content: space-between; align-items: center; margin: 18px 4px 8px; }
+
+  .task { display: flex; gap: 12px; padding: 13px 14px; align-items: flex-start; position: relative; }
+  .task + .task { border-top: 1px solid rgb(255 255 255 / .06); }
+  .task.late::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--late); box-shadow: 0 0 10px var(--late); }
+  .box { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid rgb(255 255 255 / .28); flex: none; margin-top: 1px; display: grid; place-items: center; }
+  .box.ok { background: linear-gradient(160deg, var(--lime), var(--green)); border-color: transparent; box-shadow: 0 0 12px rgb(136 239 27 / .6); }
+  .box.ok::after { content: ""; width: 9px; height: 5px; border: 2.2px solid var(--on-green); border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px,-1px); }
+  .t { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+  .done .t { color: var(--stone); text-decoration: line-through; text-decoration-color: rgb(136 239 27 / .6); }
+  .meta { display: flex; gap: 8px; align-items: center; margin-top: 6px; font-size: 12.5px; color: var(--stone); flex-wrap: wrap; }
+  .area::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 2px; margin-right: 6px; vertical-align: 1px; background: currentColor; box-shadow: 0 0 6px currentColor; }
+  .a-work { color: var(--paper); } .a-school { color: var(--mint); } .a-personal { color: var(--lime); }
+  .chip { padding: 2px 8px; border-radius: 6px; font: 600 11px var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+  .c-high { background: var(--lime); color: var(--on-green); box-shadow: 0 0 10px rgb(136 239 27 / .5); }
+  .c-med { background: rgb(0 176 0 / .22); color: var(--mint); box-shadow: inset 0 0 0 1px rgb(0 176 0 / .6); }
+  .c-low { background: rgb(255 255 255 / .06); color: #d6d6d6; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .14); }
+  .xp { font: 600 12px var(--mono); color: var(--lime); text-shadow: 0 0 8px rgb(136 239 27 / .6); }
+  .xp.off { color: var(--stone); text-shadow: none; }
+  .late-tag { font: 600 11px var(--mono); color: var(--late); text-shadow: 0 0 8px rgb(255 77 94 / .5); text-transform: uppercase; letter-spacing: .04em; }
+  .xp-float { position: absolute; right: 14px; top: 8px; font: 700 13px var(--mono); color: var(--on-green); background: var(--lime); padding: 3px 8px; border-radius: 8px; box-shadow: 0 0 18px rgb(136 239 27 / .8); }
+
+  .note { margin-top: 10px; padding: 12px 14px; display: flex; gap: 10px; align-items: center; font-size: 14px; }
+  .note svg { color: var(--lime); filter: drop-shadow(0 0 4px var(--lime)); flex: none; }
+
+  .capture { margin: 10px 16px 10px; padding: 7px 7px 7px 16px; display: flex; align-items: center; gap: 6px; border-radius: 20px; position: relative;
+    box-shadow: 0 0 0 1px rgb(136 239 27 / .25), 0 0 24px -6px rgb(136 239 27 / .45), inset 0 1px 0 rgb(255 255 255 / .06); }
+  .capture > span:first-child { flex: 1; color: var(--stone); font-size: 14px; }
+  .capture .mic, .capture .send { flex: none; }
+  .mic { width: 40px; height: 40px; display: grid; place-items: center; color: var(--lime); }
+  .send { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; color: var(--on-green);
+    background: linear-gradient(150deg, var(--lime), var(--green)); box-shadow: 0 0 18px rgb(136 239 27 / .6), inset 0 1px 0 rgb(255 255 255 / .4); }
+  .tabs { display: flex; justify-content: space-around; padding: 8px 0 24px; border-top: 1px solid var(--line); background: rgb(4 5 4 / .6); backdrop-filter: blur(16px); position: relative; }
+  .tab { text-align: center; font: 500 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--stone); position: relative; padding-top: 6px; }
+  .tab svg { display: block; margin: 0 auto 4px; }
+  .tab.on { color: var(--paper); }
+  .tab.on svg { color: var(--lime); filter: drop-shadow(0 0 6px var(--lime)); }
+  .tab.on::before { content: ""; position: absolute; top: -9px; left: 50%; translate: -50% 0; width: 26px; height: 2px; border-radius: 2px; background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+
+  /* Captura */
+  .dim { position: absolute; inset: 0; background: rgb(0 0 0 / .62); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 18px 30px; border-radius: 30px 30px 0 0;
+    background: linear-gradient(180deg, rgb(26 32 26 / .88), rgb(12 14 12 / .94)); backdrop-filter: blur(26px);
+    box-shadow: 0 -1px 0 rgb(136 239 27 / .5), 0 -20px 60px -20px rgb(0 176 0 / .5); }
+  .grab { width: 40px; height: 4px; border-radius: 2px; background: rgb(255 255 255 / .25); margin: 0 auto 14px; }
+  .ai { display: inline-flex; gap: 6px; align-items: center; font: 500 10px var(--mono); letter-spacing: .14em; color: var(--lime); padding: 4px 9px; border-radius: 999px; background: rgb(136 239 27 / .08); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .35); }
+  .sheet h3 { margin: 10px 0 14px; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+  .quote { color: var(--stone); font-size: 13px; margin: -8px 0 14px; font-style: italic; }
+  .field { padding: 11px 14px; border-radius: 14px; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); font-size: 15px; margin-bottom: 9px; }
+  .field small { display: block; color: var(--stone); font: 500 10px var(--mono); letter-spacing: .16em; text-transform: uppercase; margin-bottom: 3px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 4px 0 12px; }
+  .seg span { text-align: center; padding: 10px 0 8px; border-radius: 13px; font-size: 13px; font-weight: 600; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); color: var(--stone); }
+  .seg span small { display: block; font: 500 10px var(--mono); margin-top: 2px; opacity: .8; }
+  .seg span.on { background: linear-gradient(160deg, var(--lime), var(--green)); color: var(--on-green); box-shadow: 0 0 20px -2px rgb(136 239 27 / .6); }
+  .btns { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 6px; }
+  .btn { text-align: center; padding: 15px; border-radius: 16px; font-weight: 700; font-size: 15px; }
+  .btn.ghost { background: rgb(255 255 255 / .05); box-shadow: inset 0 0 0 1px var(--line); }
+  .btn.primary { color: var(--on-green); background: linear-gradient(120deg, var(--green-d), var(--green) 45%, var(--lime)); box-shadow: 0 0 26px -4px rgb(136 239 27 / .7), inset 0 1px 0 rgb(255 255 255 / .35); }
+
+  /* Resumo */
+  .medal-card { margin-top: 14px; padding: 18px 16px 16px; display: flex; gap: 14px; align-items: center; overflow: hidden; }
+  .medal-card svg { width: 96px; height: 112px; flex: none; }
+  .medal-card .tier { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+  .medal-card p { margin: 2px 0 10px; color: var(--stone); font-size: 13px; }
+  .bigxp { font: 800 36px/1 var(--sans); letter-spacing: -.05em; color: var(--lime); text-shadow: var(--neon); }
+  .bigxp small { font: 500 12px var(--mono); color: var(--stone); text-shadow: none; letter-spacing: .1em; margin-left: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .stat { padding: 12px 10px 10px; border-radius: 18px; }
+  .stat strong { display: block; font: 800 32px/1.05 var(--sans); letter-spacing: -.05em; }
+  .stat span { font: 500 10px var(--mono); color: var(--stone); letter-spacing: .14em; text-transform: uppercase; }
+  .stat.hl strong { color: var(--lime); text-shadow: var(--neon); }
+  .stat.bad strong { color: var(--late); text-shadow: 0 0 14px rgb(255 77 94 / .45); }
+  .chart { margin-top: 10px; padding: 14px 14px 10px; }
+  .cols { display: flex; align-items: flex-end; gap: 9px; height: 112px; margin-top: 24px; position: relative; }
+  .cols::before { content: ""; position: absolute; inset: 0 0 18px; background: repeating-linear-gradient(0deg, transparent 0 27px, rgb(255 255 255 / .05) 27px 28px); }
+  .col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; text-align: center; font: 500 10px var(--mono); color: var(--stone); text-transform: uppercase; position: relative; }
+  .col div { border-radius: 7px 7px 3px 3px; margin-bottom: 6px; background: linear-gradient(180deg, var(--lime), var(--green) 40%, rgb(0 132 0 / .35)); box-shadow: 0 0 16px -2px rgb(136 239 27 / .55); }
+  .col.low div { background: rgb(255 255 255 / .1); box-shadow: none; }
+  .col.best div::before { content: "MVP"; position: absolute; top: -16px; left: 0; right: 0; font: 600 9px var(--mono); color: var(--lime); text-shadow: var(--neon); }
+  .col.best div { position: relative; }
+
+  /* Revelação de domingo */
+  .reveal { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 70px 24px 0; text-align: center;
+    background: radial-gradient(60% 40% at 50% 42%, rgb(136 239 27 / .28), transparent 70%), radial-gradient(100% 60% at 50% 110%, rgb(0 176 0 / .5), transparent 70%), #030403; }
+  .rays { position: absolute; left: 50%; top: 38%; width: 720px; height: 720px; translate: -50% -50%;
+    background: repeating-conic-gradient(from 0deg, rgb(136 239 27 / .14) 0 6deg, transparent 6deg 18deg);
+    -webkit-mask-image: radial-gradient(circle, #000 0 18%, transparent 55%); mask-image: radial-gradient(circle, #000 0 18%, transparent 55%);
+    animation: spin 50s linear infinite; }
+  @keyframes spin { to { rotate: 360deg; } }
+  .sparks i { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 10px var(--lime); animation: rise 4s linear infinite; opacity: 0; }
+  @keyframes rise { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-260px); opacity: 0; } }
+  .reveal .eyebrow { color: var(--lime); text-shadow: var(--neon); position: relative; }
+  .reveal h2 { margin: 10px 0 0; font-size: 34px; font-weight: 800; letter-spacing: -.04em; position: relative; }
+  .reveal .big-medal { width: 230px; height: 268px; margin: 18px 0 4px; position: relative; animation: drop 900ms cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes drop { from { transform: scale(.4) rotate(-14deg); opacity: 0; } }
+  .reveal .tier { font-size: 40px; font-weight: 800; letter-spacing: -.04em; background: linear-gradient(180deg, #fff, var(--lime)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 12px rgb(136 239 27 / .6)); position: relative; }
+  .reveal p { color: var(--stone); margin: 4px 0 18px; font-size: 14px; position: relative; }
+  .reveal .pills { display: flex; gap: 8px; position: relative; }
+  .reveal .pills span { padding: 8px 12px; border-radius: 12px; font: 600 12px var(--mono); }
+  .reveal .btn { position: absolute; left: 24px; right: 24px; bottom: 36px; }
+
+  /* Galeria de medalhas */
+  .gallery { max-width: 1240px; margin: 46px auto 0; padding: 26px; border-radius: 28px;
+    background: radial-gradient(80% 120% at 50% 120%, rgb(0 176 0 / .25), transparent 60%), #0a0b0a; border: 1px solid #1a1c1a; }
+  .gallery h3 { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+  .gallery > p { margin: 0 0 22px; color: var(--stone); font-size: 14px; }
+  .tiers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  @media (max-width: 900px) { .tiers { grid-template-columns: repeat(2, 1fr); } }
+  .tierbox { text-align: center; padding: 18px 10px 16px; border-radius: 22px; }
+  .tierbox svg { width: 140px; height: 164px; }
+  .tierbox b { display: block; font-size: 17px; font-weight: 800; letter-spacing: -.02em; margin-top: 6px; }
+  .tierbox span { font: 500 11px var(--mono); color: var(--stone); letter-spacing: .1em; }
+</style>
+</head>
+<body>
+<style>
+  .topbar { display: flex; align-items: center; gap: 10px; }
+  .topbar .eyebrow { flex: 1; }
+  .menu-btn { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--paper); }
+  .streak { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font: 700 13px var(--mono); color: #ffb347; }
+  .streak svg { filter: drop-shadow(0 0 6px #ff8a1f); }
+  .plan { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 16px; }
+  .pd { text-align: center; padding: 8px 0 9px; border-radius: 14px; font: 500 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--stone); background: rgb(255 255 255 / .03); box-shadow: inset 0 0 0 1px var(--line); }
+  .pd b { display: block; margin-top: 5px; font: 700 11px var(--sans); color: var(--paper); letter-spacing: 0; text-transform: none; }
+  .pd .dot { width: 8px; height: 8px; border-radius: 50%; margin: 6px auto 0; background: rgb(255 255 255 / .14); }
+  .pd.ok .dot { background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+  .pd.miss .dot { background: var(--late); box-shadow: 0 0 8px var(--late); }
+  .pd.rest { opacity: .55; } .pd.rest b { color: var(--stone); }
+  .pd.on { background: linear-gradient(180deg, var(--lime), var(--green)); color: var(--on-green); box-shadow: 0 0 0 1px rgb(136 239 27 / .6), 0 8px 26px -6px rgb(136 239 27 / .7); }
+  .pd.on b { color: var(--on-green); } .pd.on .dot { background: rgb(0 0 0 / .4); box-shadow: none; }
+  .wo { margin-top: 14px; padding: 16px; overflow: hidden; }
+  .wo::after { content: ""; position: absolute; right: -50px; top: -60px; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(rgb(136 239 27 / .2), transparent 65%); pointer-events: none; }
+  .wo h2 { margin: 6px 0 2px; font-size: 26px; font-weight: 800; letter-spacing: -.035em; }
+  .wo p { margin: 0; color: var(--stone); font-size: 13px; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .kpis div { padding: 10px; border-radius: 14px; background: rgb(255 255 255 / .035); box-shadow: inset 0 0 0 1px var(--line); }
+  .kpis strong { display: block; font: 800 22px/1 var(--sans); letter-spacing: -.04em; }
+  .kpis span { font: 500 9px var(--mono); letter-spacing: .14em; color: var(--stone); text-transform: uppercase; }
+  .kpis .hl strong { color: var(--lime); text-shadow: var(--neon); }
+  .go { margin-top: 12px; text-align: center; padding: 14px; border-radius: 16px; font-weight: 800; font-size: 15px; color: var(--on-green); background: linear-gradient(120deg, var(--green-d), var(--green) 45%, var(--lime)); box-shadow: 0 0 26px -4px rgb(136 239 27 / .7), inset 0 1px 0 rgb(255 255 255 / .35); }
+  .ex { display: flex; gap: 12px; align-items: center; padding: 12px 14px; }
+  .ex + .ex { border-top: 1px solid rgb(255 255 255 / .06); }
+  .ex .n { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; font: 700 12px var(--mono); color: var(--lime); background: rgb(136 239 27 / .08); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .3); flex: none; }
+  .ex .t { font-size: 14.5px; }
+  .ex small { display: block; color: var(--stone); font: 500 11.5px var(--mono); margin-top: 3px; }
+  .ex .xp { margin-left: auto; }
+  .sets { display: flex; gap: 6px; margin-top: 8px; }
+  .set { flex: 1; text-align: center; padding: 8px 0 7px; border-radius: 12px; font: 600 12px var(--mono); background: rgb(255 255 255 / .04); box-shadow: inset 0 0 0 1px var(--line); color: var(--stone); }
+  .set b { display: block; font: 700 14px var(--sans); color: var(--paper); }
+  .set.ok { background: linear-gradient(160deg, rgb(136 239 27 / .25), rgb(0 176 0 / .12)); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .55), 0 0 14px -4px var(--lime); color: var(--lime); }
+  .set.now { box-shadow: inset 0 0 0 1.5px var(--lime); color: var(--paper); }
+  .pr { display: inline-flex; gap: 5px; align-items: center; font: 700 10px var(--mono); letter-spacing: .1em; padding: 3px 8px; border-radius: 7px; color: #1b1000; background: linear-gradient(120deg, #ffd34d, #ffb347); box-shadow: 0 0 14px rgb(255 190 60 / .7); }
+  .timer { margin: 12px 0 0; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+  .timer strong { font: 800 28px/1 var(--mono); letter-spacing: -.03em; color: var(--lime); text-shadow: var(--neon); }
+  .timer span { color: var(--stone); font-size: 13px; flex: 1; }
+  .bar { height: 8px; border-radius: 6px; background: rgb(255 255 255 / .07); overflow: hidden; margin-top: 10px; }
+  .bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--green-d), var(--green), var(--lime)); box-shadow: 0 0 12px rgb(136 239 27 / .7); }
+  .ed { display: flex; align-items: center; gap: 12px; padding: 11px 14px; }
+  .ed + .ed { border-top: 1px solid rgb(255 255 255 / .06); }
+  .ed .d { width: 42px; font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--stone); }
+  .ed .g { flex: 1; }
+  .ed .g b { font-size: 14.5px; display: block; }
+  .ed .g small { color: var(--stone); font-size: 12px; }
+  .ed .ed-ch { font: 600 10px var(--mono); padding: 3px 8px; border-radius: 6px; background: rgb(0 176 0 / .2); color: var(--mint); box-shadow: inset 0 0 0 1px rgb(0 176 0 / .55); }
+  .ed.rest b { color: var(--stone); font-weight: 600; }
+  .ed .grip { color: rgb(255 255 255 / .25); }
+  .add { margin-top: 10px; text-align: center; padding: 13px; border-radius: 16px; font-weight: 700; font-size: 14px; color: var(--lime); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .4); background: rgb(136 239 27 / .05); }
+  .ach { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .ach div { text-align: center; padding: 12px 6px 10px; border-radius: 16px; }
+  .ach svg { width: 28px; height: 28px; color: var(--lime); filter: drop-shadow(0 0 6px var(--lime)); }
+  .ach b { display: block; font-size: 12px; margin-top: 6px; }
+  .ach span { font: 500 9.5px var(--mono); color: var(--stone); letter-spacing: .06em; }
+  .ach .locked { opacity: .38; } .ach .locked svg { color: var(--stone); filter: none; }
+  .tabs .tab.on svg { color: var(--lime); }
+</style>
+<style>
+  .stage-row { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; max-width: 1240px; margin: 0 auto 40px; }
+  .stage { width: 280px; padding: 18px 14px 16px; border-radius: 26px; text-align: center; position: relative; overflow: hidden;
+    background: radial-gradient(80% 50% at 50% 100%, rgb(0 176 0 / .22), transparent 70%), linear-gradient(180deg, #121512, #0a0c0a); border: 1px solid #1d211d; }
+  .stage svg { width: 230px; height: 330px; display: block; margin: 0 auto; }
+  .stage b { display: block; font-size: 20px; font-weight: 800; letter-spacing: -.02em; margin-top: 4px; }
+  .stage span { font: 500 11px var(--mono); color: var(--stone); letter-spacing: .1em; }
+  .stage .lvl { position: absolute; top: 14px; left: 14px; font: 700 11px var(--mono); color: var(--lime); padding: 4px 9px; border-radius: 8px; background: rgb(136 239 27 / .08); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .35); }
+  .stage p { color: var(--stone); font-size: 12.5px; margin: 8px 6px 0; line-height: 1.45; }
+  h3.sec { max-width: 1180px; margin: 0 auto 14px; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+  h3.sec small { color: var(--stone); font: 500 12px var(--mono); margin-left: 8px; letter-spacing: .08em; }
+  .hero2 { margin-top: 10px; padding: 0; overflow: hidden; height: 300px; position: relative; }
+  .hero2 svg.h { position: absolute; left: -10px; bottom: -6px; width: 200px; height: 290px; }
+  .hero2 .info { position: absolute; right: 14px; top: 16px; width: 150px; }
+  .hero2 .info .ttl { font: 500 10px var(--mono); letter-spacing: .16em; color: var(--lime); text-shadow: var(--neon); }
+  .hero2 .info h2 { margin: 4px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+  .hero2 .info .lv { display: flex; gap: 6px; align-items: baseline; margin-top: 10px; }
+  .hero2 .info .lv strong { font: 800 42px/1 var(--sans); letter-spacing: -.05em; color: var(--lime); text-shadow: var(--neon); }
+  .hero2 .info .lv span { font: 500 10px var(--mono); color: var(--stone); letter-spacing: .14em; }
+  .hero2 .info .xpline { margin-top: 8px; }
+  .hero2 .slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+  .hero2 .slots i { height: 34px; border-radius: 10px; display: grid; place-items: center; font: 600 8.5px var(--mono); letter-spacing: .06em; font-style: normal; color: var(--lime); background: rgb(136 239 27 / .07); box-shadow: inset 0 0 0 1px rgb(136 239 27 / .35); }
+  .hero2 .slots i.off { color: var(--stone); background: rgb(255 255 255 / .03); box-shadow: inset 0 0 0 1px var(--line); }
+  .tower2 { margin-top: 10px; padding: 12px 8px 0; overflow: hidden; }
+  .tower2 svg { display: block; width: 100%; height: auto; }
+  .tower-full { display: flex; justify-content: center; }
+  .tower-full svg { width: 100%; height: auto; }
+</style>
+
+<div class="intro">
+  <h1>Agenda · <span>herói e torre de castelo</span> — rascunho 4</h1>
+  <p>O herói segue as referências (fantasia sombria, couro, tecido, cota de malha) e <b>evolui em 3 estágios</b>: começa como Andarilho (couro rústico, escudo de madeira, maça), vira Patrulheiro (elmo, gibão verde acolchoado, arco) e chega a Guardião Sombrio (capuz, máscara branca, capa longa, amuleto). O toque neon fica só no brilho: olhos e amuleto em verde-lima. A torre é de pedra: cada semana é um andar com 7 seteiras que acendem nos dias cumpridos, um estandarte na cor do brasão e, no topo, o andar da semana atual ainda em obra (andaime de madeira).</p>
+</div>
+
+<h3 class="sec">Evolução do herói <small>PEÇAS VÊM DAS TRILHAS</small></h3>
+<div class="stage-row">
+  <div class="stage"><span class="lvl">NV 1–9</span><svg data-hero="1" viewBox="0 0 200 300"></svg><b>Andarilho</b><span>COURO · ESCUDO · MAÇA</span><p>Começo de jornada. Roupas rústicas, capuz e lenço no rosto.</p></div>
+  <div class="stage"><span class="lvl">NV 10–24</span><svg data-hero="2" viewBox="0 0 200 300"></svg><b>Patrulheiro</b><span>ELMO · GIBÃO · ARCO</span><p>Ganha elmo (Física II), gibão verde e o arco com aljava.</p></div>
+  <div class="stage"><span class="lvl">NV 25+</span><svg data-hero="3" viewBox="0 0 200 300"></svg><b>Guardião Sombrio</b><span>CAPUZ · MÁSCARA · AMULETO</span><p>Capa longa, máscara branca, olhos e amuleto acesos.</p></div>
+</div>
+
+<div class="row">
+  <!-- Herói com torre -->
+  <div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮ ◔</span></div>
+      <div class="scroll">
+        <div class="topbar">
+          <span class="menu-btn glass quiet"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h11M4 17h16"/></svg></span>
+          <span class="eyebrow">Herói</span>
+          <span class="streak glass quiet"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ff8a1f"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3-1-3 0-6 1-9.5z"/></svg>12 dias</span>
+        </div>
+        <div class="glass hero2">
+          <svg class="h" data-hero="2" viewBox="0 0 200 300"></svg>
+          <div class="info">
+            <span class="ttl">PATRULHEIRO</span>
+            <h2>Hugo</h2>
+            <div class="lv"><strong>14</strong><span>NÍVEL</span></div>
+            <div class="xpline"><div class="track"><i style="width:61%"></i></div></div>
+            <div style="font:500 10.5px var(--mono);color:var(--stone);margin-top:6px"><b style="color:var(--lime)">6.120</b> XP · faltam 830</div>
+            <div class="slots"><i>ELMO</i><i>GIBÃO</i><i>ARCO</i><i class="off">CAPA</i><i class="off">MÁSC.</i><i class="off">AMUL.</i></div>
+          </div>
+        </div>
+        <div class="glass quiet tower2">
+          <div style="display:flex;justify-content:space-between;padding:0 6px"><span class="eyebrow">Torre · 9 semanas</span><span class="eyebrow" style="color:var(--lime)">ver tudo ›</span></div>
+          <svg data-tower="mini" viewBox="0 0 320 340"></svg>
+        </div>
+      </div>
+      <div class="tabs tabs4">
+        <div class="tab on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/></svg>Herói</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Hoje</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>Treino</div>
+        <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Ideias</div>
+      </div>
+    </div>
+    <div class="label">Herói: personagem + torre (radar logo abaixo)</div>
+  </div>
+
+  <!-- Torre inteira -->
+  <div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>▮▮▮ ◔</span></div>
+      <div class="scroll" style="padding-top:8px">
+        <div class="topbar">
+          <span class="menu-btn glass quiet"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></span>
+          <span class="eyebrow">Sua torre</span><span class="eyebrow" style="color:var(--lime)">9 andares</span>
+        </div>
+        <div class="tower-full"><svg data-tower="full" viewBox="0 0 320 700"></svg></div>
+      </div>
+    </div>
+    <div class="label">Torre inteira (toque num andar = quadro da semana)</div>
+  </div>
+</div>
+
+<script>
+/* ===== Herói em 3 estágios (SVG desenhado à mão) ===== */
+const HERO_DEFS = `
+<defs>
+  <linearGradient id="hLeather" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a6240"/><stop offset="1" stop-color="#4a3020"/></linearGradient>
+  <linearGradient id="hLeatherD" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5e4128"/><stop offset="1" stop-color="#2e1d12"/></linearGradient>
+  <linearGradient id="hCloth" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9a8a68"/><stop offset="1" stop-color="#5b4e38"/></linearGradient>
+  <linearGradient id="hGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5f8a4a"/><stop offset="1" stop-color="#2f4a26"/></linearGradient>
+  <linearGradient id="hSteel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8dde2"/><stop offset=".5" stop-color="#8b939b"/><stop offset="1" stop-color="#3e444a"/></linearGradient>
+  <linearGradient id="hDark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a4540"/><stop offset="1" stop-color="#1a1816"/></linearGradient>
+  <linearGradient id="hRobe" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#262c3a"/><stop offset="1" stop-color="#11141c"/></linearGradient>
+  <linearGradient id="hWood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a0703e"/><stop offset="1" stop-color="#5a3a1c"/></linearGradient>
+  <pattern id="hMail" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="#3a3e42"/><circle cx="2" cy="2" r="1.3" fill="none" stroke="#8a9096" stroke-width=".7"/></pattern>
+  <pattern id="hQuilt" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="url(#hGreen)"/><path d="M0 0H10M0 0V10" stroke="#24391d" stroke-width="1.2"/></pattern>
+  <radialGradient id="hGlow"><stop offset="0" stop-color="#eaffc0"/><stop offset=".4" stop-color="#88ef1b"/><stop offset="1" stop-color="#88ef1b" stop-opacity="0"/></radialGradient>
+  <filter id="hNeon" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>`;
+const S = 'stroke="#140e08" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"';
+
+const legs = (boot = "url(#hLeatherD)", pants = "#3b3024") => `
+  <path d="M78 196 L74 262 L92 262 L96 200 Z" fill="${pants}" ${S}/>
+  <path d="M104 200 L108 262 L126 262 L122 196 Z" fill="${pants}" ${S}/>
+  <path d="M70 252 L94 252 L96 274 L66 276 C64 268 66 258 70 252 Z" fill="${boot}" ${S}/>
+  <path d="M106 252 L130 252 C134 258 136 268 134 276 L104 274 Z" fill="${boot}" ${S}/>
+  <path d="M70 262 H95 M106 262 H131" stroke="#0e0905" stroke-width="1.2" opacity=".6"/>`;
+
+function hero1() {
+  return HERO_DEFS + `
+  <ellipse cx="100" cy="282" rx="58" ry="8" fill="#000" opacity=".45"/>
+  ${legs()}
+  <!-- túnica de couro esfarrapada -->
+  <path d="M66 108 C70 98 86 94 100 94 C114 94 130 98 134 108 L140 196 L132 210 L124 200 L116 212 L108 202 L100 214 L92 202 L84 212 L76 200 L68 210 L60 196 Z" fill="url(#hLeather)" ${S}/>
+  <path d="M80 120 L82 196 M120 120 L118 196 M100 100 V200" stroke="#3a2414" stroke-width="1.4" opacity=".7"/>
+  <path d="M86 126 h28 M86 140 h28 M86 154 h28" stroke="#c9a46a" stroke-width="1.6" stroke-dasharray="3 3" opacity=".7"/>
+  <!-- cintos -->
+  <path d="M64 170 L136 166 L137 176 L64 180 Z" fill="#3a2414" ${S}/><rect x="94" y="166" width="12" height="12" rx="2" fill="none" stroke="#b08a50" stroke-width="2"/>
+  <path d="M70 128 L130 178" stroke="#3a2414" stroke-width="6" opacity=".9"/>
+  <!-- braços -->
+  <path d="M66 110 C56 118 50 140 50 162 L62 166 C64 146 68 130 74 122 Z" fill="url(#hLeatherD)" ${S}/>
+  <path d="M134 110 C146 120 150 140 150 160 L138 164 C136 146 132 132 126 122 Z" fill="url(#hLeatherD)" ${S}/>
+  <!-- maça -->
+  <path d="M146 162 L178 120" stroke="#4a2e16" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="182" cy="114" r="13" fill="url(#hSteel)" ${S}/>
+  <g fill="#6b7177" ${S}><path d="M182 96 l3 6 h-6 z"/><path d="M198 112 l-6 3 v-6 z"/><path d="M182 132 l-3 -6 h6 z"/><path d="M168 106 l6 1 -3 5 z"/><path d="M194 124 l-5 -2 4 -4 z"/></g>
+  <circle cx="144" cy="164" r="8" fill="#b88a60" ${S}/>
+  <!-- capuz e lenço -->
+  <path d="M68 104 C62 76 74 44 100 40 C126 44 138 76 132 104 C122 112 78 112 68 104 Z" fill="url(#hCloth)" ${S}/>
+  <path d="M82 64 C86 54 114 54 118 64 L118 86 C110 92 90 92 82 86 Z" fill="#1d1510"/>
+  <path d="M84 72 h10 M106 72 h10" stroke="#e6d0a0" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M80 80 C88 90 112 90 120 80 L124 100 C110 110 90 110 76 100 Z" fill="#a89470" ${S}/>
+  <path d="M88 92 l6 8 M106 92 l-4 9" stroke="#6b5a3e" stroke-width="1.2"/>
+  <!-- escudo de madeira -->
+  <g transform="translate(40 168)">
+    <circle r="36" fill="url(#hWood)" ${S}/>
+    <path d="M-30 -18 H30 M-35 -4 H35 M-35 10 H35 M-30 24 H30" stroke="#3e2610" stroke-width="1.6" opacity=".8"/>
+    <circle r="35" fill="none" stroke="#6b5a48" stroke-width="4"/>
+    <circle r="10" fill="url(#hSteel)" ${S}/><circle r="3" fill="#2a2e32"/>
+  </g>`;
+}
+
+function hero2() {
+  return HERO_DEFS + `
+  <ellipse cx="100" cy="282" rx="60" ry="8" fill="#000" opacity=".45"/>
+  <!-- aljava e arco nas costas -->
+  <path d="M122 70 L150 150" stroke="#5a3a1c" stroke-width="12" stroke-linecap="round"/>
+  <g stroke="#d8c08a" stroke-width="1.6"><path d="M120 74 L114 54"/><path d="M126 72 L124 50"/><path d="M131 74 L134 52"/></g>
+  <g fill="#e8e0c8"><path d="M114 54 l-3 -6 6 1z"/><path d="M124 50 l-1 -7 4 5z"/><path d="M134 52 l1 -7 3 6z"/></g>
+  ${legs("url(#hLeatherD)", "#4a3a26")}
+  <!-- gibão acolchoado verde -->
+  <path d="M66 108 C70 98 86 94 100 94 C114 94 130 98 134 108 L142 230 L100 236 L58 230 Z" fill="url(#hQuilt)" ${S}/>
+  <path d="M100 100 V234" stroke="#1d2e17" stroke-width="2"/>
+  <path d="M100 236 L58 230 L64 206 L100 210 L136 206 L142 230 Z" fill="#000" opacity=".18"/>
+  <!-- cinto e espada -->
+  <path d="M62 168 L138 164 L139 175 L62 179 Z" fill="#3a2414" ${S}/><rect x="94" y="164" width="12" height="13" rx="2" fill="none" stroke="#c9a46a" stroke-width="2"/>
+  <path d="M128 172 L150 250" stroke="#2a1a0e" stroke-width="7" stroke-linecap="round"/><path d="M120 176 L138 168" stroke="#b0b6bc" stroke-width="4" stroke-linecap="round"/>
+  <path d="M68 116 L136 178" stroke="#3a2414" stroke-width="6"/>
+  <!-- braços com malha -->
+  <path d="M66 110 C54 120 48 144 50 168 L64 170 C64 148 68 132 74 122 Z" fill="url(#hMail)" ${S}/>
+  <path d="M134 110 C146 120 152 144 150 166 L136 168 C136 148 132 132 126 122 Z" fill="url(#hMail)" ${S}/>
+  <path d="M48 160 L66 160 L66 178 L48 178 Z" fill="url(#hLeatherD)" ${S}/><path d="M134 158 L152 158 L152 176 L134 176 Z" fill="url(#hLeatherD)" ${S}/>
+  <!-- ombreira -->
+  <path d="M56 100 C60 86 80 86 86 98 C84 112 64 118 54 114 Z" fill="url(#hSteel)" ${S}/>
+  <path d="M60 104 C66 98 76 98 82 104" stroke="#3e444a" stroke-width="1.2" fill="none"/>
+  <!-- arco na mão -->
+  <path d="M44 70 C16 120 16 200 44 250" fill="none" stroke="url(#hWood)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M44 70 L44 250" stroke="#e8e0c8" stroke-width="1"/>
+  <circle cx="50" cy="168" r="7" fill="#b88a60" ${S}/>
+  <!-- elmo -->
+  <path d="M74 64 C74 38 126 38 126 64 L126 92 C116 100 84 100 74 92 Z" fill="url(#hSteel)" ${S}/>
+  <path d="M100 38 V96" stroke="#3e444a" stroke-width="3"/>
+  <path d="M80 68 H96 M104 68 H120" stroke="#141618" stroke-width="5" stroke-linecap="round"/>
+  <path d="M84 80 V92 M92 80 V94 M108 80 V94 M116 80 V92" stroke="#3e444a" stroke-width="1.6"/>
+  <path d="M74 92 C82 104 118 104 126 92 L124 104 C112 112 88 112 76 104 Z" fill="url(#hMail)" ${S}/>`;
+}
+
+function hero3() {
+  return HERO_DEFS + `
+  <ellipse cx="100" cy="282" rx="66" ry="8" fill="#000" opacity=".5"/>
+  ${legs("url(#hDark)", "#1c1c20")}
+  <!-- capa longa esfarrapada -->
+  <path d="M60 96 C40 140 32 220 30 272 L44 266 L52 276 L62 264 L72 278 L80 264 L80 120 Z" fill="url(#hDark)" ${S}/>
+  <path d="M140 96 C160 140 168 220 170 272 L156 266 L148 276 L138 264 L128 278 L120 264 L120 120 Z" fill="url(#hDark)" ${S}/>
+  <!-- túnica azul escura com malha -->
+  <path d="M76 106 L124 106 L128 232 L72 232 Z" fill="url(#hRobe)" ${S}/>
+  <path d="M86 200 L114 200 L118 236 L82 236 Z" fill="url(#hMail)" ${S}/>
+  <path d="M100 108 V198" stroke="#3a4256" stroke-width="1.4"/>
+  <path d="M74 164 L126 164 L126 173 L74 173 Z" fill="#2a1d14" ${S}/><circle cx="100" cy="168.5" r="5" fill="none" stroke="#9aa0a8" stroke-width="1.6"/>
+  <!-- braços em malha + luvas -->
+  <path d="M74 112 C62 128 60 160 62 190 L76 190 C76 164 78 140 82 124 Z" fill="url(#hMail)" ${S}/>
+  <path d="M126 112 C138 128 140 160 138 190 L124 190 C124 164 122 140 118 124 Z" fill="url(#hMail)" ${S}/>
+  <path d="M60 184 L78 184 L80 206 C74 212 64 212 60 206 Z" fill="#1e1a18" ${S}/><path d="M122 184 L140 184 L140 206 C136 212 126 212 120 206 Z" fill="#1e1a18" ${S}/>
+  <!-- manto dos ombros -->
+  <path d="M62 98 C70 86 130 86 138 98 L146 132 L130 126 L122 138 L112 128 L100 140 L88 128 L78 138 L70 126 L54 132 Z" fill="url(#hDark)" ${S}/>
+  <!-- capuz -->
+  <path d="M66 100 C58 64 74 22 100 18 C126 22 142 64 134 100 C124 108 76 108 66 100 Z" fill="url(#hDark)" ${S}/>
+  <path d="M100 18 L100 8 C104 14 104 18 100 18" fill="#2a2724" ${S}/>
+  <path d="M80 54 C84 40 116 40 120 54 L120 92 C112 100 88 100 80 92 Z" fill="#0b0b0c"/>
+  <!-- máscara branca -->
+  <path d="M84 52 C88 44 112 44 116 52 L114 82 L100 100 L86 82 Z" fill="#e9e6e0" ${S}/>
+  <path d="M100 48 V98" stroke="#b8b4ac" stroke-width="1.2"/>
+  <g filter="url(#hNeon)"><path d="M88 62 L97 65 L96 68 L88 66 Z" fill="#c6ff7a"/><path d="M112 62 L103 65 L104 68 L112 66 Z" fill="#c6ff7a"/></g>
+  <!-- corrente + amuleto -->
+  <path d="M84 100 L100 130 L116 100" fill="none" stroke="#9aa0a8" stroke-width="1.4" stroke-dasharray="2 1.5"/>
+  <circle cx="100" cy="140" r="16" fill="url(#hGlow)" opacity=".7"/>
+  <g filter="url(#hNeon)"><circle cx="100" cy="140" r="8" fill="none" stroke="#c6ff7a" stroke-width="2"/><circle cx="100" cy="140" r="2.5" fill="#eaffc0"/><path d="M100 128 V133 M100 147 V152 M88 140 H93 M107 140 H112" stroke="#c6ff7a" stroke-width="1.6"/></g>`;
+}
+const HEROES = { 1: hero1, 2: hero2, 3: hero3 };
+document.querySelectorAll("svg[data-hero]").forEach(s => { s.innerHTML = HEROES[s.dataset.hero](); s.setAttribute("overflow", "visible"); });
+
+/* ===== Torre de castelo ===== */
+const WEEKS = [ // de baixo para cima
+  { w: 38, tier: "bronze", days: [1,0,0,1,0,1,0] },
+  { w: 39, tier: "prata",  days: [1,1,0,1,1,0,1] },
+  { w: 40, tier: null,     days: [0,0,1,0,0,0,0] },
+  { w: 41, tier: "prata",  days: [1,0,1,1,0,1,0], train: true },
+  { w: 42, tier: "ouro",   days: [1,1,0,1,1,1,0], train: true },
+  { w: 43, tier: "diamante", days: [1,1,1,1,1,1,1], train: true },
+  { w: 44, tier: "ouro",   days: [1,1,1,0,1,1,1], train: true },
+  { w: 45, tier: "ouro",   days: [1,1,1,1,0,1,1], train: true },
+];
+const CURRENT = { w: 46, days: [1,1,1,1,0,0,0], today: 3 };
+const TIER = { bronze: ["#e3a06a","#8a4a1e"], prata: ["#eef2f6","#7d8792"], ouro: ["#ffe27a","#c48a0a"], diamante: ["#bff1ff","#2b86c8"], supremo: ["#eaffc0","#3aa400"] };
+
+function towerDefs() { return `<defs>
+  <pattern id="tBrick" width="28" height="14" patternUnits="userSpaceOnUse"><rect width="28" height="14" fill="#5a564e"/><path d="M0 .5H28M0 7.5H28M14 0V7M0 7V14M28 7V14" stroke="#2c2a26" stroke-width="1.2"/><rect x="2" y="2" width="9" height="3" fill="#6a665c" opacity=".5"/><rect x="17" y="9" width="8" height="3" fill="#6a665c" opacity=".4"/></pattern>
+  <linearGradient id="tShade" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset=".35" stop-color="#000" stop-opacity="0"/><stop offset=".7" stop-color="#000" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></linearGradient>
+  <radialGradient id="tLit"><stop offset="0" stop-color="#fff6c0"/><stop offset=".6" stop-color="#ffb43a"/><stop offset="1" stop-color="#c46a00"/></radialGradient>
+  <radialGradient id="tHalo"><stop offset="0" stop-color="#ffc85a" stop-opacity=".55"/><stop offset="1" stop-color="#ffc85a" stop-opacity="0"/></radialGradient>
+  <linearGradient id="tSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0f0a"/><stop offset="1" stop-color="#081a08"/></linearGradient>
+</defs>`; }
+
+function slit(x, y, state, h) {
+  // seteira em arco
+  const d = `M${x-4} ${y+h} V${y+5} A4 4 0 0 1 ${x+4} ${y+5} V${y+h} Z`;
+  if (state === 1) return `<circle cx="${x}" cy="${y+h/2}" r="10" fill="url(#tHalo)"/><path d="${d}" fill="url(#tLit)" stroke="#1a1408" stroke-width="1"/>`;
+  if (state === 2) return `<path d="${d}" fill="#7a9a3a" stroke="#88ef1b" stroke-width="1.4"/>`; // hoje (falta)
+  return `<path d="${d}" fill="#0c0b0a" stroke="#1a1814" stroke-width="1"/><path d="M${x-2} ${y+6} l3 4 -2 3 3 4" stroke="#3a3832" stroke-width=".8" fill="none"/>`;
+}
+
+function floor(x, y, w, h, wk, isCur) {
+  let s = `<g data-week="${wk.w}">`;
+  s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#tBrick)"/>`;
+  s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#tShade)"/>`;
+  // cornija
+  s += `<rect x="${x-4}" y="${y+h-5}" width="${w+8}" height="6" fill="#3e3b35" stroke="#24221e" stroke-width="1"/>`;
+  const gap = (w - 24) / 6;
+  wk.days.forEach((d, i) => {
+    let st = d ? 1 : 0;
+    if (isCur && i >= wk.today) st = i === wk.today ? 2 : 3;
+    if (st === 3) { const cx = x + 12 + i * gap; s += `<path d="M${cx-4} ${y+h-12} V${y+15} A4 4 0 0 1 ${cx+4} ${y+15} V${y+h-12} Z" fill="#1c1b19" stroke="#2a2824" stroke-width="1"/>`; }
+    else s += slit(x + 12 + i * gap, y + 10, st, h - 22);
+  });
+  // estandarte
+  if (wk.tier) {
+    const [hi, lo] = TIER[wk.tier];
+    s += `<path d="M${x+w+2} ${y+2} h16 v${h-14} l-8 -6 -8 6 z" fill="${lo}" stroke="#1a1408" stroke-width="1"/>`;
+    s += `<path d="M${x+w+5} ${y+4} h10 v${h-20} l-5 -4 -5 4 z" fill="${hi}" opacity=".85"/>`;
+  }
+  if (wk.train) s += `<path d="M${x-6} ${y+6} v${h-14}" stroke="#2a1a0e" stroke-width="2"/><path d="M${x-6} ${y+7} h-14 l4 6 -4 6 h14 z" fill="#88ef1b" stroke="#2f6a00" stroke-width="1" style="filter:drop-shadow(0 0 4px #88ef1b)"/>`;
+  s += `<text x="${x+w/2}" y="${y+h-8}" text-anchor="middle" font-family="Geist Mono, monospace" font-size="0" fill="#000">.</text>`;
+  s += `</g>`;
+  return s;
+}
+
+function scaffold(x, y, w, h) {
+  let s = `<rect x="${x}" y="${y+h*0.45}" width="${w}" height="${h*0.55}" fill="url(#tBrick)"/><rect x="${x}" y="${y+h*0.45}" width="${w}" height="${h*0.55}" fill="url(#tShade)"/>`;
+  // tijolos soltos no topo
+  for (let i = 0; i < 6; i++) s += `<rect x="${x + 8 + i * 22}" y="${y + h*0.45 - 7}" width="${i % 2 ? 14 : 18}" height="7" fill="#5a564e" stroke="#2c2a26"/>`;
+  // andaime
+  s += `<g stroke="#8a5a2a" stroke-width="3" stroke-linecap="round"><path d="M${x-8} ${y-6} V${y+h}"/><path d="M${x+w+8} ${y-6} V${y+h}"/><path d="M${x-12} ${y+6} H${x+w+12}"/><path d="M${x-12} ${y+h*0.4} H${x+w+12}"/><path d="M${x-8} ${y+6} L${x+w*0.4} ${y+h*0.4}" stroke-width="2"/></g>`;
+  return s;
+}
+
+function tower(full) {
+  const W = 320, x = 92, w = 136, fh = full ? 58 : 46;
+  const list = full ? WEEKS : WEEKS.slice(-3);
+  const H = full ? 700 : 340;
+  let s = towerDefs() + `<rect width="${W}" height="${H}" fill="url(#tSky)" rx="16"/>`;
+  // estrelas
+  for (let i = 0; i < 24; i++) s += `<circle cx="${(i*73)%W}" cy="${(i*37)%(H*0.5)}" r="${i%3?0.7:1.2}" fill="#bfebbf" opacity="${0.2 + (i%5)/10}"/>`;
+  // chão e colinas
+  const groundY = H - 34;
+  s += `<path d="M0 ${groundY+6} C80 ${groundY-14} 140 ${groundY+2} 200 ${groundY-6} C250 ${groundY-12} 290 ${groundY} 320 ${groundY-4} V${H} H0 Z" fill="#0d2a0d"/>`;
+  s += `<path d="M0 ${groundY+14} C90 ${groundY+2} 200 ${groundY+18} 320 ${groundY+8} V${H} H0 Z" fill="#00b000" opacity=".25"/>`;
+  // base com portão
+  const baseY = groundY - 40;
+  s += `<rect x="${x-10}" y="${baseY}" width="${w+20}" height="46" fill="url(#tBrick)"/><rect x="${x-10}" y="${baseY}" width="${w+20}" height="46" fill="url(#tShade)"/>`;
+  s += `<path d="M${x+w/2-16} ${baseY+46} V${baseY+20} A16 16 0 0 1 ${x+w/2+16} ${baseY+20} V${baseY+46} Z" fill="#2a1a0e" stroke="#120a04" stroke-width="2"/>`;
+  s += `<path d="M${x+w/2-12} ${baseY+24} V${baseY+46} M${x+w/2-4} ${baseY+18} V${baseY+46} M${x+w/2+4} ${baseY+18} V${baseY+46} M${x+w/2+12} ${baseY+24} V${baseY+46} M${x+w/2-15} ${baseY+32} H${x+w/2+15}" stroke="#6b6458" stroke-width="1.6"/>`;
+  s += `<circle cx="${x+w/2-22}" cy="${baseY+22}" r="9" fill="url(#tHalo)"/><rect x="${x+w/2-24}" y="${baseY+18}" width="4" height="8" fill="#ffb43a"/>`;
+  let y = baseY;
+  if (!full) s += `<text x="${x+w/2}" y="${baseY-4}" fill="none">.</text>`;
+  if (!full) { // indica que tem mais embaixo
+    s += `<rect x="${x}" y="${baseY-14}" width="${w}" height="14" fill="url(#tBrick)" opacity=".7"/><text x="${x+w/2}" y="${baseY-4}" text-anchor="middle" font-family="Geist Mono, monospace" font-size="8" fill="#bfebbf" letter-spacing="1.5">+5 SEMANAS</text>`;
+    y = baseY - 14;
+  }
+  list.forEach(wk => { y -= fh; s += floor(x, y, w, fh, wk, false); s += `<text x="${x-26}" y="${y+fh/2+3}" text-anchor="end" font-family="Geist Mono, monospace" font-size="8.5" fill="#9a9a9a" letter-spacing="1">SEM ${wk.w}</text>`; });
+  // andar atual em obra
+  y -= fh;
+  s += scaffold(x, y, w, fh);
+  const gap = (w - 24) / 6;
+  CURRENT.days.forEach((d, i) => { if (i < 4) s += slit(x + 12 + i * gap, y + fh*0.45 + 4, i < CURRENT.today ? 1 : 2, fh*0.55 - 12); });
+  s += `<text x="${x-26}" y="${y+fh/2+3}" text-anchor="end" font-family="Geist Mono, monospace" font-size="8.5" fill="#88ef1b" letter-spacing="1">SEM ${CURRENT.w}</text>`;
+  s += `<text x="${x-26}" y="${y+fh/2+14}" text-anchor="end" font-family="Geist Mono, monospace" font-size="7.5" fill="#88ef1b" letter-spacing="1">EM OBRA</text>`;
+  // guindaste/polia + bandeira no topo
+  s += `<path d="M${x+w-10} ${y-6} V${y-40}" stroke="#8a5a2a" stroke-width="3"/><path d="M${x+w-10} ${y-40} H${x+w-50}" stroke="#8a5a2a" stroke-width="3"/><path d="M${x+w-46} ${y-40} V${y-18}" stroke="#bfa070" stroke-width="1"/><rect x="${x+w-52}" y="${y-18}" width="12" height="7" fill="#5a564e" stroke="#2c2a26"/>`;
+  s += `<path d="M${x+20} ${y-6} V${y-46}" stroke="#2a1a0e" stroke-width="2.4"/><path d="M${x+20} ${y-46} h26 l-6 7 6 7 h-26 z" fill="#88ef1b" style="filter:drop-shadow(0 0 6px #88ef1b)"/>`;
+  return s;
+}
+document.querySelectorAll("svg[data-tower]").forEach(s => { s.innerHTML = tower(s.dataset.tower === "full"); });
+</script>
+<script>
+/* Brasões RPG em SVG. Cada nível soma peças: espadas, asas, louros, gema, chamas. */
+const TIERS = {
+  bronze:   { hi: "#ffd2a6", mid: "#c9773a", lo: "#5a2a0c", edge: "#2e1405", glow: "#e08a45", gem: null },
+  prata:    { hi: "#ffffff", mid: "#b8c2cc", lo: "#545d68", edge: "#22272d", glow: "#cfd8e2", gem: null },
+  ouro:     { hi: "#fff4b8", mid: "#e8b320", lo: "#7a4a03", edge: "#3a2300", glow: "#ffc93a", gem: "#ff4d5e" },
+  diamante: { hi: "#eafcff", mid: "#55d3ff", lo: "#14508f", edge: "#06223f", glow: "#5fd6ff", gem: "#bff5ff" },
+  supremo:  { hi: "#f1ffd6", mid: "#88ef1b", lo: "#006b00", edge: "#022402", glow: "#88ef1b", gem: "#eaffc0" },
+};
+const SHIELD = "M60 22 L94 32 V66 C94 92 78 108 60 116 C42 108 26 92 26 66 V32 Z";
+const SHIELD_IN = "M60 30 L87 38 V66 C87 87 74 100 60 107 C46 100 33 87 33 66 V38 Z";
+
+function sword(rot, c, id) {
+  return `<g transform="rotate(${rot} 60 70)">
+    <path d="M57.5 0 L62.5 0 L63 84 L60 90 L57 84 Z" fill="url(#bl${id})" stroke="${c.edge}" stroke-width="1"/>
+    <rect x="48" y="84" width="24" height="5" rx="2" fill="url(#m${id})" stroke="${c.edge}" stroke-width="1"/>
+    <rect x="57.5" y="89" width="5" height="16" rx="2" fill="${c.edge}"/>
+    <circle cx="60" cy="108" r="4" fill="url(#m${id})" stroke="${c.edge}" stroke-width="1"/></g>`;
+}
+function wing(c, id, big) {
+  const s = big ? 1.25 : 1;
+  const f = (d) => `<path d="${d}" fill="url(#w${id})" stroke="${c.edge}" stroke-width="1" stroke-linejoin="round"/>`;
+  const w = f("M30 44 C14 40 4 30 0 16 C10 24 20 26 30 28 Z") +
+            f("M30 56 C12 54 0 46 -6 32 C6 40 18 42 30 42 Z") +
+            f("M30 68 C14 70 2 64 -4 52 C8 58 20 58 30 56 Z") +
+            (big ? f("M30 80 C16 84 4 80 -2 70 C10 74 20 74 30 70 Z") : "");
+  return `<g transform="translate(30 60) scale(${s}) translate(-30 -60)">${w}</g>
+          <g transform="translate(120 0) scale(-1 1) translate(30 60) scale(${s}) translate(-30 -60)">${w}</g>`;
+}
+function laurel(c) {
+  let out = "";
+  for (let side of [-1, 1]) for (let i = 0; i < 7; i++) {
+    const a = (200 + i * 19) * Math.PI / 180, r = 46;
+    const x = 60 + side * Math.cos(a) * -r, y = 74 - Math.sin(a) * -r * 0.98;
+    out += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="3.4" ry="8" fill="#3fae2a" stroke="#123d0b" stroke-width=".8"
+      transform="rotate(${(side * (i * 19 - 30)).toFixed(0)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+  }
+  return out;
+}
+function crown(c, id, y = 6, s = 1) {
+  return `<g transform="translate(60 ${y}) scale(${s}) translate(-60 0)">
+    <path d="M42 26 L39 6 L50 15 L60 0 L70 15 L81 6 L78 26 Z" fill="url(#m${id})" stroke="${c.edge}" stroke-width="1.4" stroke-linejoin="round"/>
+    <circle cx="60" cy="18" r="3" fill="${c.gem || '#ff4d5e'}"/><circle cx="39" cy="6" r="2.2" fill="url(#m${id})"/><circle cx="60" cy="0" r="2.4" fill="url(#m${id})"/><circle cx="81" cy="6" r="2.2" fill="url(#m${id})"/></g>`;
+}
+function flames(id) {
+  return `<path d="M60 -4 C70 10 64 16 74 24 C80 12 78 4 88 0 C86 14 96 22 92 36 L28 36 C24 22 34 14 32 0 C42 4 40 12 46 24 C56 16 50 10 60 -4 Z"
+    fill="url(#fl${id})" opacity=".95"/>`;
+}
+function emblem(t, c, id) {
+  if (t === "bronze") return `<polygon points="60,46 65,60 80,60 68,69 72,84 60,75 48,84 52,69 40,60 55,60" fill="url(#m${id})" stroke="${c.edge}" stroke-width="1.4"/>`;
+  if (t === "prata") return `<g transform="translate(0 4)"><path d="M58 42 L62 42 L62.5 82 L60 86 L57.5 82 Z" fill="url(#bl${id})" stroke="${c.edge}"/><rect x="50" y="78" width="20" height="4" rx="2" fill="url(#m${id})" stroke="${c.edge}"/><path d="M44 62 L60 52 L76 62 L60 72 Z" fill="none" stroke="${c.edge}" stroke-width="2"/></g>`;
+  if (t === "ouro") return crown(c, id, 52, .9) + `<path d="M46 86 H74" stroke="${c.edge}" stroke-width="2"/>`;
+  const gem = c.gem;
+  return `<g filter="url(#gl${id})"><path d="M60 46 L76 60 L60 90 L44 60 Z" fill="${gem}" stroke="${c.edge}" stroke-width="1.4"/>
+    <path d="M44 60 H76 M52 60 L60 46 L68 60 L60 90 M52 60 L60 90" stroke="${c.edge}" stroke-width=".8" fill="none" opacity=".6"/>
+    <path d="M60 46 L68 60 L60 60 Z" fill="#fff" opacity=".55"/></g>`;
+}
+let n = 0;
+function medal(t) {
+  const c = TIERS[t], id = ++n;
+  const lvl = ["bronze", "prata", "ouro", "diamante", "supremo"].indexOf(t);
+  const defs = `<defs>
+    <linearGradient id="m${id}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${c.hi}"/><stop offset=".45" stop-color="${c.mid}"/><stop offset="1" stop-color="${c.lo}"/></linearGradient>
+    <linearGradient id="in${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.lo}"/><stop offset="1" stop-color="${c.edge}"/></linearGradient>
+    <linearGradient id="bl${id}" x1="0" x2="1"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#cfd6dc"/><stop offset="1" stop-color="#6b737b"/></linearGradient>
+    <linearGradient id="w${id}" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.hi}"/><stop offset="1" stop-color="${c.mid}"/></linearGradient>
+    <linearGradient id="fl${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#00b000"/><stop offset=".6" stop-color="#88ef1b"/><stop offset="1" stop-color="#eaffc0" stop-opacity=".2"/></linearGradient>
+    <linearGradient id="rb${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1c241c"/><stop offset="1" stop-color="#0a0d0a"/></linearGradient>
+    <filter id="gl${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>`;
+  let back = "";
+  if (t === "supremo") back += flames(id);
+  if (lvl >= 3) back += wing(c, id, t === "supremo");
+  if (lvl >= 2) back += laurel(c);
+  if (lvl === 0 || lvl >= 2) back += sword(-38, c, id) + sword(38, c, id);
+  if (lvl === 1) back += wing(c, id, false);
+  const shield = `
+    <path d="${SHIELD}" fill="url(#m${id})" stroke="${c.edge}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="${SHIELD_IN}" fill="url(#in${id})" stroke="${c.hi}" stroke-opacity=".55" stroke-width="1.2"/>
+    <path d="M36 40 L60 33 L60 70 C50 64 40 56 36 40 Z" fill="#fff" opacity=".08"/>
+    ${[0,1,2,3].slice(0, lvl + 1).map(i => `<circle cx="${60 - lvl * 4.5 + i * 9}" cy="40" r="2" fill="${c.hi}" opacity=".9"/>`).join("")}`;
+  const top = lvl >= 3 ? crown(c, id, t === "supremo" ? 2 : 6, t === "supremo" ? 1.05 : .8) : "";
+  const label = t.toUpperCase();
+  const ribbon = `<g><path d="M24 112 H96 L90 121 L96 130 H24 L30 121 Z" fill="url(#rb${id})" stroke="${c.mid}" stroke-width="1.3"/>
+    <text x="60" y="124.5" text-anchor="middle" font-family="Geist Mono, monospace" font-size="8.5" font-weight="600" letter-spacing="1.6" fill="${c.hi}">${label}</text></g>`;
+  return defs + `<g style="filter: drop-shadow(0 0 ${4 + lvl * 2}px ${c.glow}66)">${back}${shield}${emblem(t, c, id)}${top}</g>` + ribbon;
+}
+document.querySelectorAll("svg[data-medal]").forEach(s => { s.innerHTML = medal(s.dataset.medal); s.setAttribute("overflow", "visible"); });
+</script>
+</body>
+</html>
