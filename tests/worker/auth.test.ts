@@ -100,6 +100,76 @@ describe("accessGuard", () => {
       expect(res.status).toBe(401);
     });
   });
+
+  describe("chave de serviço (sincronização do Financeiro)", () => {
+    const CLIENT_ID = "abc123.access";
+    const withSync = { ...base, SYNC_CLIENT_ID: CLIENT_ID } as unknown as Env;
+
+    async function setup() {
+      const { publicKey, privateKey } = await generateKeyPair("RS256");
+      const jwk = { ...(await exportJWK(publicKey)), kid: "k1", alg: "RS256", use: "sig" };
+      const jwks = createLocalJWKSet({ keys: [jwk] });
+      const sign = (claims: Record<string, unknown>, sub?: string) => {
+        const t = new SignJWT(claims)
+          .setProtectedHeader({ alg: "RS256", kid: "k1" })
+          .setIssuer(`https://${base.ACCESS_TEAM_DOMAIN}`)
+          .setAudience("aud123")
+          .setExpirationTime("5m");
+        if (sub !== undefined) t.setSubject(sub);
+        return t.sign(privateKey);
+      };
+      // Carga do JWT de chave de serviço: sem email, sub vazio, common_name = Client ID.
+      const service = (commonName = CLIENT_ID) => sign({ common_name: commonName, type: "app" }, "");
+      const user = () => sign({ email: "a@b.c", type: "app" }, "user-123");
+      const a = new Hono<{ Bindings: Env }>();
+      a.use("/api/*", accessGuard({ getJwks: () => jwks }));
+      a.post("/api/finance/sync", (c) => c.json({ ok: true }));
+      a.get("/api/finance", (c) => c.json({ ok: true }));
+      a.get("/api/x", (c) => c.json({ ok: true }));
+      const req = async (method: string, path: string, token: string, env: Env = withSync) =>
+        a.request(`https://agenda.test${path}`, { method, headers: { "Cf-Access-Jwt-Assertion": token } }, env);
+      return { req, service, user };
+    }
+
+    it("common_name certo na rota de sync: 200", async () => {
+      const { req, service } = await setup();
+      expect((await req("POST", "/api/finance/sync", await service())).status).toBe(200);
+    });
+
+    it("chave certa fora da rota de sync: 403", async () => {
+      const { req, service } = await setup();
+      const token = await service();
+      for (const [method, path] of [["GET", "/api/finance"], ["GET", "/api/x"], ["GET", "/api/finance/sync"]]) {
+        const res = await req(method, path, token);
+        expect(res.status).toBe(403);
+        expect(await res.json()).toEqual({ error: "Acesso não permitido." });
+      }
+    });
+
+    it("common_name errado ou SYNC_CLIENT_ID ausente: 403", async () => {
+      const { req, service } = await setup();
+      expect((await req("POST", "/api/finance/sync", await service("outro.access"))).status).toBe(403);
+      expect((await req("POST", "/api/finance/sync", await service(), prod)).status).toBe(403);
+    });
+
+    it("JWT de usuário no sync: 403; nas outras rotas continua 200", async () => {
+      const { req, user } = await setup();
+      const token = await user();
+      expect((await req("POST", "/api/finance/sync", token)).status).toBe(403);
+      expect((await req("GET", "/api/finance", token)).status).toBe(200);
+      expect((await req("GET", "/api/x", token)).status).toBe(200);
+    });
+
+    it("DEV em localhost libera o sync sem JWT", async () => {
+      const res = await app.request(
+        "http://localhost/api/finance/sync",
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
+        { DEV: "true" } as unknown as Env,
+      );
+      // Passou da autenticação: o corpo vazio cai na validação.
+      expect(res.status).toBe(400);
+    });
+  });
 });
 
 describe("sameOrigin", () => {

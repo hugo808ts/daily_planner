@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-11-09T08:30-03:00",
+  "contas": [
+    { "nome": "Banco A corrente", "instituicao": "Banco A", "tipo": "corrente", "saldo": 234567 },
+    { "nome": "Banco B caixinha", "instituicao": "Banco B", "tipo": "reserva", "saldo": 800000 },
+    { "nome": "Carteira", "instituicao": "Dinheiro", "tipo": "carteira", "saldo": 12000 }
+  ],
+  "cartoes": [
+    { "nome": "Banco B crédito", "limite": 500000, "usado": 183045, "disponivel": 316955, "meta": 150000, "faturaAtual": 123045, "faturaMes": "2026-11", "fechamento": 3, "vencimento": 10 },
+    { "nome": "Banco A crédito", "limite": 300000, "usado": 42000, "disponivel": 258000, "meta": null, "faturaAtual": 42000, "faturaMes": "2026-12", "fechamento": 25, "vencimento": 5 }
+  ],
+  "contasFixas": [
+    { "descricao": "Aluguel", "valor": 120000, "dia": 5, "forma": "pix", "ativa": true },
+    { "descricao": "Streaming", "valor": 3990, "dia": 9, "forma": "cartao", "ativa": true },
+    { "descricao": "Academia", "valor": 9990, "dia": 10, "forma": "cartao", "ativa": true },
+    { "descricao": "Internet", "valor": 10990, "dia": 15, "forma": "boleto", "ativa": true },
+    { "descricao": "Celular", "valor": 4999, "dia": 20, "forma": "debito", "ativa": true },
+    { "descricao": "Revista antiga", "valor": 1990, "dia": 12, "forma": "cartao", "ativa": false }
+  ],
+  "investimentos": [
+    { "codigo": "KNSC11", "classe": "fii", "onde": "Corretora X", "quantidade": 120, "custo": 108000, "rendimentos": 5280, "cotacao": 912, "dataCotacao": "2026-11-08" },
+    { "codigo": "IVVB11", "classe": "etf", "onde": "Corretora X", "quantidade": 5, "custo": 165000, "rendimentos": 0, "cotacao": 35210, "dataCotacao": "2026-11-08" },
+    { "codigo": "TESOURO SELIC 2029", "classe": "tesouro", "onde": "Corretora X", "quantidade": 0.35, "custo": 520000, "rendimentos": 0, "cotacao": null, "dataCotacao": null },
+    { "codigo": "CDB 110% CDI", "classe": "renda_fixa", "onde": "Banco B", "quantidade": 0, "custo": 300000, "rendimentos": 0, "cotacao": null, "dataCotacao": null }
+  ],
+  "movimentacoes": [
+    { "id": 33, "data": "2026-11-09", "descricao": "Transferência para caixinha", "valor": 50000, "tipo": "transferencia", "categoria": null, "onde": "Banco A corrente", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 32, "data": "2026-11-09", "descricao": "Streaming", "valor": 3990, "tipo": "gasto", "categoria": "Assinaturas", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 31, "data": "2026-11-08", "descricao": "Padaria", "valor": 1850, "tipo": "gasto", "categoria": "Alimentação", "onde": "Carteira", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 30, "data": "2026-11-08", "descricao": "Pix recebido", "valor": 15000, "tipo": "receita", "categoria": "Pix recebido", "onde": "Banco A corrente", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 29, "data": "2026-11-07", "descricao": "Tênis", "valor": 15980, "tipo": "gasto", "categoria": "Compras", "onde": "Banco B crédito", "parcelaNum": 2, "parcelaTotal": 5 },
+    { "id": 28, "data": "2026-11-06", "descricao": "Cinema", "valor": 6400, "tipo": "gasto", "categoria": "Lazer", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 27, "data": "2026-11-05", "descricao": "Aporte KNSC11", "valor": 30000, "tipo": "aporte", "categoria": null, "onde": "Banco A corrente", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 26, "data": "2026-11-05", "descricao": "Aluguel", "valor": 120000, "tipo": "gasto", "categoria": "Moradia", "onde": "Banco A corrente", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 25, "data": "2026-11-04", "descricao": "Farmácia", "valor": 6735, "tipo": "gasto", "categoria": "Saúde", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 24, "data": "2026-11-03", "descricao": "iFood", "valor": 5480, "tipo": "gasto", "categoria": "Alimentação", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 23, "data": "2026-11-02", "descricao": "Uber", "valor": 2390, "tipo": "gasto", "categoria": "Transporte", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 22, "data": "2026-11-01", "descricao": "Mercado", "valor": 28743, "tipo": "gasto", "categoria": "Alimentação", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 21, "data": "2026-11-01", "descricao": "Salário", "valor": 450000, "tipo": "receita", "categoria": "Salário", "onde": "Banco A corrente", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 12, "data": "2026-10-28", "descricao": "Estorno de compra", "valor": 3500, "tipo": "estorno", "categoria": "Compras", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 11, "data": "2026-10-25", "descricao": "Pagamento fatura", "valor": 98000, "tipo": "pagamento_fatura", "categoria": null, "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 10, "data": "2026-10-22", "descricao": "iFood", "valor": 7240, "tipo": "gasto", "categoria": "Alimentação", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 9, "data": "2026-10-20", "descricao": "Celular", "valor": 4999, "tipo": "gasto", "categoria": "Contas fixas", "onde": "Banco A corrente", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 8, "data": "2026-10-18", "descricao": "Bar", "valor": 8800, "tipo": "gasto", "categoria": "Lazer", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 7, "data": "2026-10-15", "descricao": "Internet", "valor": 10990, "tipo": "gasto", "categoria": "Contas fixas", "onde": "Banco A corrente", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 6, "data": "2026-10-12", "descricao": "Uber", "valor": 4560, "tipo": "gasto", "categoria": "Transporte", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 5, "data": "2026-10-10", "descricao": "Academia", "valor": 9990, "tipo": "gasto", "categoria": "Saúde", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 4, "data": "2026-10-07", "descricao": "Tênis", "valor": 15980, "tipo": "gasto", "categoria": "Compras", "onde": "Banco B crédito", "parcelaNum": 1, "parcelaTotal": 5 },
+    { "id": 3, "data": "2026-10-05", "descricao": "Aluguel", "valor": 120000, "tipo": "gasto", "categoria": "Moradia", "onde": "Banco A corrente", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 2, "data": "2026-10-02", "descricao": "Mercado", "valor": 41210, "tipo": "gasto", "categoria": "Alimentação", "onde": "Banco B crédito", "parcelaNum": null, "parcelaTotal": null },
+    { "id": 1, "data": "2026-10-01", "descricao": "Salário", "valor": 450000, "tipo": "receita", "categoria": "Salário", "onde": "Banco A corrente", "parcelaNum": null, "parcelaTotal": null }
+  ]
+}

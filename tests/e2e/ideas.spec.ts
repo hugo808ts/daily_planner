@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { addDays, todayISO, weekDays, weekStart } from "../../shared/dates";
 import { shortDay } from "../../src/lib/format";
+import { openSection } from "./nav";
 
 // Servidor com DEV=true e D1 local isolado. Os outros arquivos E2E também criam pastas,
 // então este começa apagando todas para ver a tela de primeira visita.
@@ -20,7 +21,7 @@ async function clearFolders(request: APIRequestContext) {
 
 const openIdeas = async (page: Page) => {
   await page.goto("/");
-  await page.getByRole("navigation", { name: "Seções" }).getByRole("button", { name: "Ideias" }).click();
+  await openSection(page, "Ideias");
 };
 const cards = (page: Page) => page.getByRole("list", { name: "Ideias da pasta" }).getByRole("listitem");
 const card = (page: Page, title: string) => cards(page).filter({ hasText: title });
@@ -99,7 +100,7 @@ test("ideias: link, fixar, autosalvar, resolver e desfazer", async ({ page, requ
     await expect(saveState(page)).toHaveText("Salvando…");
     await expect(saveState(page)).toHaveText("Salvo");
     await page.reload();
-    await page.getByRole("navigation", { name: "Seções" }).getByRole("button", { name: "Ideias" }).click();
+    await openSection(page, "Ideias");
     await page.getByRole("button", { name: "Abrir pasta Vídeos TikTok" }).click();
     await card(page, "Receita de marmita da semana").getByRole("button", { name: /Receita de marmita/ }).click();
     await expect(page.getByLabel("Texto")).toHaveValue("Frango, arroz integral e legumes. Fazer no domingo.");
@@ -185,7 +186,10 @@ test("Virar tarefa abre a confirmação, salva no dia escolhido e mantém a idei
   const task = week.tasks.find((t: { title: string }) => t.title === "Fórmula de Bhaskara");
   expect(task).toMatchObject({ date: OTHER });
 
-  await page.getByRole("navigation", { name: "Seções" }).getByRole("button", { name: "Hoje" }).click();
+  // O ☰ fica no topo das Ideias: volta do editor para as pastas antes de trocar de tela.
+  await page.getByRole("button", { name: "Voltar para Estudos" }).click();
+  await page.getByRole("button", { name: "Voltar para Ideias" }).click();
+  await openSection(page, "Tarefas do dia");
   await page
     .getByRole("navigation", { name: "Dias da semana" })
     .getByRole("button", { name: new RegExp(shortDay(OTHER).replace(" ", ".*")) })

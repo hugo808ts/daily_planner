@@ -1,4 +1,24 @@
+import type { FinanceResponse } from "../../shared/finance";
 import type { Area, CaptureResult, DayNote, Folder, Idea, Task, WeekReport } from "../../shared/types";
+import type {
+  SessionSummary,
+  SessionView,
+  SetResult,
+  WorkoutExercise,
+  WorkoutExerciseCreate,
+  WorkoutExercisePatch,
+  WorkoutPlanDay,
+  WorkoutPlanPut,
+  WorkoutReportResponse,
+  WorkoutSetCreate,
+  WorkoutSetPatch,
+  WorkoutSettings,
+  WorkoutSettingsPatch,
+  WorkoutTemplate,
+  WorkoutTemplateCreate,
+  WorkoutTemplatePatch,
+  WorkoutWeekView,
+} from "../../shared/workout";
 import type { Difficulty, MedalTier } from "../../shared/xp";
 
 export class ApiError extends Error {
@@ -132,6 +152,10 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return data as T;
 }
 
+const enc = encodeURIComponent;
+const tpl = (id: string) => `/api/workout/templates/${enc(id)}`;
+const sess = (id: string) => `/api/workout/sessions/${enc(id)}`;
+
 const json = (method: string, path: string, body?: unknown) => request<Record<string, unknown>>(method, path, body);
 
 export const api = {
@@ -168,6 +192,54 @@ export const api = {
   /** Devolve o registro apagado, para o Desfazer. */
   deleteIdea: async (id: string) => (await json("DELETE", `/api/ideas/${encodeURIComponent(id)}`)).idea as Idea,
   restoreIdea: async (idea: Idea) => (await json("POST", "/api/ideas/restore", { idea })).idea as Idea,
+  /** Painel financeiro do mês (AAAA-MM); sem mês, o servidor usa o mês atual. */
+  finance: (month?: string) =>
+    request<FinanceResponse>("GET", month ? `/api/finance?month=${encodeURIComponent(month)}` : "/api/finance"),
   searchIdeas: async (q: string) =>
     (await json("GET", `/api/ideas/search?q=${encodeURIComponent(q)}`)).ideas as FoundIdea[],
+
+  // ===== Treino (worker/routes/workout.ts) =====
+  /** Semana de treino: plano, status dos dias, treino de hoje, sessão aberta, sequência e brasão. */
+  workoutWeek: () => request<WorkoutWeekView>("GET", "/api/workout"),
+  createWorkoutTemplate: async (input: WorkoutTemplateCreate) =>
+    (await json("POST", "/api/workout/templates", input)).template as WorkoutTemplate,
+  updateWorkoutTemplate: async (id: string, patch: WorkoutTemplatePatch) =>
+    (await json("PATCH", tpl(id), patch)).template as WorkoutTemplate,
+  /** Os dias que apontavam para ele viram folga. */
+  deleteWorkoutTemplate: async (id: string) => {
+    await json("DELETE", tpl(id));
+  },
+  /** 409 com `fields.name` se o treino já tem esse exercício. */
+  createWorkoutExercise: async (templateId: string, input: WorkoutExerciseCreate) =>
+    (await json("POST", `${tpl(templateId)}/exercises`, input)).exercise as WorkoutExercise,
+  updateWorkoutExercise: async (templateId: string, id: string, patch: WorkoutExercisePatch) =>
+    (await json("PATCH", `${tpl(templateId)}/exercises/${enc(id)}`, patch)).exercise as WorkoutExercise,
+  deleteWorkoutExercise: async (templateId: string, id: string) => {
+    await json("DELETE", `${tpl(templateId)}/exercises/${enc(id)}`);
+  },
+  /** `ids` = todos os exercícios do treino, na nova ordem. */
+  reorderWorkoutExercises: async (templateId: string, ids: string[]) =>
+    (await json("PATCH", `${tpl(templateId)}/exercises/order`, { ids })).template as WorkoutTemplate,
+  saveWorkoutPlan: (input: WorkoutPlanPut) =>
+    request<{ plan: WorkoutPlanDay[]; settings: WorkoutSettings }>("PUT", "/api/workout/plan", input),
+  updateWorkoutSettings: async (patch: WorkoutSettingsPatch) =>
+    (await json("PATCH", "/api/workout/settings", patch)).settings as WorkoutSettings,
+  /** Abre o treino ao vivo (201). 409 se já houver um em andamento. */
+  startWorkoutSession: async (templateId: string) =>
+    (await json("POST", "/api/workout/sessions", { templateId })).session as SessionView,
+  workoutSession: async (id: string) => (await json("GET", sess(id))).session as SessionView,
+  /** Descarta a sessão (e as séries dela). */
+  discardWorkoutSession: async (id: string) => {
+    await json("DELETE", sess(id));
+  },
+  finishWorkoutSession: async (id: string) => (await json("POST", `${sess(id)}/finish`)).summary as SessionSummary,
+  /** Grava uma série; repetir o mesmo exercício+série substitui. */
+  logWorkoutSet: (sessionId: string, input: WorkoutSetCreate) => request<SetResult>("POST", `${sess(sessionId)}/sets`, input),
+  updateWorkoutSet: (sessionId: string, setId: string, patch: WorkoutSetPatch) =>
+    request<SetResult>("PATCH", `${sess(sessionId)}/sets/${enc(setId)}`, patch),
+  deleteWorkoutSet: (sessionId: string, setId: string) =>
+    request<{ id: string; sessionXp: number }>("DELETE", `${sess(sessionId)}/sets/${enc(setId)}`),
+  /** Relatório semana × semana (week = qualquer dia da semana; sem ela, a semana atual). */
+  workoutReport: (week?: string) =>
+    request<WorkoutReportResponse>("GET", week ? `/api/workout/report?week=${enc(week)}` : "/api/workout/report"),
 };

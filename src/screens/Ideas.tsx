@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { todayISO } from "../../shared/dates";
 import type { Folder, Idea, Task } from "../../shared/types";
 import { ConfirmSheet, type SavedItem } from "../components/ConfirmSheet";
@@ -21,6 +21,8 @@ interface Props {
   onTaskSaved?: (task: Task) => void;
   /** Computador: pastas | lista | editor lado a lado, cada coluna com rolagem própria. */
   wide?: boolean;
+  /** Botão ☰ do menu lateral (celular), no topo da lista de pastas. */
+  menu?: ReactNode;
 }
 
 const MOBILE_PAD = {
@@ -51,7 +53,7 @@ type Editing = { key: string; idea: Idea | null };
  * Ideias. No celular, uma tela por vez (pastas → lista → editor), escolhida pelo estado
  * `folderId` / `editing`; no computador as três podem ficar lado a lado com o mesmo estado.
  */
-export function Ideas({ captured, onTaskSaved, wide = false }: Props) {
+export function Ideas({ captured, onTaskSaved, wide = false, menu }: Props) {
   const now = useNow(60_000);
   const { folders, error: foldersError, reload: reloadFolders, setFolders } = useFolders();
   const [folderId, setFolderId] = useState<string | null>(null);
@@ -294,7 +296,12 @@ export function Ideas({ captured, onTaskSaved, wide = false }: Props) {
           <div role="status" aria-label="Carregando" className="h-40" />
         )
       ) : (
-        grid
+        <>
+          {menu && (
+            <div className="mb-1 flex min-h-11 items-center">{menu}</div>
+          )}
+          {grid}
+        </>
       )}
 
       {sheet}

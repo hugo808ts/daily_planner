@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsUp,
+  CircleQuestionMark,
   Clock,
   Ellipsis,
   Equal,
@@ -23,12 +24,15 @@ import {
   Lightbulb,
   Link,
   LoaderCircle,
+  Menu,
   Mic,
   Pencil,
   Pin,
   PinOff,
   Plus,
   Search,
+  Settings,
+  Shield,
   Sparkles,
   Square,
   Star,
@@ -37,6 +41,35 @@ import {
   Trophy,
   Undo2,
   Video,
+  Wallet,
+  ArrowDownLeft,
+  ArrowLeftRight,
+  Banknote,
+  Bus,
+  CircleDollarSign,
+  Clapperboard,
+  CreditCard,
+  Dumbbell,
+  Eye,
+  Flame,
+  Timer,
+  ChevronDown,
+  ChevronUp,
+  Minus,
+  Play,
+  EyeOff,
+  GraduationCap,
+  HeartPulse,
+  House,
+  PiggyBank,
+  Receipt,
+  Repeat,
+  RotateCcw,
+  ShoppingBag,
+  ShoppingCart,
+  SlidersHorizontal,
+  TrendingUp,
+  UtensilsCrossed,
   X,
 } from "lucide-react";
 
@@ -80,6 +113,20 @@ export const ChevronRightIcon = make(ChevronRight, "ChevronRightIcon");
 export const ArrowRightIcon = make(ArrowRight, "ArrowRightIcon");
 export const CloseIcon = make(X, "CloseIcon");
 export const MoreIcon = make(Ellipsis, "MoreIcon");
+export const MenuIcon = make(Menu, "MenuIcon");
+export const WalletIcon = make(Wallet, "WalletIcon");
+export const SettingsIcon = make(Settings, "SettingsIcon");
+export const HelpIcon = make(CircleQuestionMark, "HelpIcon");
+export const ShieldIcon = make(Shield, "ShieldIcon");
+export const DumbbellIcon = make(Dumbbell, "DumbbellIcon");
+
+// Treino (descanso e sequência de semanas)
+export const TimerIcon = make(Timer, "TimerIcon");
+export const FlameIcon = make(Flame, "FlameIcon");
+export const PlayIcon = make(Play, "PlayIcon");
+export const MinusIcon = make(Minus, "MinusIcon");
+export const ChevronUpIcon = make(ChevronUp, "ChevronUpIcon");
+export const ChevronDownIcon = make(ChevronDown, "ChevronDownIcon");
 
 // Captura
 export const MicIcon = make(Mic, "MicIcon");
@@ -122,3 +169,26 @@ export const TrophyIcon = make(Trophy, "TrophyIcon");
 export const StarIcon = make(Star, "StarIcon");
 export const SparklesIcon = make(Sparkles, "SparklesIcon");
 export const ChevronsUpIcon = make(ChevronsUp, "ChevronsUpIcon");
+
+// Financeiro (olho e categorias das movimentações; o mapa categoria → ícone mora em Finance.tsx)
+export const EyeIcon = make(Eye, "EyeIcon");
+export const EyeOffIcon = make(EyeOff, "EyeOffIcon");
+export const UtensilsIcon = make(UtensilsCrossed, "UtensilsIcon");
+export const CartIcon = make(ShoppingCart, "CartIcon");
+export const HouseIcon = make(House, "HouseIcon");
+export const BusIcon = make(Bus, "BusIcon");
+export const HealthIcon = make(HeartPulse, "HealthIcon");
+export const LeisureIcon = make(Clapperboard, "LeisureIcon");
+export const ShoppingBagIcon = make(ShoppingBag, "ShoppingBagIcon");
+export const SubscriptionIcon = make(Repeat, "SubscriptionIcon");
+export const EducationIcon = make(GraduationCap, "EducationIcon");
+export const ReceiptIcon = make(Receipt, "ReceiptIcon");
+export const BanknoteIcon = make(Banknote, "BanknoteIcon");
+export const IncomeIcon = make(ArrowDownLeft, "IncomeIcon");
+export const PiggyBankIcon = make(PiggyBank, "PiggyBankIcon");
+export const TransferIcon = make(ArrowLeftRight, "TransferIcon");
+export const CreditCardIcon = make(CreditCard, "CreditCardIcon");
+export const RefundIcon = make(RotateCcw, "RefundIcon");
+export const AdjustIcon = make(SlidersHorizontal, "AdjustIcon");
+export const InvestIcon = make(TrendingUp, "InvestIcon");
+export const MoneyIcon = make(CircleDollarSign, "MoneyIcon");

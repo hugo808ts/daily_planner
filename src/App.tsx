@@ -1,27 +1,38 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { addDays, isSunday, todayISO, weekStart } from "../shared/dates";
 import type { Idea, Task } from "../shared/types";
 import { CaptureBar } from "./components/CaptureBar";
+import { NavDrawer, type Section } from "./components/NavDrawer";
 import { Toast } from "./components/Toast";
 import { ProgressPill } from "./components/game/ProgressPill";
-import { CalendarIcon, CheckIcon, LightbulbIcon, type IconComponent } from "./components/ui/Icon";
+import { IconButton } from "./components/ui/Button";
+import { CalendarIcon, CheckIcon, DumbbellIcon, LightbulbIcon, MenuIcon, type IconComponent } from "./components/ui/Icon";
+import { api } from "./lib/api";
 import { useProgress } from "./lib/useProgress";
 import { useWide } from "./lib/useWide";
+import { Finance } from "./screens/Finance";
 import { Ideas } from "./screens/Ideas";
 import { MedalReveal } from "./screens/MedalReveal";
 import { Report } from "./screens/Report";
 import { Today } from "./screens/Today";
+import { Workout } from "./screens/Workout";
 
-type Tab = "today" | "ideas";
+type Tab = Section;
 
-const TABS: { id: Tab; label: string; hash: string; Icon: IconComponent }[] = [
-  { id: "today", label: "Hoje", hash: "hoje", Icon: CalendarIcon },
-  { id: "ideas", label: "Ideias", hash: "ideias", Icon: LightbulbIcon },
+/** Hash de cada tela (#hoje / #ideias / #treino / #financeiro). Hash desconhecido cai no Hoje. */
+const HASH: Record<Tab, string> = { today: "hoje", ideas: "ideias", workout: "treino", finance: "financeiro" };
+
+/** Barra de baixo no celular; o resto (Financeiro, Quadro da semana…) fica no ☰. */
+const TABS: { id: Tab; label: string; Icon: IconComponent }[] = [
+  { id: "today", label: "Hoje", Icon: CalendarIcon },
+  { id: "ideas", label: "Ideias", Icon: LightbulbIcon },
+  { id: "workout", label: "Treino", Icon: DumbbellIcon },
 ];
+const TAB_BY_HASH = new Map(Object.entries(HASH).map(([tab, hash]) => [`#${hash}`, tab as Tab]));
 
-const tabFromHash = (): Tab => (window.location.hash === "#ideias" ? "ideas" : "today");
+const tabFromHash = (): Tab => TAB_BY_HASH.get(window.location.hash) ?? "today";
 
-/** Aba atual refletida no hash (#hoje / #ideias): o botão Voltar do navegador troca de aba. */
+/** Tela atual refletida no hash: o botão Voltar do navegador troca de tela. */
 function useHashTab(): [Tab, (t: Tab) => void] {
   const [tab, setTabState] = useState<Tab>(tabFromHash);
   useEffect(() => {
@@ -30,10 +41,22 @@ function useHashTab(): [Tab, (t: Tab) => void] {
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
   const setTab = (t: Tab) => {
-    if (t !== tab) window.location.hash = TABS.find((x) => x.id === t)!.hash;
+    if (t === tab) return;
+    setTabState(t); // já neste render: o foco do menu volta ao ☰ da tela nova
+    window.location.hash = HASH[t];
   };
   return [tab, setTab];
 }
+
+/** Selo NOVO do Financeiro some depois da primeira visita (conveniência deste aparelho). */
+const FINANCE_SEEN = "agenda:finance-seen";
+const readFinanceSeen = () => {
+  try {
+    return localStorage.getItem(FINANCE_SEEN) === "1";
+  } catch {
+    return false;
+  }
+};
 
 const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
@@ -81,6 +104,75 @@ export default function App() {
     else setReportStart(start);
   };
 
+  // ===== Menu lateral =====
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [todayCount, setTodayCount] = useState<string | null>(null);
+  const [financeNew, setFinanceNew] = useState(() => !readFinanceSeen());
+  /** Quem abriu o menu (o ☰ desta tela), para o foco voltar a ele. */
+  const opener = useRef<HTMLElement | null>(null);
+  const wasOpen = useRef(false);
+
+  const openMenu = (e: MouseEvent<HTMLButtonElement>) => {
+    opener.current = e.currentTarget;
+    setMenuOpen(true);
+    // "N/M" das tarefas de hoje; é um extra, então falha em silêncio.
+    const today = todayISO();
+    api
+      .week(weekStart(today))
+      .then(({ tasks }) => {
+        const mine = tasks.filter((t) => t.date === today);
+        setTodayCount(mine.length ? `${mine.filter((t) => t.doneAt).length}/${mine.length}` : null);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    if (menuOpen) {
+      wasOpen.current = true;
+      return;
+    }
+    if (!wasOpen.current) return;
+    wasOpen.current = false;
+    // Outro diálogo abriu no lugar (Quadro da semana): ele cuida do foco.
+    if (document.querySelector("dialog[open]")) return;
+    const back = opener.current?.isConnected ? opener.current : document.querySelector<HTMLElement>("[data-menu-button]");
+    back?.focus();
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (tab !== "finance" || !financeNew) return;
+    setFinanceNew(false);
+    try {
+      localStorage.setItem(FINANCE_SEEN, "1");
+    } catch {
+      /* sem armazenamento: o selo volta na próxima visita */
+    }
+  }, [tab, financeNew]);
+
+  const menuButton = (
+    <IconButton
+      label="Abrir menu"
+      data-menu-button
+      variant="secondary"
+      aria-haspopup="dialog"
+      aria-expanded={menuOpen}
+      icon={<MenuIcon size={22} strokeWidth={2.2} className="drop-shadow-[0_0_4px_rgb(136_239_27/0.35)]" />}
+      onClick={openMenu}
+    />
+  );
+
+  const drawer = menuOpen && (
+    <NavDrawer
+      current={tab}
+      progress={progress}
+      todayCount={todayCount}
+      financeNew={financeNew}
+      onNavigate={setTab}
+      onOpenWeek={() => setReportStart(weekStart(todayISO()))}
+      onClose={() => setMenuOpen(false)}
+    />
+  );
+
   const reveal = revealStart && (
     <MedalReveal
       start={revealStart}
@@ -92,12 +184,17 @@ export default function App() {
     />
   );
 
+  const report = reportStart && (
+    <Report start={reportStart} onClose={() => setReportStart(null)} onMoved={() => setTodayKey((k) => k + 1)} />
+  );
+
   if (wide) {
-    // Computador: barra no topo; o dia fixo à esquerda (com a captura embaixo) e as Ideias no resto.
+    // Computador: barra no topo; o dia fixo à esquerda (com a captura embaixo) e Ideias, Treino ou Financeiro no resto.
     return (
       <div className="safe-x grid h-dvh grid-rows-[52px_minmax(0,1fr)] overflow-hidden">
         <SkipLink />
-        <header className="flex items-center gap-3 glass-quiet rounded-none border-x-0 border-t-0 px-5">
+        <header className="flex items-center gap-3 glass-quiet rounded-none border-x-0 border-t-0 pr-5 pl-2">
+          {menuButton}
           <span aria-hidden className="grid size-[26px] place-items-center rounded-lg fill-neon">
             <CheckIcon size={15} strokeWidth={2.6} />
           </span>
@@ -118,12 +215,17 @@ export default function App() {
             <CaptureBar inline onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />
           </aside>
           <main id="conteudo" tabIndex={-1} className="min-h-0 min-w-0 overflow-hidden focus:outline-none">
-            <Ideas wide captured={capturedIdea} onTaskSaved={setCaptured} />
+            {tab === "finance" ? (
+              <Finance wide />
+            ) : tab === "workout" ? (
+              <Workout wide />
+            ) : (
+              <Ideas wide captured={capturedIdea} onTaskSaved={setCaptured} />
+            )}
           </main>
         </div>
-        {reportStart && (
-          <Report start={reportStart} onClose={() => setReportStart(null)} onMoved={() => setTodayKey((k) => k + 1)} />
-        )}
+        {drawer}
+        {report}
         {reveal}
         <Toast />
       </div>
@@ -135,14 +237,19 @@ export default function App() {
       <SkipLink />
       <main id="conteudo" tabIndex={-1} className="focus:outline-none">
         {tab === "today" ? (
-          <Today key={todayKey} captured={captured} onOpenReport={openFromToday} />
+          <Today key={todayKey} captured={captured} onOpenReport={openFromToday} menu={menuButton} />
+        ) : tab === "ideas" ? (
+          <Ideas captured={capturedIdea} onTaskSaved={setCaptured} menu={menuButton} />
+        ) : tab === "workout" ? (
+          <Workout menu={menuButton} />
         ) : (
-          <Ideas captured={capturedIdea} onTaskSaved={setCaptured} />
+          <Finance menu={menuButton} />
         )}
       </main>
 
-      <CaptureBar onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />
+      {(tab === "today" || tab === "ideas") && <CaptureBar onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />}
 
+      {/* No Financeiro (só pelo ☰) a barra continua, sem item marcado. */}
       <nav
         aria-label="Seções"
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-black/70 backdrop-blur-xl"
@@ -170,10 +277,8 @@ export default function App() {
         </div>
       </nav>
 
-      {reportStart && (
-        <Report start={reportStart} onClose={() => setReportStart(null)} onMoved={() => setTodayKey((k) => k + 1)} />
-      )}
-
+      {drawer}
+      {report}
       {reveal}
       <Toast />
     </div>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { addDays, formatDayTitle, isSunday, todayISO, weekDays, weekStart } from "../../shared/dates";
 import type { Task } from "../../shared/types";
 import { SundayCard } from "../components/SundayCard";
@@ -25,8 +25,10 @@ interface Props {
   onOpenReport?: (start: string) => void;
   /** Tarefa criada pela captura rápida, para entrar na semana sem recarregar. */
   captured?: Task | null;
-  /** Computador: coluna fixa à esquerda, sem barra de abas nem captura flutuante embaixo. */
+  /** Computador: coluna fixa à esquerda, sem captura flutuante embaixo. */
   wide?: boolean;
+  /** Botão ☰ do menu lateral (celular), no começo da linha do mês. */
+  menu?: ReactNode;
 }
 
 const monthFmt = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: "UTC" });
@@ -37,7 +39,7 @@ const MOBILE_PAD = {
   paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h) + 5.5rem)",
 };
 
-export function Today({ captured, onOpenReport, wide = false }: Props) {
+export function Today({ captured, onOpenReport, wide = false, menu }: Props) {
   const now = useNow(60_000); // estados (atrasada, não feita) recalculados a cada minuto
   const today = todayISO(now);
   const days = weekDays(weekStart(today));
@@ -129,7 +131,10 @@ export function Today({ captured, onOpenReport, wide = false }: Props) {
   return (
     <div className={wide ? "px-[18px] pt-4 pb-2" : "mx-auto w-full max-w-md px-4"} style={wide ? undefined : MOBILE_PAD}>
       <div className="mb-1 flex min-h-11 items-center justify-between gap-3">
-        <span className="eyebrow">{monthName(selected)}</span>
+        <div className="flex min-w-0 items-center gap-2.5">
+          {menu}
+          <span className="eyebrow">{monthName(selected)}</span>
+        </div>
         {onOpenReport && !wide && !isSunday(today) && (
           <ProgressPill progress={progress} onClick={() => onOpenReport(addDays(days[0], -7))} />
         )}

@@ -38,6 +38,7 @@
   --danger-fill: #ff4d5e;
   --on-accent: #061006;
   --neon: 0 0 6px rgb(136 239 27 / 0.55), 0 0 22px rgb(0 176 0 / 0.35);
+  /* Barra de baixo no celular (Hoje · Ideias · Treino); o resto mora no menu lateral (NavDrawer). */
   --tabbar-h: 57px;
   --fixed-bars-h: calc(var(--tabbar-h) + 72px + env(safe-area-inset-bottom));
   /* Jogo */
@@ -55,7 +56,7 @@
   color-scheme: dark;
 }
 
-/* Computador: sem barra de abas (a captura mora na coluna do Hoje). */
+/* Computador: sem barra de baixo (a captura mora na coluna do Hoje). */
 @media (min-width: 1024px) {
   :root {
     --tabbar-h: 0px;
@@ -261,6 +262,100 @@
     border-radius: 24px;
   }
 }
+/* Menu lateral (NavDrawer) sobre <dialog> nativo: entra pela esquerda.
+   Rascunho: docs/superpowers/mockups/nav-lateral-2026-11.html (.drawer). */
+.drawer-dialog {
+  margin: 0;
+  inset: 0 auto 0 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  width: min(82vw, 340px);
+  max-width: 100%;
+  border: 0;
+  border-right: 1px solid rgb(136 239 27 / 0.35);
+  border-radius: 0 28px 28px 0;
+  padding: 0;
+  background:
+    radial-gradient(70% 35% at 0% 105%, rgb(0 176 0 / 0.4), transparent 70%),
+    linear-gradient(180deg, rgb(18 22 18 / 0.96), rgb(7 9 7 / 0.98));
+  box-shadow: 1px 0 0 rgb(136 239 27 / 0.15), 20px 0 60px -20px rgb(0 176 0 / 0.45);
+  color: var(--ink);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.drawer-dialog::backdrop {
+  background: rgb(0 0 0 / 0.6);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+.drawer-dialog[open] {
+  animation: drawer-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+/* Item do menu (.nav a do rascunho). */
+.drawer-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 50px;
+  padding: 0 12px;
+  border-radius: 15px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  color: var(--ink);
+}
+.drawer-item > svg {
+  color: var(--muted);
+}
+.drawer-item small {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.drawer-item:not(:disabled):hover {
+  background: rgb(255 255 255 / 0.04);
+}
+.drawer-item[aria-current="page"] {
+  background: linear-gradient(90deg, rgb(136 239 27 / 0.16), rgb(136 239 27 / 0.03));
+  box-shadow: inset 0 0 0 1px rgb(136 239 27 / 0.3);
+}
+.drawer-item[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--lime);
+  box-shadow: 0 0 10px var(--lime);
+}
+.drawer-item[aria-current="page"] > svg {
+  color: var(--lime);
+  filter: drop-shadow(0 0 5px var(--lime));
+}
+.drawer-item[aria-current="page"] small {
+  color: var(--lime);
+}
+.drawer-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawer-dialog[open] {
+    animation: none;
+  }
+}
+
 /* ===== Tema Neon: vidro, neon e preenchimentos ===== */
 @layer components {
 /* Cartão de vidro com borda em degradê limão (destaque). */

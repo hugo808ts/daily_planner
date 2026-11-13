@@ -1,6 +1,7 @@
 import { expect, test, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { devices } from "@playwright/test";
 import { todayISO } from "../../shared/dates";
+import { openSection } from "./nav";
 
 // Projeto "desktop" (1440×900). Os blocos de celular trocam o viewport com test.use.
 // Este arquivo apaga o que cria: os outros testes contam pastas e tarefas.
@@ -121,7 +122,7 @@ async function expectNoHorizontalScroll(page: Page) {
 }
 
 test.describe("computador (1440×900)", () => {
-  test("Hoje fixo à esquerda e Ideias em três colunas, sem barra de abas", async ({ page, request }) => {
+  test("Hoje fixo à esquerda e Ideias em três colunas, com o ☰ no cabeçalho", async ({ page, request }) => {
     await seedIdea(request);
     await seedTasks(request);
     await page.goto("/");
@@ -131,8 +132,9 @@ test.describe("computador (1440×900)", () => {
     const list = page.getByTestId("list-pane");
     const editor = page.getByTestId("editor-pane");
 
-    await test.step("sem abas; Hoje, pastas e Recentes lado a lado (sem painel de editor vazio)", async () => {
-      await expect(page.getByRole("navigation", { name: "Seções" })).toHaveCount(0);
+    await test.step("☰ no cabeçalho; Hoje, pastas e Recentes lado a lado (sem painel de editor vazio)", async () => {
+      await expect(page.getByRole("banner").getByRole("button", { name: "Abrir menu" })).toBeVisible();
+      await expect(page.getByRole("dialog", { name: "Menu" })).toHaveCount(0);
       for (const pane of [today, folders, list]) await expect(pane).toBeVisible();
       await expect(editor).toHaveCount(0);
       await expect(list.getByRole("heading", { name: "Recentes" })).toBeVisible();
@@ -204,6 +206,33 @@ test.describe("computador (1440×900)", () => {
     await page.screenshot({ path: "test-results/layout-desktop-light.png", animations: "disabled" });
   });
 
+  test("menu: Financeiro ocupa a área da direita no lugar das Ideias", async ({ page }) => {
+    await page.goto("/");
+    await openSection(page, "Financeiro");
+    await expect(page).toHaveURL(/#financeiro$/);
+    await expect(page.getByTestId("today-pane")).toBeVisible();
+    await expect(page.getByTestId("folders-pane")).toHaveCount(0);
+    await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveText("Financeiro");
+    // Foco volta ao ☰ do cabeçalho.
+    await expect(page.getByRole("banner").getByRole("button", { name: "Abrir menu" })).toBeFocused();
+    await openSection(page, "Ideias");
+    await expect(page.getByTestId("folders-pane")).toBeVisible();
+  });
+
+  test("menu: Treino ocupa a área da direita; sem barra de baixo no computador", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("navigation", { name: "Seções" })).toHaveCount(0);
+    await openSection(page, "Treino");
+    await expect(page).toHaveURL(/#treino$/);
+    await expect(page.getByTestId("today-pane")).toBeVisible();
+    await expect(page.getByTestId("folders-pane")).toHaveCount(0);
+    await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toHaveText("Treino");
+    await expect(page.getByRole("main").getByRole("heading", { name: "Monte sua semana" })).toBeVisible();
+    // A captura continua na coluna do Hoje.
+    await expect(page.getByTestId("today-pane").getByRole("textbox", { name: "Captura rápida" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Seções" })).toHaveCount(0);
+  });
+
   test.describe("escuro", () => {
     test.use({ colorScheme: "dark" });
 
@@ -229,17 +258,111 @@ test.describe("celular", () => {
     userAgent: devices["iPhone 13"].userAgent,
   });
 
-  test("barra de abas e uma tela por vez", async ({ page }) => {
+  test("menu lateral e uma tela por vez", async ({ page }) => {
     await page.goto("/");
-    const tabs = page.getByRole("navigation", { name: "Seções" });
-    await expect(tabs).toBeVisible();
+    const menuButton = page.getByRole("button", { name: "Abrir menu" });
+    const menu = page.getByRole("dialog", { name: "Menu" });
+    await expect(menuButton).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hoje");
     await expect(page.getByTestId("folders-pane")).toHaveCount(0);
     await expect(page.getByTestId("list-pane")).toHaveCount(0);
 
-    await tabs.getByRole("button", { name: "Ideias" }).click();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ideias");
-    await expect(page.getByRole("navigation", { name: "Dias da semana" })).toHaveCount(0);
+    await test.step("abre com o item atual marcado; Esc fecha e o foco volta ao ☰", async () => {
+      await menuButton.click();
+      await expect(menu).toBeVisible();
+      await expect(menu.getByRole("button", { name: /^Tarefas do dia/ })).toHaveAttribute("aria-current", "page");
+      await expect(menu.getByRole("button", { name: /^Configurações/ })).toBeDisabled();
+      await expect(menu.getByRole("button", { name: /^Ajuda/ })).toBeDisabled();
+      await page.screenshot({ path: "test-results/menu-mobile.png", animations: "disabled" });
+      await page.keyboard.press("Escape");
+      await expect(menu).toHaveCount(0);
+      await expect(menuButton).toBeFocused();
+    });
+
+    await test.step("toque fora fecha", async () => {
+      await menuButton.click();
+      await expect(menu).toBeVisible();
+      await page.mouse.click(380, 400); // fundo escurecido, à direita do menu
+      await expect(menu).toHaveCount(0);
+    });
+
+    await test.step("troca de tela pelo menu", async () => {
+      await openSection(page, "Ideias");
+      await expect(page).toHaveURL(/#ideias$/);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ideias");
+      await expect(page.getByRole("navigation", { name: "Dias da semana" })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Abrir menu" })).toBeFocused();
+
+      await openSection(page, "Financeiro");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Financeiro");
+      await expect(page.getByRole("textbox", { name: "Captura rápida" })).toHaveCount(0);
+
+      await page.getByRole("button", { name: "Abrir menu" }).click();
+      await expect(menu.getByRole("button", { name: /^Financeiro/ })).toHaveAttribute("aria-current", "page");
+      await menu.getByRole("button", { name: "Fechar menu" }).click();
+      await expect(menu).toHaveCount(0);
+    });
+
+    await test.step("Quadro da semana abre o resumo da semana atual", async () => {
+      await page.getByRole("button", { name: "Abrir menu" }).click();
+      await menu.getByRole("button", { name: /^Quadro da semana/ }).click();
+      await expect(page.getByRole("dialog", { name: "Resumo da semana" })).toBeVisible();
+    });
+  });
+
+  test("barra de baixo: Hoje, Ideias e Treino", async ({ page }) => {
+    await page.goto("/");
+    const bar = page.getByRole("navigation", { name: "Seções" });
+    const tabs = bar.getByRole("button");
+    await expect(tabs).toHaveText(["Hoje", "Ideias", "Treino"]);
+    const tab = (name: string) => bar.getByRole("button", { name });
+    await expect(tab("Hoje")).toHaveAttribute("aria-current", "page");
+    await expect(bar.locator('[aria-current="page"]')).toHaveCount(1);
+
+    await test.step("a captura fica acima da barra, sem ser coberta", async () => {
+      const field = page.getByRole("textbox", { name: "Captura rápida" });
+      await expect(field).toBeVisible();
+      const c = await box(field);
+      const b = await box(bar);
+      expect(c.y + c.height).toBeLessThanOrEqual(b.y);
+      expect(b.y + b.height).toBeLessThanOrEqual(844 + 1);
+    });
+
+    await test.step("Treino: hash #treino, item marcado, sem captura", async () => {
+      await tab("Treino").click();
+      await expect(page).toHaveURL(/#treino$/);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Treino");
+      await expect(page.getByRole("heading", { name: "Monte sua semana" })).toBeVisible();
+      await expect(tab("Treino")).toHaveAttribute("aria-current", "page");
+      await expect(tab("Hoje")).not.toHaveAttribute("aria-current", "page");
+      await expect(page.getByRole("textbox", { name: "Captura rápida" })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Abrir menu" })).toBeVisible();
+      await page.screenshot({ path: "test-results/treino-mobile.png", animations: "disabled" });
+    });
+
+    await test.step("Ideias e volta pelo histórico", async () => {
+      await tab("Ideias").click();
+      await expect(page).toHaveURL(/#ideias$/);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Ideias");
+      await expect(tab("Ideias")).toHaveAttribute("aria-current", "page");
+      await page.goBack();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Treino");
+      await expect(tab("Treino")).toHaveAttribute("aria-current", "page");
+    });
+
+    await test.step("Treino também no menu; Financeiro deixa a barra sem item marcado", async () => {
+      await page.getByRole("button", { name: "Abrir menu" }).click();
+      const menu = page.getByRole("dialog", { name: "Menu" });
+      await expect(menu.getByRole("button", { name: /^Treino/ })).toHaveAttribute("aria-current", "page");
+      await page.keyboard.press("Escape");
+      await openSection(page, "Financeiro");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Financeiro");
+      await expect(bar).toBeVisible();
+      await expect(bar.locator('[aria-current="page"]')).toHaveCount(0);
+      await tab("Hoje").click();
+      await expect(page).toHaveURL(/#hoje$/);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hoje");
+    });
   });
 
   test("campos com fonte de 16 px ou mais (iOS não dá zoom)", async ({ page, request }) => {
@@ -256,8 +379,7 @@ test.describe("celular", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Fixar uma anotação" }).click();
     await check();
-    const tabs = page.getByRole("navigation", { name: "Seções" });
-    await tabs.getByRole("button", { name: "Ideias" }).click();
+    await openSection(page, "Ideias");
     await check();
     await page.getByRole("button", { name: new RegExp(`Abrir pasta ${FOLDER}`) }).click();
     await page.getByRole("button", { name: new RegExp(IDEA) }).click();
@@ -272,7 +394,16 @@ test.describe("celular", () => {
       await page.goto("/");
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hoje");
       await expectNoHorizontalScroll(page);
-      await page.getByRole("navigation", { name: "Seções" }).getByRole("button", { name: "Ideias" }).click();
+      await page.getByRole("button", { name: "Abrir menu" }).click();
+      await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible();
+      await expectNoHorizontalScroll(page);
+      await page.keyboard.press("Escape");
+      await openSection(page, "Financeiro");
+      await expectNoHorizontalScroll(page);
+      await openSection(page, "Treino");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText("Treino");
+      await expectNoHorizontalScroll(page);
+      await openSection(page, "Ideias");
       await expectNoHorizontalScroll(page);
       await page.getByRole("button", { name: new RegExp(`Abrir pasta ${FOLDER}`) }).click();
       await expect(page.getByRole("button", { name: new RegExp(IDEA) })).toBeVisible();

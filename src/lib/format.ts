@@ -88,3 +88,37 @@ export function findLinks(text: string): string[] {
   const found = text.match(/https?:\/\/[^\s<>"')\]]+/g) ?? [];
   return [...new Set(found.map((u) => u.replace(/[.,;:!?]+$/, "")))];
 }
+
+// ===== Dinheiro (Financeiro): os valores chegam em CENTAVOS inteiros =====
+
+const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const BRL_WHOLE = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
+/** Texto no lugar de um valor quando o olho está fechado. */
+export const HIDDEN_MONEY = "R$ ••••";
+
+export interface MoneyOptions {
+  /** Olho fechado: devolve "R$ ••••". */
+  hidden?: boolean;
+  /** Sem centavos (arredondado): "R$ 4.820". */
+  whole?: boolean;
+  /** Mostra "+" ou "−" (sinal de menos de verdade) na frente; o valor vira absoluto. */
+  sign?: 1 | -1 | 0;
+}
+
+/** 1248090 → "R$ 12.480,90". O espaço depois de "R$" é inseparável (Intl). */
+export function money(cents: number, { hidden = false, whole = false, sign }: MoneyOptions = {}): string {
+  const prefix = sign === 1 ? "+" : sign === -1 ? "−" : "";
+  if (hidden) return `${prefix}${HIDDEN_MONEY}`;
+  const value = (sign === undefined ? cents : Math.abs(cents)) / 100;
+  const text = (whole ? BRL_WHOLE : BRL).format(value).replace("-", "−");
+  return `${prefix}${text}`;
+}
+
+/** Valor grande com os centavos à parte: { main: "R$ 12.480", cents: ",90" }. Escondido: só main. */
+export function moneyParts(cents: number, hidden = false): { main: string; cents: string } {
+  if (hidden) return { main: HIDDEN_MONEY, cents: "" };
+  const full = money(cents);
+  const i = full.lastIndexOf(",");
+  return i < 0 ? { main: full, cents: "" } : { main: full.slice(0, i), cents: full.slice(i) };
+}

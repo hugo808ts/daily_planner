@@ -1,9 +1,11 @@
 import { Hono } from "hono";
 import { accessGuard, sameOrigin } from "./auth";
 import { captureRoutes } from "./routes/capture";
+import { financeRoutes } from "./routes/finance";
 import { ideaRoutes } from "./routes/ideas";
 import { reportRoutes } from "./routes/report";
 import { taskRoutes } from "./routes/tasks";
+import { workoutRoutes } from "./routes/workout";
 
 export type Env = {
   DB: D1Database;
@@ -13,6 +15,8 @@ export type Env = {
   AI_MOCK?: string;
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
+  /** Client ID da chave de serviço do Access usada pelo Agente Finanças (POST /api/finance/sync). */
+  SYNC_CLIENT_ID?: string;
 };
 
 export const app = new Hono<{ Bindings: Env }>();
@@ -33,5 +37,7 @@ app.route("/", taskRoutes);
 app.route("/", ideaRoutes);
 app.route("/", captureRoutes);
 app.route("/", reportRoutes);
+app.route("/", financeRoutes);
+app.route("/", workoutRoutes);
 
 export default { fetch: app.fetch };
