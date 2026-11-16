@@ -1,0 +1,429 @@
+/* Painel Financeiro. Rascunho: docs/superpowers/mockups/financeiro-2026-11.html (classes copiadas com prefixo fin-). */
+
+.fin-card {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 22px;
+}
+.fin-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.fin-head h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.fin-hero {
+  font: 800 40px/1 var(--font-display);
+  letter-spacing: -0.05em;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.fin-hero small {
+  font-size: 20px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.fin-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+.fin-mini {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.035);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.fin-mini b {
+  display: block;
+  font: 700 18px var(--font-display);
+  letter-spacing: -0.03em;
+  margin-top: 4px;
+}
+.fin-big {
+  font: 800 22px var(--font-display);
+  letter-spacing: -0.03em;
+  margin-top: 4px;
+}
+.fin-up {
+  color: var(--lime);
+  text-shadow: 0 0 10px rgb(136 239 27 / 0.5);
+}
+.fin-down {
+  color: var(--danger);
+  text-shadow: 0 0 10px rgb(255 77 94 / 0.4);
+}
+.fin-delta {
+  font: 600 11px var(--font-mono);
+  white-space: nowrap;
+}
+.fin-axis {
+  display: flex;
+  justify-content: space-between;
+  font: 500 11px var(--font-mono);
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Chips de mês */
+.fin-months {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.fin-months button {
+  min-height: 36px;
+  min-width: 0;
+  padding: 0 12px;
+  border-radius: 999px;
+  font: 500 12px var(--font-mono);
+  color: var(--muted);
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: inset 0 0 0 1px var(--line);
+  white-space: nowrap;
+}
+.fin-months button[aria-pressed="true"] {
+  background: linear-gradient(150deg, var(--lime), var(--green));
+  color: var(--on-accent);
+  box-shadow: 0 0 16px -2px rgb(136 239 27 / 0.6);
+}
+
+/* Gráfico do mês */
+.fin-chart {
+  position: relative;
+  margin-top: 10px;
+  height: 120px;
+}
+.fin-chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.fin-chart .fin-dot {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: var(--on-accent);
+  border: 2.5px solid var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+}
+
+/* Rosca de categorias */
+.fin-donut-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 12px;
+}
+.fin-donut {
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  position: relative;
+  filter: drop-shadow(0 0 12px rgb(136 239 27 / 0.35));
+}
+.fin-donut::after {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border-radius: 50%;
+  background: #0c0f0c;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.fin-donut > div {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.fin-donut strong {
+  font: 800 16px var(--font-display);
+  letter-spacing: -0.03em;
+  display: block;
+}
+.fin-cats {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fin-cat {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+.fin-cat i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  box-shadow: 0 0 6px currentColor;
+}
+.fin-cat > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fin-cat > span:last-child {
+  font: 600 12px var(--font-mono);
+  color: var(--muted);
+  text-align: right;
+}
+.fin-cat small {
+  display: block;
+  font: 500 10px var(--font-mono);
+}
+
+/* Cartões de crédito */
+.fin-ccard {
+  position: relative;
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(136 239 27 / 0.28), transparent 55%),
+    linear-gradient(135deg, #0f2a0f, #0a0d0a 60%);
+  box-shadow: inset 0 0 0 1px rgb(136 239 27 / 0.35), 0 18px 40px -20px rgb(0 176 0 / 0.6);
+}
+.fin-ccard.alt {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgb(240 240 240 / 0.14), transparent 55%),
+    linear-gradient(135deg, #1b1d1b, #0a0b0a 60%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14), 0 18px 40px -20px #000;
+}
+.fin-ccard .chip-c {
+  width: 34px;
+  height: 25px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #e9d48a, #9c7c2a);
+  opacity: 0.9;
+  flex: none;
+}
+.fin-ccard.alt .chip-c {
+  filter: grayscale(1);
+}
+.fin-ccard strong {
+  font: 800 30px/1 var(--font-display);
+  letter-spacing: -0.04em;
+}
+.fin-ccard strong small {
+  font-size: 15px;
+  color: var(--muted);
+}
+.fin-due {
+  font: 500 11px var(--font-mono);
+  color: var(--muted);
+  margin-top: 6px;
+  letter-spacing: 0.06em;
+}
+.fin-bar {
+  height: 7px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.08);
+  position: relative;
+  margin-top: 12px;
+}
+.fin-bar i {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--green-deep), var(--lime));
+  box-shadow: 0 0 10px rgb(136 239 27 / 0.6);
+}
+.fin-bar i.over {
+  background: linear-gradient(90deg, #a3202d, var(--danger));
+  box-shadow: 0 0 8px rgb(255 77 94 / 0.6);
+}
+.fin-bar em {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 15px;
+  background: var(--ink);
+  border-radius: 1px;
+  box-shadow: 0 0 6px #fff;
+}
+.fin-lbl {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font: 500 11px var(--font-mono);
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* Listas (contas fixas, investimentos, movimentações) */
+.fin-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fin-it {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+}
+.fin-it:first-child {
+  border-top: 0;
+}
+.fin-ic {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: rgb(136 239 27 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(136 239 27 / 0.3);
+  color: var(--lime);
+  font: 700 12px var(--font-mono);
+}
+.fin-ic.gray {
+  background: rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink);
+}
+.fin-tx {
+  flex: 1;
+  min-width: 0;
+}
+.fin-tx b {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fin-tx small {
+  display: block;
+  font: 500 11px var(--font-mono);
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fin-val {
+  font: 700 14px var(--font-mono);
+  text-align: right;
+  white-space: nowrap;
+}
+.fin-val small {
+  display: block;
+  font: 500 10px var(--font-mono);
+  color: var(--muted);
+  text-shadow: none;
+}
+.fin-tag {
+  font: 600 10px var(--font-mono);
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.fin-tag.soon {
+  background: rgb(255 77 94 / 0.12);
+  color: var(--danger-ink);
+  box-shadow: inset 0 0 0 1px rgb(255 77 94 / 0.4);
+}
+.fin-tag.ok {
+  background: rgb(136 239 27 / 0.1);
+  color: var(--lime);
+  box-shadow: inset 0 0 0 1px rgb(136 239 27 / 0.35);
+}
+.fin-tag.past {
+  color: var(--muted);
+  font-weight: 500;
+  padding: 2px 0;
+}
+
+/* Investimentos */
+.fin-alloc {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 12px;
+  gap: 2px;
+}
+.fin-alloc i {
+  display: block;
+  height: 100%;
+}
+.fin-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font: 500 11px var(--font-mono);
+  color: var(--muted);
+}
+.fin-legend li::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 6px;
+  background: var(--c);
+  box-shadow: 0 0 6px var(--c);
+}
+
+.fin-sync {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 11px var(--font-mono);
+  color: var(--muted);
+  margin: 14px 2px 0;
+}
+.fin-sync i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+}
+
+/* Esqueleto enquanto carrega */
+.fin-skel {
+  border-radius: 22px;
+  background: rgb(255 255 255 / 0.05);
+  animation: fin-pulse 1.4s ease-in-out infinite;
+}
+@keyframes fin-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Computador: as partes lado a lado. */
+.fin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0 20px;
+  align-items: start;
+}
