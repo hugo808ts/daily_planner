@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { SessionView } from "../../shared/workout";
 import { LIVE_KEY, LiveSession } from "../components/workout/LiveSession";
+import { WorkoutProgress } from "../components/workout/WorkoutProgress";
 import { PlanSheet } from "../components/workout/PlanSheet";
 import { TodayCard } from "../components/workout/TodayCard";
 import { ExerciseList } from "../components/workout/ExerciseList";
@@ -29,6 +30,8 @@ export function Workout({ menu, wide = false }: Props) {
   /** Treino ao vivo aberto em tela cheia. */
   const [live, setLive] = useState<{ id: string; initial: SessionView | null } | null>(null);
   const resumed = useRef(false);
+  /** Sobe quando um treino fecha: o relatório recarrega. */
+  const [refresh, setRefresh] = useState(0);
 
   // Reabriu o app no meio do treino: volta direto para a tela do treino.
   useEffect(() => {
@@ -142,6 +145,7 @@ export function Workout({ menu, wide = false }: Props) {
             <Button className="mt-4 w-full" icon={<PencilIcon size={16} />} onClick={() => setSheet({ edit: null })}>
               Montar a semana
             </Button>
+            <WorkoutProgress view={view} refreshKey={refresh} />
           </>
         )}
       </div>
@@ -155,6 +159,7 @@ export function Workout({ menu, wide = false }: Props) {
           defaultRestS={view.settings.defaultRestS}
           onClose={() => {
             setLive(null);
+            setRefresh((n) => n + 1);
             void reload();
           }}
         />

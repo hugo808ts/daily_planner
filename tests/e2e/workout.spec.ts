@@ -227,3 +227,58 @@ test("Treino ao vivo: sair e descartar", async ({ page, request }) => {
   await expect(live).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Começar treino" })).toBeVisible();
 });
+
+test("Progresso: brasão, conquistas e relatório semana × semana", async ({ page, request }) => {
+  const t = (await (await request.post("/api/workout/templates", { data: { name: "Treino C", focus: "Costas" } })).json()).template;
+  const ex = (
+    await (
+      await request.post(`/api/workout/templates/${t.id}/exercises`, {
+        data: { name: "Remada curvada", sets: 2, reps: 10, weightG: 65000 },
+      })
+    ).json()
+  ).exercise;
+  // Quarta passada 65 kg, quarta desta semana 70 kg.
+  const wednesday = addDays(THURSDAY, -1);
+  for (const [day, weightG] of [
+    [addDays(wednesday, -7), 65000],
+    [wednesday, 70000],
+  ] as const) {
+    const headers = { "x-test-today": day };
+    const s = (await (await request.post("/api/workout/sessions", { data: { templateId: t.id }, headers })).json()).session;
+    for (const setIndex of [1, 2]) {
+      const r = await request.post(`/api/workout/sessions/${s.id}/sets`, {
+        data: { exerciseId: ex.id, setIndex, weightG, reps: 10 },
+        headers,
+      });
+      expect(r.status()).toBe(201);
+    }
+    expect((await request.post(`/api/workout/sessions/${s.id}/finish`, { headers })).ok()).toBe(true);
+  }
+
+  await fakeServerToday(page, THURSDAY);
+  await page.goto("/#treino");
+
+  const progress = page.getByRole("region", { name: "Progresso" });
+  await expect(progress).toContainText("Brasão da semana");
+  await expect(progress.getByRole("list", { name: "Conquistas" }).getByRole("listitem")).toHaveCount(6);
+  await expect(progress.getByLabel(/^Recordista: .*Conquistada$/)).toBeVisible();
+  await expect(progress.getByLabel(/^Inquebrável: .*Bloqueada$/)).toBeVisible();
+
+  const report = page.getByRole("region", { name: "Relatório de treino" });
+  await expect(report.getByRole("radio")).toHaveCount(4);
+  await expect(report.getByRole("radio").last()).toHaveAttribute("aria-checked", "true");
+  await expect(report).toContainText("subiram");
+  const row = report.getByRole("list", { name: "Carga por exercício" }).getByRole("listitem").filter({ hasText: "Remada curvada" });
+  await expect(row).toContainText("70 kg");
+  await expect(row.getByLabel("subiu 5 kg")).toHaveText("↑ 5 kg");
+
+  await progress.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "test-results/treino-progresso.png", animations: "disabled" });
+
+  // Semana anterior: a remada aparece como novidade (sem semana antes dela).
+  await report.getByRole("radio").nth(2).click();
+  await expect(report.getByRole("radio").nth(2)).toHaveAttribute("aria-checked", "true");
+  const before = report.getByRole("list", { name: "Carga por exercício" }).getByRole("listitem").filter({ hasText: "Remada curvada" });
+  await expect(before).toContainText("65 kg");
+  await expect(before.getByLabel("sem semana anterior")).toHaveText("novo");
+});
