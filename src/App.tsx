@@ -108,6 +108,8 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [todayCount, setTodayCount] = useState<string | null>(null);
   const [financeNew, setFinanceNew] = useState(() => !readFinanceSeen());
+  /** "Atualizado pelo agente às HH:MM", vindo da tela do Financeiro. */
+  const [financeSync, setFinanceSync] = useState<string | null>(null);
   /** Quem abriu o menu (o ☰ desta tela), para o foco voltar a ele. */
   const opener = useRef<HTMLElement | null>(null);
   const wasOpen = useRef(false);
@@ -167,6 +169,7 @@ export default function App() {
       progress={progress}
       todayCount={todayCount}
       financeNew={financeNew}
+      syncLabel={financeSync}
       onNavigate={setTab}
       onOpenWeek={() => setReportStart(weekStart(todayISO()))}
       onClose={() => setMenuOpen(false)}
@@ -216,7 +219,7 @@ export default function App() {
           </aside>
           <main id="conteudo" tabIndex={-1} className="min-h-0 min-w-0 overflow-hidden focus:outline-none">
             {tab === "finance" ? (
-              <Finance wide />
+              <Finance wide onSyncLabel={setFinanceSync} />
             ) : tab === "workout" ? (
               <Workout wide />
             ) : (
@@ -243,7 +246,7 @@ export default function App() {
         ) : tab === "workout" ? (
           <Workout menu={menuButton} />
         ) : (
-          <Finance menu={menuButton} />
+          <Finance menu={menuButton} onSyncLabel={setFinanceSync} />
         )}
       </main>
 
