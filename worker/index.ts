@@ -6,6 +6,8 @@ import { ideaRoutes } from "./routes/ideas";
 import { reportRoutes } from "./routes/report";
 import { taskRoutes } from "./routes/tasks";
 import { workoutRoutes } from "./routes/workout";
+import { missionRoutes } from "./routes/missions";
+import { heroRoutes } from "./routes/hero";
 
 export type Env = {
   DB: D1Database;
@@ -39,5 +41,7 @@ app.route("/", captureRoutes);
 app.route("/", reportRoutes);
 app.route("/", financeRoutes);
 app.route("/", workoutRoutes);
+app.route("/", missionRoutes);
+app.route("/", heroRoutes);
 
 export default { fetch: app.fetch };

@@ -7,6 +7,7 @@ import {
   type FinanceResponse,
   type FinanceSyncResult,
 } from "../../shared/finance";
+import { financeDaysFrom } from "../../shared/hero";
 import { badRequest, serverToday, type Ctx } from "../http";
 import type { Env } from "../index";
 
@@ -79,6 +80,10 @@ financeRoutes.post("/api/finance/sync", async (c) => {
       "ON CONFLICT(id) DO UPDATE SET generated_at = excluded.generated_at, received_at = excluded.received_at, data = excluded.data",
   )
     .bind(snap.generatedAt, receivedAt, JSON.stringify(snap))
+    .run();
+  // Herói: guarda os dias de finanças (o retrato só traz 13 meses; dia já visto nunca some).
+  await c.env.DB.prepare("INSERT OR IGNORE INTO finance_days (date, first_seen_at) SELECT value, ? FROM json_each(?)")
+    .bind(receivedAt, JSON.stringify(financeDaysFrom(snap)))
     .run();
   const result: FinanceSyncResult = { ok: true, generatedAt: snap.generatedAt, receivedAt };
   return c.json(result);

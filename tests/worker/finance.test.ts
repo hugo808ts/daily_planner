@@ -1,6 +1,7 @@
 import { env, SELF } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import fixture from "../fixtures/finance-snapshot.json";
+import { financeDaysFrom } from "../../shared/hero";
 
 const BASE = "http://localhost";
 /** "Hoje" para o qual o retrato de exemplo foi montado (X-Test-Today só vale em DEV local). */
@@ -106,5 +107,39 @@ describe("POST /api/finance/sync", () => {
       body: stream,
     });
     expect(res.status).toBe(413);
+  });
+});
+
+describe("dias de finanças do Herói", () => {
+  beforeEach(async () => {
+    await env.DB.prepare("DELETE FROM finance_days").run();
+  });
+
+  const days = async () =>
+    (await env.DB.prepare("SELECT date FROM finance_days ORDER BY date").all<{ date: string }>()).results.map((r) => r.date);
+
+  it("o sync grava as datas e um segundo sync com menos meses não apaga", async () => {
+    expect((await sync(JSON.stringify(fixture))).status).toBe(200);
+    const all = financeDaysFrom(fixture as any);
+    expect(all.length).toBeGreaterThan(1);
+    expect(await days()).toEqual(all);
+
+    const menor = { ...fixture, movimentacoes: fixture.movimentacoes.filter((m) => m.data >= all[all.length - 1]) };
+    expect((await sync(JSON.stringify(menor))).status).toBe(200);
+    expect(await days()).toEqual(all);
+  });
+
+  it("ignora transferência e ajuste", async () => {
+    const mov = fixture.movimentacoes[0];
+    const snap = {
+      ...fixture,
+      movimentacoes: [
+        { ...mov, id: 1, data: "2026-01-05", tipo: "transferencia" },
+        { ...mov, id: 2, data: "2026-01-06", tipo: "ajuste" },
+        { ...mov, id: 3, data: "2026-01-07", tipo: "gasto" },
+      ],
+    };
+    expect((await sync(JSON.stringify(snap))).status).toBe(200);
+    expect(await days()).toEqual(["2026-01-07"]);
   });
 });
