@@ -1,5 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { addDays, todayISO, weekStart } from "../../shared/dates";
+import { isoWeekday } from "../../shared/workout";
 
 // Quinta-feira desta semana: o servidor trata como "hoje" via X-Test-Today (só em DEV local).
 const THURSDAY = addDays(weekStart(todayISO()), 3);
@@ -120,4 +121,109 @@ test("Treino: dia de folga oferece treinar mesmo assim", async ({ page, request 
   await expect(card.getByRole("radio", { name: "Costas · Treino B" })).toHaveAttribute("aria-checked", "true");
   await expect(card.getByRole("button", { name: "Treinar mesmo assim" })).toBeVisible();
   await expect(page.getByRole("list", { name: "Semana de treino" }).locator('[aria-current="date"]')).toContainText("Folga");
+});
+
+/** Treino A (Supino reto 3 × 8 · 60 kg) na quinta e uma sessão concluída na quinta passada (60 kg × 8 nas 3 séries). */
+async function seedSupino(request: APIRequestContext, today = THURSDAY) {
+  const t = (await (await request.post("/api/workout/templates", { data: { name: "Treino A", focus: "Peito" } })).json()).template;
+  const ex = (
+    await (
+      await request.post(`/api/workout/templates/${t.id}/exercises`, {
+        data: { name: "Supino reto", sets: 3, reps: 8, weightG: 60000, restS: 90 },
+      })
+    ).json()
+  ).exercise;
+  expect((await request.put("/api/workout/plan", { data: { days: [{ weekday: isoWeekday(today), templateId: t.id }] } })).ok()).toBe(true);
+  const lastWeek = { "x-test-today": addDays(today, -7) };
+  const s = (await (await request.post("/api/workout/sessions", { data: { templateId: t.id }, headers: lastWeek })).json()).session;
+  for (const setIndex of [1, 2, 3]) {
+    const r = await request.post(`/api/workout/sessions/${s.id}/sets`, {
+      data: { exerciseId: ex.id, setIndex, weightG: 60000, reps: 8 },
+      headers: lastWeek,
+    });
+    expect(r.status()).toBe(201);
+  }
+  expect((await request.post(`/api/workout/sessions/${s.id}/finish`, { headers: lastWeek })).ok()).toBe(true);
+  return { template: t, exercise: ex };
+}
+
+test("Treino ao vivo: séries, descanso, recorde e resumo", async ({ page, request }) => {
+  await seedSupino(request);
+  await page.clock.install();
+  await fakeServerToday(page, THURSDAY);
+  await page.goto("/#treino");
+
+  const live = page.getByRole("region", { name: "Treino ao vivo" });
+  await test.step("começar: tela cheia com a última vez e a meta de hoje", async () => {
+    await page.getByRole("button", { name: "Começar treino" }).click();
+    await expect(live).toBeVisible();
+    await expect(live.getByRole("heading", { name: "Supino reto" })).toBeVisible();
+    await expect(live).toContainText("Última vez: 60 kg × 8");
+    await expect(live.getByLabel("Peso", { exact: true })).toHaveText(/^60\s*kg$/);
+    await live.getByRole("button", { name: /Meta hoje: subir para 62,5 kg/ }).click();
+    await expect(live.getByLabel("Peso", { exact: true })).toHaveText(/^62,5\s*kg$/);
+    await page.screenshot({ path: "test-results/treino-ao-vivo.png", animations: "disabled" });
+  });
+
+  await test.step("S1 salva na hora e abre o descanso; Já estou pronto fecha", async () => {
+    await live.getByRole("button", { name: "Concluir série 1 · descanso 1:30" }).click();
+    await expect(live.getByRole("timer")).toBeVisible();
+    await expect(live.getByRole("timer")).toContainText("1:30");
+    await live.getByRole("button", { name: "Mais 15 segundos" }).click();
+    await expect(live.getByRole("timer")).toContainText("de 1:45");
+    await expect(live).toContainText("Supino reto · S2");
+    await page.screenshot({ path: "test-results/treino-descanso.png", animations: "disabled" });
+    await live.getByRole("button", { name: "Já estou pronto" }).click();
+    await expect(live.getByRole("timer")).toHaveCount(0);
+    const rows = live.getByRole("list", { name: "Séries de Supino reto" }).getByRole("listitem");
+    await expect(rows.nth(0)).toContainText("62,5 × 8");
+    await expect(rows.nth(0)).toContainText("RECORDE");
+    await expect(live).toContainText("+35 XP");
+  });
+
+  await test.step("reabrir o app volta para a série certa", async () => {
+    await page.reload();
+    await expect(live).toBeVisible();
+    await expect(live.getByRole("list", { name: "Séries de Supino reto" }).locator('[aria-current="step"]')).toContainText("S2");
+  });
+
+  await test.step("S2: o descanso termina sozinho pelo relógio", async () => {
+    await live.getByRole("button", { name: /^Concluir série 2/ }).click();
+    await expect(live.getByRole("timer")).toBeVisible();
+    await page.clock.fastForward("01:31");
+    await expect(live.getByRole("timer")).toHaveCount(0);
+    await expect(live.getByRole("list", { name: "Séries de Supino reto" }).locator('[aria-current="step"]')).toContainText("S3");
+  });
+
+  await test.step("última série, finalizar e resumo com ↑", async () => {
+    await live.getByRole("button", { name: "Concluir série 3" }).click();
+    await page.getByRole("button", { name: "Finalizar treino" }).click();
+    await expect(live.getByText("Treino concluído")).toBeVisible();
+    const row = live.getByRole("list", { name: "Exercícios do treino" }).getByRole("listitem").first();
+    await expect(row).toContainText("Supino reto");
+    await expect(row.getByLabel("subiu")).toHaveText("↑ 2,5 kg");
+    await page.screenshot({ path: "test-results/treino-resumo.png", animations: "disabled" });
+    await live.getByRole("button", { name: "Salvar e fechar" }).click();
+    await expect(live).toHaveCount(0);
+    await expect(page.getByText("Feito hoje. Bom trabalho!")).toBeVisible();
+  });
+});
+
+test("Treino ao vivo: sair e descartar", async ({ page, request }) => {
+  // Sexta: a quinta já tem treino concluído do teste anterior (o D1 do e2e não apaga sessões).
+  const friday = addDays(THURSDAY, 1);
+  await seedSupino(request, friday);
+  await fakeServerToday(page, friday);
+  await page.goto("/#treino");
+  await page.getByRole("button", { name: "Começar treino" }).click();
+  const live = page.getByRole("region", { name: "Treino ao vivo" });
+  await live.getByRole("button", { name: "Sair do treino" }).click();
+  await page.getByRole("button", { name: "Continuar depois" }).click();
+  await expect(live).toHaveCount(0);
+  await page.getByRole("button", { name: "Continuar treino" }).click();
+  await expect(live).toBeVisible();
+  await live.getByRole("button", { name: "Sair do treino" }).click();
+  await page.getByRole("button", { name: "Descartar treino" }).click();
+  await expect(live).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Começar treino" })).toBeVisible();
 });

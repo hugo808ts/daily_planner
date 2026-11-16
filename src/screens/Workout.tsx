@@ -1,4 +1,6 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { SessionView } from "../../shared/workout";
+import { LIVE_KEY, LiveSession } from "../components/workout/LiveSession";
 import { PlanSheet } from "../components/workout/PlanSheet";
 import { TodayCard } from "../components/workout/TodayCard";
 import { ExerciseList } from "../components/workout/ExerciseList";
@@ -24,11 +26,28 @@ export function Workout({ menu, wide = false }: Props) {
   const { data, error, reload } = useWorkout();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [busy, setBusy] = useState(false);
+  /** Treino ao vivo aberto em tela cheia. */
+  const [live, setLive] = useState<{ id: string; initial: SessionView | null } | null>(null);
+  const resumed = useRef(false);
+
+  // Reabriu o app no meio do treino: volta direto para a tela do treino.
+  useEffect(() => {
+    if (!data || resumed.current) return;
+    resumed.current = true;
+    let mark: string | null = null;
+    try {
+      mark = localStorage.getItem(LIVE_KEY);
+    } catch {
+      /* sem armazenamento */
+    }
+    if (data.openSession && mark === data.openSession.id) setLive({ id: data.openSession.id, initial: null });
+  }, [data]);
 
   const start = async (templateId: string) => {
     setBusy(true);
     try {
-      await api.startWorkoutSession(templateId);
+      const s = await api.startWorkoutSession(templateId);
+      setLive({ id: s.id, initial: s });
     } catch (e) {
       // 409: já existe um treino em andamento; a recarga mostra "Continuar treino".
       if (!(e instanceof ApiError && e.status === 409)) showToast(e instanceof ApiError ? e.message : "Não foi possível começar.");
@@ -111,7 +130,7 @@ export function Workout({ menu, wide = false }: Props) {
               view={view}
               busy={busy}
               onStart={(id) => void start(id)}
-              onContinue={() => showToast("O treino ao vivo chega na próxima versão.")}
+              onContinue={(id) => setLive({ id, initial: null })}
               onEditTemplate={(id) => setSheet({ edit: id })}
             />
             {view.todayWorkout && view.todayWorkout.exercises.length > 0 && (
@@ -126,6 +145,20 @@ export function Workout({ menu, wide = false }: Props) {
           </>
         )}
       </div>
+
+      {live && view && (
+        <LiveSession
+          key={live.id}
+          sessionId={live.id}
+          initial={live.initial}
+          sound={view.settings.sound}
+          defaultRestS={view.settings.defaultRestS}
+          onClose={() => {
+            setLive(null);
+            void reload();
+          }}
+        />
+      )}
 
       {sheet && view && (
         <PlanSheet
