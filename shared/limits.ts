@@ -17,3 +17,6 @@ export const EXERCISE_NAME_MIN = 1;
 export const EXERCISE_NAME_MAX = 60;
 export const WORKOUT_TEMPLATES_MAX = 12;
 export const WORKOUT_EXERCISES_MAX = 20;
+export const MISSION_TITLE_MIN = 1;
+export const MISSION_TITLE_MAX = 60;
+export const MISSIONS_ACTIVE_MAX = 8;
