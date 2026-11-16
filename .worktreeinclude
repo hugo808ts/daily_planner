@@ -1,0 +1,2 @@
+# Arquivos ignorados pelo Git que o Orca copia para cada worktree novo
+.dev.vars
