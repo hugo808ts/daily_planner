@@ -44,3 +44,15 @@ export const templateTitle = (t: Pick<WorkoutTemplate, "name" | "focus">): strin
 /** "Perna · Treino C" (ou só o nome). */
 export const templateHeading = (t: Pick<WorkoutTemplate, "name" | "focus">): string =>
   t.focus ? `${t.focus} · ${t.name}` : t.name;
+
+/** Próximo nome livre: "Treino A", "Treino B"… (depois do Z, "Treino 27"…). */
+export function nextTemplateName(templates: Pick<WorkoutTemplate, "name">[]): string {
+  const used = new Set(templates.map((t) => t.name.trim().toLowerCase()));
+  for (let i = 0; i < 26; i++) {
+    const name = `Treino ${String.fromCharCode(65 + i)}`;
+    if (!used.has(name.toLowerCase())) return name;
+  }
+  let n = 27;
+  while (used.has(`treino ${n}`)) n++;
+  return `Treino ${n}`;
+}
