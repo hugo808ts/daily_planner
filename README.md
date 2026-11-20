@@ -2,18 +2,8 @@
 
 Aplicativo web pessoal para organizar a semana e o dia a dia. Reúne tarefas do dia, captura rápida por texto ou voz interpretada por IA, um resumo semanal de desempenho, um planejador de treino com sessão ao vivo, um painel financeiro e um espaço de ideias organizado em pastas. Funciona no celular (instalável como PWA) e no computador, hospedado na Cloudflare com custo zero.
 
-<table align="center">
-  <tr>
-    <td align="center"><img src="docs/screenshots/hoje.png" width="190" alt="Tela Hoje"><br><sub><b>Hoje</b></sub></td>
-    <td align="center"><img src="docs/screenshots/treino.png" width="190" alt="Tela Treino"><br><sub><b>Treino</b></sub></td>
-    <td align="center"><img src="docs/screenshots/financeiro.png" width="190" alt="Painel Financeiro"><br><sub><b>Financeiro</b></sub></td>
-    <td align="center"><img src="docs/screenshots/ideias.png" width="190" alt="Tela Ideias"><br><sub><b>Ideias</b></sub></td>
-  </tr>
-</table>
-
 <p align="center">
-  <img src="docs/screenshots/desktop.png" width="760" alt="Layout para computador"><br>
-  <sub>Versão para computador</sub>
+  <img src="docs/screenshots/telas.png" width="100%" alt="Telas do app: Hoje, Semana, Treino, Financeiro e Ideias">
 </p>
 
 ## Funcionalidades
