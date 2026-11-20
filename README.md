@@ -1,25 +1,19 @@
 # Agenda
 
-Aplicativo web pessoal para organizar a semana e o dia a dia. Reúne tarefas do dia, captura rápida por texto ou voz interpretada por IA, um resumo semanal de desempenho e um espaço de ideias organizado em pastas. Funciona no celular (instalável como PWA) e no computador, hospedado na Cloudflare com custo zero.
+Aplicativo web pessoal para organizar a semana e o dia a dia. Reúne tarefas do dia, captura rápida por texto ou voz interpretada por IA, um resumo semanal de desempenho, um planejador de treino com sessão ao vivo, um painel financeiro e um espaço de ideias organizado em pastas. Funciona no celular (instalável como PWA) e no computador, hospedado na Cloudflare com custo zero.
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/screenshots/hoje.png" width="190" alt="Tela Hoje"><br><sub><b>Hoje</b></sub></td>
+    <td align="center"><img src="docs/screenshots/treino.png" width="190" alt="Tela Treino"><br><sub><b>Treino</b></sub></td>
+    <td align="center"><img src="docs/screenshots/financeiro.png" width="190" alt="Painel Financeiro"><br><sub><b>Financeiro</b></sub></td>
+    <td align="center"><img src="docs/screenshots/ideias.png" width="190" alt="Tela Ideias"><br><sub><b>Ideias</b></sub></td>
+  </tr>
+</table>
 
 <p align="center">
-  <img src="docs/screenshots/hoje.png" width="230" alt="Tela Hoje">
-  <img src="docs/screenshots/ideias.png" width="230" alt="Tela Ideias">
-  <img src="docs/screenshots/captura.png" width="230" alt="Captura com confirmação">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/desktop.png" width="720" alt="Layout para computador">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/treino.png" width="230" alt="Treino da semana">
-  <img src="docs/screenshots/treino-ao-vivo.png" width="230" alt="Treino ao vivo">
-  <img src="docs/screenshots/treino-progresso.png" width="230" alt="Progresso do treino">
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/financeiro.png" width="230" alt="Painel Financeiro">
+  <img src="docs/screenshots/desktop.png" width="760" alt="Layout para computador"><br>
+  <sub>Versão para computador</sub>
 </p>
 
 ## Funcionalidades
