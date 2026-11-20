@@ -12,6 +12,16 @@ Aplicativo web pessoal para organizar a semana e o dia a dia. Reúne tarefas do 
   <img src="docs/screenshots/desktop.png" width="720" alt="Layout para computador">
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/treino.png" width="230" alt="Treino da semana">
+  <img src="docs/screenshots/treino-ao-vivo.png" width="230" alt="Treino ao vivo">
+  <img src="docs/screenshots/treino-progresso.png" width="230" alt="Progresso do treino">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/financeiro.png" width="230" alt="Painel Financeiro">
+</p>
+
 ## Funcionalidades
 
 - **Hoje:** tarefas do dia com faixa da semana, placar (feitas, atrasadas, não feitas) e anotação fixada do dia. As tarefas ficam ordenadas por dificuldade.
@@ -20,6 +30,8 @@ Aplicativo web pessoal para organizar a semana e o dia a dia. Reúne tarefas do 
 - **Progresso:** tarefas concluídas rendem pontos de experiência conforme a dificuldade, que se somam num nível e numa medalha da semana.
 - **Resumo semanal:** desempenho de segunda a sábado, gráfico dia a dia, medalha da semana e lista do que ficou pendente.
 - **Ideias:** notas em pastas, com título, texto, link com prévia e opção de fixar ou transformar em tarefa.
+- **Treino:** plano da semana com treinos A/B/C, treino ao vivo com peso e repetições já preenchidos, cronômetro de descanso ajustável, resumo comparado à última vez, relatório semana × semana, brasão e conquistas.
+- **Financeiro:** painel só de leitura (patrimônio, contas, cartão, gastos do mês, contas fixas e investimentos), alimentado pelo agente de finanças no computador por um endpoint protegido; olho para esconder os valores.
 - **Acesso protegido:** o app só abre após login.
 
 ## Tecnologias
