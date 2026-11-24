@@ -204,7 +204,7 @@ export function WeekReportView({
                     <div className="min-w-0">
                       <div className="line-clamp-2 break-words">{t.title}</div>
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-meta text-muted">
-                        <span>{weekdayShort(t.date)}</span>
+                        {t.date && <span>{weekdayShort(t.date)}</span>}
                         {t.area && <AreaTag area={t.area} />}
                       </div>
                     </div>

@@ -5,7 +5,7 @@ import { DAY_NOTE_MAX, TASK_TITLE_MAX, TASK_TITLE_MIN } from "../../shared/limit
 import { taskStatus } from "../../shared/status";
 import type { Task } from "../../shared/types";
 import { DIFFICULTIES } from "../../shared/xp";
-import { getTask, insertTask, notesBetween, tasksBetween, updateTask } from "../db";
+import { getTask, insertTask, notesBetween, tasksBetween, todoOf, updateTask } from "../db";
 import { badRequest, readBody, serverToday, type Ctx } from "../http";
 import type { Env } from "../index";
 
@@ -25,14 +25,15 @@ const titleSchema = z
 
 const createSchema = z.object({
   title: titleSchema,
-  date: dateSchema,
+  /** null ou ausente = sem data (lista "A fazer"). */
+  date: dateSchema.nullish(),
   time: timeSchema.nullish(),
   area: areaSchema.nullish(),
   difficulty: difficultySchema.optional(),
 });
 const patchSchema = z.object({
   title: titleSchema.optional(),
-  date: dateSchema.optional(),
+  date: dateSchema.nullable().optional(),
   time: timeSchema.nullable().optional(),
   area: areaSchema.nullable().optional(),
   difficulty: difficultySchema.optional(),
@@ -63,6 +64,13 @@ taskRoutes.get("/api/week", async (c) => {
   return c.json({ start, days, tasks, notes });
 });
 
+/** Lista "A fazer" do dia: sem data (pendentes + feitas nesse dia) e compromissos do dia. */
+taskRoutes.get("/api/todo", async (c) => {
+  const date = c.req.query("date") ?? serverToday(c);
+  if (!isRealDate(date)) return badRequest(c, "Informe date=AAAA-MM-DD.", { date: "Data inválida (use AAAA-MM-DD)." });
+  return c.json(await todoOf(c.env.DB, date));
+});
+
 taskRoutes.post("/api/tasks", async (c) => {
   const body = await readBody(c, createSchema);
   if (!body.ok) return body.res;
@@ -70,7 +78,7 @@ taskRoutes.post("/api/tasks", async (c) => {
   const task: Task = {
     id: crypto.randomUUID(),
     title: body.data.title,
-    date: body.data.date,
+    date: body.data.date ?? null,
     time: body.data.time ?? null,
     area: body.data.area ?? null,
     difficulty: body.data.difficulty ?? "medium",
@@ -93,7 +101,7 @@ taskRoutes.patch("/api/tasks/:id", async (c) => {
   const next: Task = {
     ...task,
     title: p.title ?? task.title,
-    date: p.date ?? task.date,
+    date: p.date === undefined ? task.date : p.date,
     time: p.time === undefined ? task.time : p.time,
     area: p.area === undefined ? task.area : p.area,
     difficulty: p.difficulty ?? task.difficulty,

@@ -15,7 +15,7 @@ interface Props {
 function originLabel(task: Task, allTasks: Task[]): string | null {
   if (!task.movedFromId) return null;
   const original = allTasks.find((t) => t.id === task.movedFromId);
-  return original ? `veio de ${weekdayShort(original.date)}` : "veio de outro dia";
+  return original?.date ? `veio de ${weekdayShort(original.date)}` : "veio de outro dia";
 }
 
 const CARD = "glass-quiet rounded-[18px]";

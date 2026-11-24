@@ -5,6 +5,12 @@ export type Difficulty = "low" | "medium" | "high";
 
 export const DIFFICULTIES = ["low", "medium", "high"] as const satisfies readonly Difficulty[];
 
+/**
+ * Data de corte: tarefa feita a partir deste dia (dia local de done_at) conta XP no dia em que foi marcada;
+ * antes disso, no dia da tarefa (semanas antigas e brasões não mudam).
+ */
+export const XP_DONE_AT_FROM = "2026-11-24";
+
 export const XP_BY_DIFFICULTY: Readonly<Record<Difficulty, number>> = { low: 10, medium: 25, high: 50 };
 
 /** XP de uma tarefa: o da dificuldade se feita, 0 se não. */

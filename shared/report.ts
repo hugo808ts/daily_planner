@@ -20,7 +20,7 @@ export function computeWeekReport(
   let xp = 0;
   for (const t of tasks) {
     const day = perDay.find((d) => d.date === t.date);
-    if (!day) continue;
+    if (!day || t.date === null) continue;
     const st = taskStatus(t, now);
     if (st === "done") {
       done++;
@@ -35,7 +35,7 @@ export function computeWeekReport(
       notDoneTasks.push(copied.has(t.id) ? { ...t, movedTo: true } : t);
     }
   }
-  notDoneTasks.sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? "99:99").localeCompare(b.time ?? "99:99"));
+  notDoneTasks.sort((a, b) => (a.date ?? "").localeCompare(b.date ?? "") || (a.time ?? "99:99").localeCompare(b.time ?? "99:99"));
   const total = done + notDone;
   let bestDay: string | null = null;
   let bestXp = 0;

@@ -94,7 +94,7 @@ export function Today({ captured, onOpenReport, wide = false, menu }: Props) {
         await api.deleteTask(result.task.id);
         removeTask(result.task.id);
       } else {
-        setTask((await api.moveTask(result.task.id, from.date)).task);
+        setTask(from.date ? (await api.moveTask(result.task.id, from.date)).task : await api.updateTask(result.task.id, { date: null }));
       }
       void afterChange();
     } catch (e) {
@@ -106,7 +106,7 @@ export function Today({ captured, onOpenReport, wide = false, menu }: Props) {
     setTask(result.task);
     setEditing(null);
     void afterChange();
-    const where = dayPhrase(result.task.date, today);
+    const where = result.task.date ? dayPhrase(result.task.date, today) : "a lista";
     showToast(result.copied ? `Cópia criada para ${where}` : `Levada para ${where}`, {
       label: "Desfazer",
       onClick: () => void undoMove(result, from),
@@ -117,7 +117,7 @@ export function Today({ captured, onOpenReport, wide = false, menu }: Props) {
     const moved = editing && editing.date !== task.date;
     setTask(task);
     setEditing(null);
-    if (moved) showToast(`Levada para ${dayPhrase(task.date, today)}`);
+    if (moved) showToast(task.date ? `Levada para ${dayPhrase(task.date, today)}` : "Levada para a lista");
     void afterChange();
   };
 

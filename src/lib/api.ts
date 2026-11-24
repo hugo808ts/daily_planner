@@ -1,5 +1,5 @@
 import type { FinanceResponse } from "../../shared/finance";
-import type { Area, CaptureResult, DayNote, Folder, Idea, Task, WeekReport } from "../../shared/types";
+import type { Area, CaptureResult, DayNote, Folder, Idea, Task, TodoView, WeekReport } from "../../shared/types";
 import type {
   SessionSummary,
   SessionView,
@@ -42,7 +42,8 @@ export interface WeekData {
 
 export interface NewTask {
   title: string;
-  date: string;
+  /** null = sem data (lista "A fazer"). */
+  date: string | null;
   time?: string | null;
   area?: Area | null;
   /** Padrão no servidor: "medium". */
@@ -51,7 +52,7 @@ export interface NewTask {
 
 export interface TaskPatch {
   title?: string;
-  date?: string;
+  date?: string | null;
   time?: string | null;
   area?: Area | null;
   difficulty?: Difficulty;
@@ -171,6 +172,8 @@ export const api = {
   deleteTask: async (id: string) => {
     await json("DELETE", `/api/tasks/${encodeURIComponent(id)}`);
   },
+  /** Lista "A fazer" do dia: sem data (pendentes + feitas no dia) e compromissos do dia. */
+  todo: (date: string) => request<TodoView>("GET", `/api/todo?date=${encodeURIComponent(date)}`),
   moveTask: (id: string, date: string) =>
     request<MoveResult>("POST", `/api/tasks/${encodeURIComponent(id)}/move`, { date }),
   saveDayNote: async (date: string, text: string) =>

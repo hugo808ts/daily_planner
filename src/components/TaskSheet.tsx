@@ -38,7 +38,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
 
   const [mode, setMode] = useState<Mode>("edit");
   const [title, setTitle] = useState(task.title);
-  const [date, setDate] = useState(task.date);
+  const [date, setDate] = useState(task.date ?? "");
   const [time, setTime] = useState(task.time ?? "");
   const [area, setArea] = useState<Area | null>(task.area);
   const [difficulty, setDifficulty] = useState<Difficulty>(task.difficulty);
@@ -59,7 +59,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
 
   const dirty =
     title !== task.title ||
-    (!notDone && date !== task.date) ||
+    (!notDone && date !== (task.date ?? "")) ||
     time !== (task.time ?? "") ||
     area !== task.area ||
     difficulty !== task.difficulty ||
@@ -99,7 +99,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
     const patch: TaskPatch = {};
     if (title.trim() !== task.title) patch.title = title;
     // Tarefa não feita não muda de data pelo formulário: o histórico fica no dia dela.
-    if (!notDone && date !== task.date) patch.date = date;
+    if (!notDone && date !== (task.date ?? "")) patch.date = date || null;
     if ((time || null) !== task.time) patch.time = time || null;
     if (area !== task.area) patch.area = area;
     if (difficulty !== task.difficulty) patch.difficulty = difficulty;
@@ -204,7 +204,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
           <div>
             <p className="mb-3 text-sm text-muted break-words">
               {notDone
-                ? `“${task.title}” continua como não feita ${onDay(task.date, today)}. Uma cópia vai para o dia escolhido.`
+                ? `“${task.title}” continua como não feita ${onDay(task.date ?? today, today)}. Uma cópia vai para o dia escolhido.`
                 : `“${task.title}” muda de dia.`}
             </p>
             <div className="grid grid-cols-3 gap-2">
@@ -305,7 +305,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
             </div>
             {notDone && (
               <p className="text-sm text-muted">
-                Ficou como não feita {onDay(task.date, today)}. Para fazer em outro dia, use “Levar para outro dia”.
+                Ficou como não feita {onDay(task.date ?? today, today)}. Para fazer em outro dia, use “Levar para outro dia”.
               </p>
             )}
 

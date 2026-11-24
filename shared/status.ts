@@ -5,6 +5,8 @@ export type TaskStatus = "pending" | "done" | "overdue" | "not_done";
 
 export function taskStatus(task: Task, now: Date = new Date()): TaskStatus {
   if (task.doneAt) return "done";
+  // Sem data: fica na lista até ser feita; nunca atrasada nem "não feita".
+  if (task.date === null) return "pending";
   const { date, time } = nowParts(now);
   if (task.date > date) return "pending";
   if (task.date < date) return "not_done";

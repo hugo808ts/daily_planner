@@ -8,7 +8,7 @@ const RANK: Record<Task["difficulty"], number> = { high: 0, medium: 1, low: 2 };
 export function sortTasks(tasks: Task[]): Task[] {
   return [...tasks].sort(
     (a, b) =>
-      a.date.localeCompare(b.date) ||
+      (a.date ?? "").localeCompare(b.date ?? "") ||
       RANK[a.difficulty] - RANK[b.difficulty] ||
       (a.time ?? "99:99").localeCompare(b.time ?? "99:99") ||
       a.createdAt.localeCompare(b.createdAt),
@@ -49,7 +49,7 @@ export function useWeek(start: string) {
     setData((d) => {
       if (!d) return d;
       const others = d.tasks.filter((t) => t.id !== task.id);
-      const inWeek = d.days.includes(task.date);
+      const inWeek = task.date !== null && d.days.includes(task.date);
       return { ...d, tasks: inWeek ? sortTasks([...others, task]) : others };
     });
   }, []);

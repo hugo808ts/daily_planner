@@ -1,9 +1,12 @@
-import type { DayNote, Task } from "../shared/types";
+import type { DayNote, Task, TodoView } from "../shared/types";
+
+/** Dia local (America/Sao_Paulo, -3 h fixo, sem horário de verão; o mesmo de shared/dates.ts) de done_at. */
+export const DONE_DAY_SQL = "date(done_at, '-3 hours')";
 
 export type TaskRow = {
   id: string;
   title: string;
-  date: string;
+  date: string | null;
   time: string | null;
   area: string | null;
   difficulty: string;
@@ -67,4 +70,22 @@ export async function notesBetween(db: D1Database, from: string, to: string): Pr
     .bind(from, to)
     .all<DayNote>();
   return results;
+}
+
+/** Lista "A fazer" de `date`: sem data e não feitas (mais antigas primeiro), sem data feitas nesse dia, e compromissos do dia. */
+export async function todoOf(db: D1Database, date: string): Promise<TodoView> {
+  const [undated, appointments] = await Promise.all([
+    db
+      .prepare(
+        `SELECT * FROM tasks WHERE date IS NULL AND (done_at IS NULL OR ${DONE_DAY_SQL} = ?)
+         ORDER BY done_at IS NOT NULL, done_at, created_at, rowid`,
+      )
+      .bind(date)
+      .all<TaskRow>(),
+    db
+      .prepare("SELECT * FROM tasks WHERE date = ? ORDER BY time IS NULL, time, created_at, rowid")
+      .bind(date)
+      .all<TaskRow>(),
+  ]);
+  return { date, undated: undated.results.map(rowToTask), appointments: appointments.results.map(rowToTask) };
 }

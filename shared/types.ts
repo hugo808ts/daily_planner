@@ -5,7 +5,8 @@ export type Area = "work" | "school" | "personal";
 export interface Task {
   id: string;
   title: string;
-  date: string;
+  /** null = sem data: fica na lista "A fazer" até ser feita (nunca atrasada nem "não feita"). */
+  date: string | null;
   time: string | null;
   area: Area | null;
   difficulty: Difficulty;
@@ -13,6 +14,15 @@ export interface Task {
   movedFromId: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Lista "A fazer" de um dia (GET /api/todo). */
+export interface TodoView {
+  date: string;
+  /** Sem data e não feitas, mais as sem data feitas nesse dia (dia local de done_at). */
+  undated: Task[];
+  /** Compromissos com date = o dia (feitos ou não). */
+  appointments: Task[];
 }
 
 export interface DayNote {
