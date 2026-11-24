@@ -65,8 +65,7 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
     await expect(late).toHaveAttribute("data-status", "overdue");
     await expect(late).toContainText("14:00 · atrasada");
     await expect(row(page, "Jantar com a namorada")).toHaveAttribute("data-status", "pending");
-    await expect(page.getByTestId("score")).toContainText(/1\sde\s\d+\sfeitas/);
-    await expect(page.getByTestId("score")).toContainText(/1\satrasada/);
+    await expect(page.getByLabel("1 feita hoje")).toBeVisible();
   });
 
   await test.step("marcar como feita tira o vermelho e atualiza o placar", async () => {
@@ -74,8 +73,7 @@ test("Hoje: placar, atrasadas, troca de dia, levar para outro dia e anotação",
     const late = row(page, "Estudar Cálculo, cap. 4");
     await expect(late).toHaveAttribute("data-status", "done");
     await expect(late).not.toContainText("atrasada");
-    await expect(page.getByTestId("score")).toContainText(/2\sde\s\d+\sfeitas/);
-    await expect(page.getByTestId("score")).not.toContainText("atrasada");
+    await expect(page.getByLabel("2 feitas hoje")).toBeVisible();
   });
 
   await test.step("tocar em outro dia mostra as tarefas dele", async () => {

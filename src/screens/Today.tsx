@@ -3,7 +3,7 @@ import { addDays, formatDayTitle, isSunday, todayISO, weekDays, weekStart } from
 import type { Task } from "../../shared/types";
 import { SundayCard } from "../components/SundayCard";
 import { DayNote } from "../components/DayNote";
-import { ScoreBar, ScoreDial, ScoreText } from "../components/ScoreBar";
+import { CountDial, ScoreBar, ScoreDial, ScoreText } from "../components/ScoreBar";
 import { TaskList } from "../components/TaskList";
 import { TaskSheet } from "../components/TaskSheet";
 import { showToast } from "../components/Toast";
@@ -180,9 +180,6 @@ export function Today({ captured, onOpenReport, wide = false, menu, onOpenWorkou
       {onOpenReport && isSunday(today) && <SundayCard onOpen={() => onOpenReport(days[0])} />}
       <WeekStrip days={days} today={today} selected={selected} tasks={tasks} now={now} onSelect={setPicked} />
 
-      {/* Rotina só no dia de hoje: em outros dias não dá para marcar. */}
-      {isToday && <MissionsCard key={today} date={today} onXp={onMissionXp} />}
-
       <header className="glass relative mt-5 mb-4 rounded-[24px] p-4">
         {pop && <XpPop key={pop.key} amount={pop.amount} onDone={() => setPop(null)} />}
         <div className="flex items-center justify-between gap-3">
@@ -190,13 +187,24 @@ export function Today({ captured, onOpenReport, wide = false, menu, onOpenWorkou
             <h1 className="font-display text-[34px] leading-none font-extrabold tracking-[-0.04em]">{title}</h1>
             {relative && <p className="mt-1.5 text-[13px] text-muted first-letter:uppercase">{longDate(selected)}</p>}
           </div>
-          <ScoreDial tasks={scoreTasks} now={now} />
-          <ScoreText tasks={scoreTasks} now={now} />
+          {isToday ? (
+            <CountDial done={todoTasks.filter((t) => t.doneAt).length} />
+          ) : (
+            <>
+              <ScoreDial tasks={scoreTasks} now={now} />
+              <ScoreText tasks={scoreTasks} now={now} />
+            </>
+          )}
         </div>
-        <div className="mt-4">
-          <ScoreBar tasks={scoreTasks} now={now} />
-        </div>
+        {!isToday && (
+          <div className="mt-4">
+            <ScoreBar tasks={scoreTasks} now={now} />
+          </div>
+        )}
       </header>
+
+      {/* Rotina só no dia de hoje: em outros dias não dá para marcar. */}
+      {isToday && <MissionsCard key={today} date={today} onXp={onMissionXp} />}
 
       {isToday ? (
         <section aria-labelledby="afazer-titulo">

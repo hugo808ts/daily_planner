@@ -55,6 +55,27 @@ export function ScoreDial({ tasks, now }: { tasks: Task[]; now: Date }) {
   );
 }
 
+/** Contador do dia: quantas coisas foram feitas hoje; começa em 0 e só sobe. */
+export function CountDial({ done }: { done: number }) {
+  return (
+    <div
+      aria-label={done === 1 ? "1 feita hoje" : `${done} feitas hoje`}
+      className="grid size-[84px] shrink-0 place-items-center rounded-full p-[5px]"
+      style={{
+        background: done > 0 ? "conic-gradient(var(--green), var(--lime), var(--green))" : "rgb(255 255 255 / 0.08)",
+        boxShadow: done > 0 ? "0 0 22px -6px rgb(136 239 27 / 0.55)" : undefined,
+      }}
+    >
+      <div className="grid size-full place-items-center rounded-full bg-bg">
+        <div className="text-center leading-none">
+          <div className="font-display text-[26px] font-extrabold tracking-[-0.02em] tabular-nums">{done}</div>
+          <div className="eyebrow mt-1 text-[9px]! text-lime!">{done === 1 ? "feita" : "feitas"}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Barra com um segmento por tarefa (roxo feita, vermelho atrasada/nao feita, cinza pendente). */
 export function ScoreBar({ tasks, now }: { tasks: Task[]; now: Date }) {
   if (tasks.length === 0) return null;

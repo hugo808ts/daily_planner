@@ -83,7 +83,8 @@ test("A fazer: no dia seguinte a pendente continua e a feita sai", async ({ page
   await open(page, TOMORROW);
   await expect(row(page, "Estudar cálculo capítulo 4 Afazer")).toHaveAttribute("data-status", "pending");
   await expect(row(page, "Comprar presente Afazer")).toHaveCount(0);
-  await expect(row(page, "Dentista Afazer")).toHaveCount(0);
+  // Compromisso de ontem não feito continua na lista, em vermelho.
+  await expect(row(page, "Dentista Afazer")).toHaveAttribute("data-status", "not_done");
   await expect(row(page, "Amanhã Afazer")).toHaveAttribute("data-appointment", "true");
   await expect(page.getByTestId("day-xp")).toHaveCount(0);
 });

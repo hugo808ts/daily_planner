@@ -99,8 +99,12 @@ export async function todoOf(db: D1Database, date: string): Promise<TodoView> {
       .bind(date)
       .all<TaskRow>(),
     db
-      .prepare("SELECT * FROM tasks WHERE date = ? ORDER BY time IS NULL, time, created_at, rowid")
-      .bind(date)
+      // Compromissos do dia + os de dias passados ainda não feitos (ficam atrasados até marcar).
+      .prepare(
+        `SELECT * FROM tasks WHERE date = ? OR (date < ? AND done_at IS NULL)
+         ORDER BY date, time IS NULL, time, created_at, rowid`,
+      )
+      .bind(date, date)
       .all<TaskRow>(),
   ]);
   return { date, undated: undated.results.map(rowToTask), appointments: appointments.results.map(rowToTask) };
