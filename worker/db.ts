@@ -1,4 +1,5 @@
 import type { DayNote, Task, TodoView } from "../shared/types";
+import { XP_DONE_AT_FROM } from "../shared/xp";
 
 /** Dia local (America/Sao_Paulo, -3 h fixo, sem horário de verão; o mesmo de shared/dates.ts) de done_at. */
 export const DONE_DAY_SQL = "date(done_at, '-3 hours')";
@@ -73,6 +74,21 @@ export async function notesBetween(db: D1Database, from: string, to: string): Pr
 }
 
 /** Lista "A fazer" de `date`: sem data e não feitas (mais antigas primeiro), sem data feitas nesse dia, e compromissos do dia. */
+/** SQL do dia em que a tarefa feita conta XP (mesma regra de taskXpDay em shared/xp.ts). */
+export const XP_DAY_SQL = `CASE WHEN date IS NULL OR ${DONE_DAY_SQL} >= '${XP_DONE_AT_FROM}' THEN ${DONE_DAY_SQL} ELSE date END`;
+
+/** Tarefas do resumo: com dia na semana, mais as feitas que contam XP nela (dia local de done_at). */
+export async function tasksForReport(db: D1Database, from: string, to: string): Promise<Task[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT * FROM tasks WHERE date BETWEEN ?1 AND ?2 OR (done_at IS NOT NULL AND ${XP_DAY_SQL} BETWEEN ?1 AND ?2)
+       ORDER BY date IS NULL, date, time IS NULL, time, created_at, rowid`,
+    )
+    .bind(from, to)
+    .all<TaskRow>();
+  return results.map(rowToTask);
+}
+
 export async function todoOf(db: D1Database, date: string): Promise<TodoView> {
   const [undated, appointments] = await Promise.all([
     db

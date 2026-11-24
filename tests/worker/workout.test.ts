@@ -274,6 +274,8 @@ describe("XP do treino no nível geral", () => {
 
     const task = (await j(await call("POST", "/api/tasks", { title: "t", date: addDays(weekStart(today), 1), difficulty: "low" }))).task;
     await call("PATCH", `/api/tasks/${task.id}`, { done: true });
+    // Feita no próprio dia (a partir de XP_DONE_AT_FROM o XP vale no dia de done_at).
+    await env.DB.prepare("UPDATE tasks SET done_at = date || 'T15:00:00.000Z' WHERE id = ?").bind(task.id).run();
     const p2 = await j(await call("GET", `/api/progress?start=${weekStart(today)}`));
     expect(p2).toMatchObject({ totalXp: 70, weekXp: 10, medal: "bronze" });
   });

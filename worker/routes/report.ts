@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { addDays, isRealDate, weekStart } from "../../shared/dates";
 import { computeWeekReport } from "../../shared/report";
 import { levelFromXp, medalFor, nextMedal } from "../../shared/xp";
-import { tasksBetween } from "../db";
+import { tasksForReport } from "../db";
 import { badRequest } from "../http";
 import type { Env } from "../index";
 import { totalXp, xpByWeek } from "../xp";
@@ -17,7 +17,7 @@ reportRoutes.get("/api/report", async (c) => {
   const start = weekStart(param);
   const end = addDays(start, 5);
   const [tasks, copiedRows, weeks] = await Promise.all([
-    tasksBetween(c.env.DB, start, end),
+    tasksForReport(c.env.DB, start, end),
     // Tarefas que já têm uma cópia em outro dia (levar não pode duplicar).
     c.env.DB.prepare(
       "SELECT t.id FROM tasks t WHERE t.date BETWEEN ? AND ? AND EXISTS(SELECT 1 FROM tasks c WHERE c.moved_from_id = t.id)",

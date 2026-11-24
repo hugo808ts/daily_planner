@@ -84,3 +84,26 @@ describe("migração 0006", () => {
     expect(idx.results.map((r) => r.name)).toEqual(expect.arrayContaining(["idx_tasks_date", "idx_tasks_undated"]));
   });
 });
+
+describe("XP no dia em que marca", () => {
+  const progress = async (start: string) => j(await call("GET", `/api/progress?start=${start}`));
+  it("semana antiga fica igual; a partir do corte conta na semana de done_at; sem data também", async () => {
+    const create = async (body: object) => (await j(await call("POST", "/api/tasks", body))).task;
+    const setDone = (id: string, at: string) => env.DB.prepare("UPDATE tasks SET done_at = ? WHERE id = ?").bind(at, id).run();
+    // Tarefa de 2026-11-13 (sexta) marcada em 2026-11-17: antes do corte, fica na semana de 09/11.
+    const old = await create({ title: "antiga", date: "2026-11-13", difficulty: "high" });
+    await setDone(old.id, "2026-11-17T13:00:00.000Z");
+    // Tarefa de 2026-11-21 (sábado) marcada em 2026-11-25: depois do corte, vai para a semana de 23/11.
+    const late = await create({ title: "atrasada", date: "2026-11-21", difficulty: "low" });
+    await setDone(late.id, "2026-11-25T13:00:00.000Z");
+    // Sem data marcada na quinta 26/11.
+    const free = await create({ title: "sem data" });
+    await setDone(free.id, "2026-11-26T13:00:00.000Z");
+    expect((await progress("2026-11-09")).weekXp).toBe(50);
+    expect((await progress("2026-11-16")).weekXp).toBe(0);
+    expect((await progress("2026-11-23")).weekXp).toBe(35);
+    const rep = await j(await call("GET", "/api/report?start=2026-11-23"));
+    expect(rep.report).toMatchObject({ done: 2, notDone: 0, xp: 35, bestDay: "2026-11-26" });
+    expect((await j(await call("GET", "/api/report?start=2026-11-16"))).report).toMatchObject({ done: 0, notDone: 0 });
+  });
+});

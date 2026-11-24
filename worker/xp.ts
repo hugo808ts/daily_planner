@@ -2,6 +2,7 @@ import { weekStart } from "../shared/dates";
 import { FINANCE_DAY_XP } from "../shared/hero";
 import { recordsBySession, sessionXp } from "../shared/workout";
 import { XP_BY_DIFFICULTY, type Difficulty } from "../shared/xp";
+import { XP_DAY_SQL } from "./db";
 import { loadHistory, type WorkoutHistory } from "./workout-db";
 
 /**
@@ -27,14 +28,15 @@ export function workoutXpBySession(h: WorkoutHistory): Map<string, { xp: number;
 /**
  * XP de todo o histórico por semana, sempre calculado (não há coluna de XP): uma consulta agrupa as
  * tarefas feitas por semana, domingo e dificuldade, e os valores vêm de XP_BY_DIFFICULTY.
- * O XP vale para o dia (`date`) da tarefa ou da sessão de treino.
+ * O XP vale para o dia da sessão de treino; o da tarefa segue XP_DAY_SQL (dia local de done_at a partir de
+ * XP_DONE_AT_FROM, antes disso o dia da tarefa).
  */
 export async function xpByWeek(db: D1Database, preloaded?: WorkoutHistory): Promise<Map<string, WeekXp>> {
   const [{ results }, history, missionRows, financeRows] = await Promise.all([
     db
       .prepare(
-        `SELECT date(date, '-6 days', 'weekday 1') AS week, strftime('%w', date) = '0' AS sunday, difficulty, COUNT(*) AS n
-         FROM tasks WHERE done_at IS NOT NULL GROUP BY week, sunday, difficulty`,
+        `SELECT date(day, '-6 days', 'weekday 1') AS week, strftime('%w', day) = '0' AS sunday, difficulty, COUNT(*) AS n
+         FROM (SELECT ${XP_DAY_SQL} AS day, difficulty FROM tasks WHERE done_at IS NOT NULL) GROUP BY week, sunday, difficulty`,
       )
       .all<{ week: string; sunday: number; difficulty: string; n: number }>(),
     preloaded ?? loadHistory(db),

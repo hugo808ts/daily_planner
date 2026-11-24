@@ -1,9 +1,12 @@
 import { addDays } from "./dates";
 import { taskStatus } from "./status";
 import type { ReportTask, Task, WeekReport } from "./types";
-import { medalFor, taskXp, type Difficulty } from "./xp";
+import { medalFor, taskXp, taskXpDay, type Difficulty } from "./xp";
 
-/** Resumo de segunda a sábado. Domingo e tarefas ainda pendentes não entram na conta. */
+/**
+ * Resumo de segunda a sábado. Domingo e tarefas ainda pendentes não entram na conta.
+ * Feitas contam no dia de taskXpDay; não feitas, no dia da tarefa.
+ */
 export function computeWeekReport(
   tasks: Task[],
   start: string,
@@ -19,17 +22,24 @@ export function computeWeekReport(
   let notDone = 0;
   let xp = 0;
   for (const t of tasks) {
-    const day = perDay.find((d) => d.date === t.date);
-    if (!day || t.date === null) continue;
     const st = taskStatus(t, now);
     if (st === "done") {
+      // Feita conta no dia do XP (dia local de done_at a partir da data de corte; antes, o dia da tarefa).
+      const xpDay = taskXpDay(t);
+      const day = perDay.find((d) => d.date === xpDay);
+      if (!day || !xpDay) continue;
       done++;
       day.done++;
       const gained = taskXp(t);
       xp += gained;
-      xpPerDay.set(t.date, (xpPerDay.get(t.date) ?? 0) + gained);
+      xpPerDay.set(xpDay, (xpPerDay.get(xpDay) ?? 0) + gained);
       if (t.difficulty in byDifficulty) byDifficulty[t.difficulty]++;
-    } else if (st === "not_done") {
+      continue;
+    }
+    // Sem data nunca vira "não feita" (taskStatus devolve pendente).
+    const day = perDay.find((d) => d.date === t.date);
+    if (!day) continue;
+    if (st === "not_done") {
       notDone++;
       day.notDone++;
       notDoneTasks.push(copied.has(t.id) ? { ...t, movedTo: true } : t);

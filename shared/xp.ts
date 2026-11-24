@@ -1,3 +1,4 @@
+import { todayISO } from "./dates";
 import type { Task } from "./types";
 
 /** Dificuldade da tarefa; define quanto XP ela vale quando feita. */
@@ -10,6 +11,16 @@ export const DIFFICULTIES = ["low", "medium", "high"] as const satisfies readonl
  * antes disso, no dia da tarefa (semanas antigas e brasões não mudam).
  */
 export const XP_DONE_AT_FROM = "2026-11-24";
+
+/**
+ * Dia em que a tarefa feita conta XP: o dia local (America/Sao_Paulo) de done_at quando ele é a partir de
+ * XP_DONE_AT_FROM ou a tarefa não tem data; senão o dia da tarefa. null se não foi feita.
+ */
+export function taskXpDay(task: Pick<Task, "date" | "doneAt">): string | null {
+  if (!task.doneAt) return null;
+  const doneDay = todayISO(new Date(task.doneAt));
+  return task.date === null || doneDay >= XP_DONE_AT_FROM ? doneDay : task.date;
+}
 
 export const XP_BY_DIFFICULTY: Readonly<Record<Difficulty, number>> = { low: 10, medium: 25, high: 50 };
 

@@ -30,6 +30,8 @@ describe("GET /api/report", () => {
   it("caminho feliz: contagens, domingo fora e movedTo", async () => {
     const a = await create({ title: "feita", date: START });
     await call("PATCH", `/api/tasks/${a.id}`, { done: true });
+    // Feita no próprio dia (a partir de XP_DONE_AT_FROM o XP vale no dia de done_at).
+    await env.DB.prepare("UPDATE tasks SET done_at = date || 'T15:00:00.000Z' WHERE id = ?").bind(a.id).run();
     const b = await create({ title: "ficou", date: addDays(START, 1) });
     await create({ title: "ficou 2", date: addDays(START, 2) });
     await create({ title: "domingo", date: addDays(START, 6) });
@@ -60,6 +62,8 @@ describe("GET /api/report", () => {
 async function doneTask(date: string, difficulty: string) {
   const t = await create({ title: `${difficulty} ${date}`, date, difficulty });
   expect((await call("PATCH", `/api/tasks/${t.id}`, { done: true })).status).toBe(200);
+  // Feita no próprio dia (a partir de XP_DONE_AT_FROM o XP vale no dia de done_at).
+  await env.DB.prepare("UPDATE tasks SET done_at = date || 'T15:00:00.000Z' WHERE id = ?").bind(t.id).run();
 }
 
 /**
@@ -117,6 +121,8 @@ describe("XP no resumo e no progresso", () => {
   it("progress: só domingo não dá medalha; desmarcar remove o XP", async () => {
     const t = await create({ title: "dom", date: addDays(START, 6), difficulty: "high" });
     await call("PATCH", `/api/tasks/${t.id}`, { done: true });
+    // Feita no próprio dia (a partir de XP_DONE_AT_FROM o XP vale no dia de done_at).
+    await env.DB.prepare("UPDATE tasks SET done_at = date || 'T15:00:00.000Z' WHERE id = ?").bind(t.id).run();
     let p = (await (await call("GET", `/api/progress?start=${START}`)).json()) as any;
     expect(p).toMatchObject({ totalXp: 50, weekXp: 0, medal: null, next: { medal: "bronze", missing: 1 } });
     await call("PATCH", `/api/tasks/${t.id}`, { done: false });

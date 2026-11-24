@@ -1,3 +1,4 @@
+import { XP_DAY_SQL } from "./db";
 import type { AttributeId, MissionBase, MissionCheck } from "../shared/hero";
 
 // Linhas do D1 (snake_case) e mappers para o JSON (camelCase).
@@ -57,7 +58,7 @@ export async function taskFacts(
 ): Promise<{ date: string; area: string | null; difficulty: string; n: number }[]> {
   const { results } = await db
     .prepare(
-      "SELECT date, area, difficulty, COUNT(*) AS n FROM tasks WHERE done_at IS NOT NULL GROUP BY date, area, difficulty ORDER BY date",
+      `SELECT day AS date, area, difficulty, COUNT(*) AS n FROM (SELECT ${XP_DAY_SQL} AS day, area, difficulty FROM tasks WHERE done_at IS NOT NULL) GROUP BY day, area, difficulty ORDER BY day`,
     )
     .all<{ date: string; area: string | null; difficulty: string; n: number }>();
   return results;

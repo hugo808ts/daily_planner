@@ -39,6 +39,8 @@ const hero = async (today = THU) => j(await call("GET", "/api/hero", undefined, 
 async function doneTask(title: string, date: string, area: string | null, difficulty = "high") {
   const t = (await j(await call("POST", "/api/tasks", { title, date, area, difficulty }))).task;
   await call("PATCH", `/api/tasks/${t.id}`, { done: true });
+  // Feita no próprio dia (a partir de XP_DONE_AT_FROM o XP vale no dia de done_at).
+  await env.DB.prepare("UPDATE tasks SET done_at = date || 'T15:00:00.000Z' WHERE id = ?").bind(t.id).run();
   return t;
 }
 
