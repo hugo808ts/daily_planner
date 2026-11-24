@@ -9,6 +9,7 @@ import { FolderIconPicker } from "./FolderIconPicker";
 import { XP_BY_DIFFICULTY, type Difficulty } from "../../shared/xp";
 import { AREA_ORDER, AreaTag, areaMeta } from "./ui/AreaTag";
 import { Button } from "./ui/Button";
+import { WhenToggle } from "./WhenToggle";
 import { DIFFICULTY_ORDER, DifficultyTag, difficultyMeta } from "./ui/DifficultyTag";
 import { CalendarIcon, CheckIcon, ClockIcon, FolderIcon, LightbulbIcon, PencilIcon, PlusIcon } from "./ui/Icon";
 
@@ -91,6 +92,8 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
   const [kind, setKind] = useState(initial.kind);
   const [title, setTitle] = useState(initial.title);
   const [date, setDate] = useState(initial.date ?? today);
+  /** Sem data (padrão quando a frase não diz o dia) ou Dia certo. */
+  const [dated, setDated] = useState(initial.date !== null);
   const [time, setTime] = useState(initial.time ?? "");
   const [area, setArea] = useState<Area | null>(initial.area);
   const [difficulty, setDifficulty] = useState<Difficulty>(initial.difficulty ?? "medium");
@@ -146,7 +149,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
   };
 
   const saveTask = async () => {
-    const task = await api.createTask({ title, date, time: time || null, area, difficulty });
+    const task = await api.createTask({ title, date: dated ? date : null, time: dated ? time || null : null, area, difficulty });
     onSaved({ kind: "task", task });
   };
 
@@ -303,19 +306,25 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
           </button>
         )}
 
+        {isTask && <WhenToggle dated={dated} onChange={setDated} />}
+
         <div className="mb-4 flex flex-wrap gap-2">
           {isTask ? (
             <>
-              <Chip label={`Dia: ${dayStrong}, ${dayRest}`} open={show("date")} onClick={() => toggle("date")}>
-                <CalendarIcon size={16} />
-                <span>
-                  <b className="font-semibold">{dayStrong}</b>, {dayRest}
-                </span>
-              </Chip>
-              <Chip label={`Horário: ${time || "sem horário"}`} open={show("time")} onClick={() => toggle("time")}>
-                <ClockIcon size={16} />
-                {time ? <b className="font-semibold">{time}</b> : <span className="text-muted">Sem horário</span>}
-              </Chip>
+              {dated && (
+                <Chip label={`Dia: ${dayStrong}, ${dayRest}`} open={show("date")} onClick={() => toggle("date")}>
+                  <CalendarIcon size={16} />
+                  <span>
+                    <b className="font-semibold">{dayStrong}</b>, {dayRest}
+                  </span>
+                </Chip>
+              )}
+              {dated && (
+                <Chip label={`Horário: ${time || "sem horário"}`} open={show("time")} onClick={() => toggle("time")}>
+                  <ClockIcon size={16} />
+                  {time ? <b className="font-semibold">{time}</b> : <span className="text-muted">Sem horário</span>}
+                </Chip>
+              )}
               <Chip
                 label={`Área: ${area ? areaMeta(area).label : "sem área"}`}
                 open={show("area")}
@@ -358,7 +367,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
           )}
         </div>
 
-        {isTask && show("date") && (
+        {isTask && dated && show("date") && (
           <div className="mb-4">
             <label htmlFor="confirm-date" className={LABEL}>
               Dia
@@ -384,7 +393,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
           </div>
         )}
 
-        {isTask && show("time") && (
+        {isTask && dated && show("time") && (
           <div className="mb-4">
             <label htmlFor="confirm-time" className={LABEL}>
               Horário <span className="font-normal text-muted">(opcional)</span>
@@ -569,7 +578,7 @@ export function ConfirmSheet({ initial, said, onClose, onSaved }: Props) {
             busyLabel="Salvando…"
             disabled={!isTask && folders === null}
           >
-            {isTask ? `Salvar · ${XP_BY_DIFFICULTY[difficulty]} XP` : "Guardar"}
+            {isTask ? `${dated ? "Salvar" : "Pôr na lista"} · ${XP_BY_DIFFICULTY[difficulty]} XP` : "Guardar"}
           </Button>
         </div>
       </form>

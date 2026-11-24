@@ -14,7 +14,7 @@ async function seed(request: APIRequestContext, input: { title: string; date: st
   const res = await request.post("/api/tasks", { data: input });
   expect(res.status()).toBe(201);
   const { task } = await res.json();
-  if (done) expect((await request.patch(`/api/tasks/${task.id}`, { data: { done: true } })).ok()).toBe(true);
+  if (done) expect((await request.patch(`/api/tasks/${task.id}`, { data: { done: true }, headers: { "x-test-today": input.date } })).ok()).toBe(true);
   return task;
 }
 

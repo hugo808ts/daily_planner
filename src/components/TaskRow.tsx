@@ -12,6 +12,10 @@ interface Props {
   origin: string | null;
   onToggle: (task: Task) => void;
   onOpen: (task: Task) => void;
+  /** Compromisso do dia na lista A fazer: destaque laranja com "hoje · hora". */
+  appointment?: boolean;
+  /** Nota extra no fim da linha (ex.: "na lista há 3 dias"). */
+  note?: string | null;
 }
 
 const STATUS_NOTE: Partial<Record<TaskStatus, string>> = {
@@ -21,18 +25,22 @@ const STATUS_NOTE: Partial<Record<TaskStatus, string>> = {
 
 const FOCUS = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
-export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
+export function TaskRow({ task, status, origin, onToggle, onOpen, appointment = false, note = null }: Props) {
   const done = status === "done";
   const bad = status === "overdue" || status === "not_done";
-  const timeText = [task.time, STATUS_NOTE[status]].filter(Boolean).join(" · ");
+  const warn = appointment && !done && !bad;
+  const timeText = [appointment ? "hoje" : null, task.time, STATUS_NOTE[status]].filter(Boolean).join(" · ");
 
   return (
     <li
       data-status={status}
+      data-appointment={appointment || undefined}
       className="relative -mx-4 flex items-start gap-1 border-b border-line px-4 transition-colors duration-200 last:border-b-0 hover:bg-ink/[0.025]"
     >
       {bad && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-linear-to-r from-danger/15 to-transparent" />}
       {bad && <span aria-hidden className="pointer-events-none absolute top-2.5 bottom-2.5 left-0 w-[3px] rounded-r-[3px] bg-danger shadow-[0_0_10px_var(--danger)]" />}
+      {warn && <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-2/3 bg-linear-to-r from-warn-soft to-transparent" />}
+      {warn && <span aria-hidden className="pointer-events-none absolute top-2.5 bottom-2.5 left-0 w-[3px] rounded-r-[3px] bg-warn" />}
       <button
         type="button"
         role="checkbox"
@@ -43,7 +51,7 @@ export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
       >
         <span
           className={`grid size-5 place-items-center rounded-md border-[1.75px] transition-[background-color,border-color,transform] duration-150 group-hover:border-accent group-active:scale-90 motion-reduce:transition-none ${
-            done ? "fill-neon border-transparent" : bad ? "border-danger" : "border-muted"
+            done ? "fill-neon border-transparent" : bad ? "border-danger" : warn ? "border-warn" : "border-muted"
           }`}
         >
           {done && <CheckIcon size={14} strokeWidth={3.2} className="text-on-accent" />}
@@ -70,8 +78,21 @@ export function TaskRow({ task, status, origin, onToggle, onOpen }: Props) {
               {done ? "+" : ""}
               {XP_BY_DIFFICULTY[task.difficulty]} XP
             </span>
-            {timeText && <span className={bad ? "font-mono text-[11px] font-semibold tracking-[0.1em] text-neon-danger uppercase" : ""}>{timeText}</span>}
+            {timeText && (
+              <span
+                className={
+                  bad
+                    ? "font-mono text-[11px] font-semibold tracking-[0.1em] text-neon-danger uppercase"
+                    : warn
+                      ? "font-mono text-[11px] font-semibold tracking-[0.1em] text-warn uppercase"
+                      : ""
+                }
+              >
+                {timeText}
+              </span>
+            )}
             {origin && <span>{origin}</span>}
+            {note && <span data-testid="task-age">{note}</span>}
           </span>
         )}
       </button>

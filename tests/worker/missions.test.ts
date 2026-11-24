@@ -107,6 +107,22 @@ describe("missões", () => {
     expect(n?.n).toBe(0);
   });
 
+  it("desfazer o arquivamento só no mesmo dia, com o histórico de volta", async () => {
+    const m = (await create({ title: "Ler", attribute: "mental", xp: 20 })).json.mission;
+    await check(m.id, WED, true);
+    await call("DELETE", `/api/missions/${m.id}`, undefined, THU);
+    const back = await call("POST", `/api/missions/${m.id}/restore`, undefined, THU);
+    expect(back.status).toBe(200);
+    expect((await j(back)).mission).toMatchObject({ id: m.id, archivedDate: null, hasChecks: true });
+    const thu = await j(await call("GET", `/api/missions?date=${THU}`, undefined, THU));
+    expect(thu.missions.map((x: any) => x.id)).toEqual([m.id]);
+    // Ativa de novo: não há o que desfazer.
+    expect((await call("POST", `/api/missions/${m.id}/restore`, undefined, THU)).status).toBe(404);
+    // Arquivada num dia, desfazer no outro: 409.
+    await call("DELETE", `/api/missions/${m.id}`, undefined, THU);
+    expect((await call("POST", `/api/missions/${m.id}/restore`, undefined, "2026-11-13")).status).toBe(409);
+  });
+
   it("check em data futura dá 400; data inválida também", async () => {
     const m = (await create({ title: "Ler", attribute: "mental", xp: 20 })).json.mission;
     expect((await check(m.id, "2026-11-13", true)).status).toBe(400);

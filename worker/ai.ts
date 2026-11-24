@@ -35,8 +35,9 @@ export function sanitize(raw: unknown, today: string, folderIds: Set<string>): C
   const title = typeof r.title === "string" ? r.title.trim().slice(0, TITLE_MAX).trim() : "";
   if (!title) return null;
   const isTask = r.kind === "task";
-  const date = isTask ? (isRealDate(r.date) && r.date >= today ? r.date : today) : null;
   const time = isTask && typeof r.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.time) ? r.time : null;
+  // Sem dia na frase: sem data (lista "A fazer"); só com hora, hoje.
+  const date = isTask ? (isRealDate(r.date) && r.date >= today ? r.date : time ? today : null) : null;
   const area = typeof r.area === "string" && AREAS.includes(r.area) ? (r.area as Area) : null;
   const folderId = typeof r.folderId === "string" && folderIds.has(r.folderId) ? r.folderId : null;
   const difficulty: Difficulty =
@@ -63,6 +64,7 @@ export async function interpretWithAI(
       "dificuldade: low (rápida/simples), medium (normal), high (grande/importante/prova/entrega); na dúvida medium.",
       `Pastas disponíveis (id: nome); use o id só se a frase citar claramente a pasta, senão null:\n${folderList}`,
       "Datas relativas (amanhã, sexta) devem virar AAAA-MM-DD a partir de hoje. Hora em HH:MM, 24h. title curto, sem data/hora.",
+      "Se a frase não disser o dia, date = null (vai para a lista sem data). Não invente hoje.",
     ].join("\n");
     const result = (await env.AI.run(CAPTURE_MODEL as any, {
       messages: [

@@ -59,11 +59,12 @@ describe("parseCapture", () => {
   it("parses depois de amanhã", () => {
     expect(parse("depois de amanhã dentista")).toMatchObject({ date: "2026-10-30", area: "personal", title: "Dentista" });
   });
-  it("defaults to today with no area/time", () => {
+  it("sem dia na frase: sem data (lista A fazer); só com hora, hoje", () => {
+    expect(parse("reunião 15h").date).toBe("2026-10-28");
     expect(parse("comprar pão")).toEqual({
       kind: "task",
       title: "Comprar pão",
-      date: "2026-10-28",
+      date: null,
       time: null,
       area: null,
       folderId: null,

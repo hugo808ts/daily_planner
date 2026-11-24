@@ -144,7 +144,8 @@ export function parseCapture(text: string, today: string, folders: Pick<Folder, 
   }
 
   const time = parseTime(n, spans);
-  const date = parseDate(n, today, spans) ?? today;
+  // Sem dia na frase: sem data (lista "A fazer"); só com hora, hoje.
+  const date = parseDate(n, today, spans) ?? (time ? today : null);
   const area = parseArea(n, spans);
   return {
     kind: "task",

@@ -1,5 +1,6 @@
 import type { LucideIcon, LucideProps } from "lucide-react";
 import {
+  Archive,
   ArrowDown,
   ArrowRight,
   ArrowUp,
@@ -51,6 +52,7 @@ import {
   CreditCard,
   Dumbbell,
   Eye,
+  Flag,
   Flame,
   Timer,
   ChevronDown,
@@ -169,6 +171,10 @@ export const TrophyIcon = make(Trophy, "TrophyIcon");
 export const StarIcon = make(Star, "StarIcon");
 export const SparklesIcon = make(Sparkles, "SparklesIcon");
 export const ChevronsUpIcon = make(ChevronsUp, "ChevronsUpIcon");
+
+// Herói (missões arquivadas, bandeira de treino na torre)
+export const ArchiveIcon = make(Archive, "ArchiveIcon");
+export const FlagIcon = make(Flag, "FlagIcon");
 
 // Financeiro (olho e categorias das movimentações; o mapa categoria → ícone mora em Finance.tsx)
 export const EyeIcon = make(Eye, "EyeIcon");

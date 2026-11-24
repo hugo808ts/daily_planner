@@ -9,6 +9,7 @@ import { XP_BY_DIFFICULTY } from "../../shared/xp";
 import { AREA_ORDER, AreaTag } from "./ui/AreaTag";
 import { DIFFICULTY_ORDER, difficultyMeta, type Difficulty } from "./ui/DifficultyTag";
 import { Button } from "./ui/Button";
+import { WhenToggle } from "./WhenToggle";
 import { CloseIcon, TrashIcon } from "./ui/Icon";
 
 interface Props {
@@ -38,7 +39,10 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
 
   const [mode, setMode] = useState<Mode>("edit");
   const [title, setTitle] = useState(task.title);
-  const [date, setDate] = useState(task.date ?? "");
+  const [date, setDate] = useState(task.date ?? today);
+  /** Sem data (lista A fazer) ou Dia certo. */
+  const [dated, setDated] = useState(task.date !== null);
+  const nextDate = dated ? date : null;
   const [time, setTime] = useState(task.time ?? "");
   const [area, setArea] = useState<Area | null>(task.area);
   const [difficulty, setDifficulty] = useState<Difficulty>(task.difficulty);
@@ -59,7 +63,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
 
   const dirty =
     title !== task.title ||
-    (!notDone && date !== (task.date ?? "")) ||
+    (!notDone && nextDate !== task.date) ||
     time !== (task.time ?? "") ||
     area !== task.area ||
     difficulty !== task.difficulty ||
@@ -99,8 +103,9 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
     const patch: TaskPatch = {};
     if (title.trim() !== task.title) patch.title = title;
     // Tarefa não feita não muda de data pelo formulário: o histórico fica no dia dela.
-    if (!notDone && date !== (task.date ?? "")) patch.date = date || null;
-    if ((time || null) !== task.time) patch.time = time || null;
+    if (!notDone && nextDate !== task.date) patch.date = nextDate;
+    const nextTime = dated ? time || null : null;
+    if (nextTime !== task.time) patch.time = nextTime;
     if (area !== task.area) patch.area = area;
     if (difficulty !== task.difficulty) patch.difficulty = difficulty;
     if (Object.keys(patch).length === 0) return onClose();
@@ -266,6 +271,9 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
               )}
             </div>
 
+            {!notDone && <WhenToggle dated={dated} onChange={setDated} />}
+
+            {(dated || notDone) && (
             <div className="flex gap-3">
               {!notDone && (
                 <div className="min-w-0 flex-1">
@@ -303,6 +311,7 @@ export function TaskSheet({ task, today, now, onClose, onSaved, onMoved, onDelet
                 {fields.time && <p className="mt-1 text-sm text-danger-ink">{fields.time}</p>}
               </div>
             </div>
+            )}
             {notDone && (
               <p className="text-sm text-muted">
                 Ficou como não feita {onDay(task.date ?? today, today)}. Para fazer em outro dia, use “Levar para outro dia”.

@@ -6,7 +6,7 @@ import { taskStatus } from "../../shared/status";
 import type { Task } from "../../shared/types";
 import { DIFFICULTIES } from "../../shared/xp";
 import { getTask, insertTask, notesBetween, tasksBetween, todoOf, updateTask } from "../db";
-import { badRequest, readBody, serverToday, type Ctx } from "../http";
+import { badRequest, readBody, serverNowISO, serverToday, type Ctx } from "../http";
 import type { Env } from "../index";
 
 const NOT_FOUND = "Tarefa não encontrada.";
@@ -105,7 +105,7 @@ taskRoutes.patch("/api/tasks/:id", async (c) => {
     time: p.time === undefined ? task.time : p.time,
     area: p.area === undefined ? task.area : p.area,
     difficulty: p.difficulty ?? task.difficulty,
-    doneAt: p.done === undefined ? task.doneAt : p.done ? (task.doneAt ?? now) : null,
+    doneAt: p.done === undefined ? task.doneAt : p.done ? (task.doneAt ?? serverNowISO(c)) : null,
     updatedAt: now,
   };
   await updateTask(c.env.DB, next);

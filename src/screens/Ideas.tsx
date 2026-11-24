@@ -223,7 +223,7 @@ export function Ideas({ captured, onTaskSaved, wide = false, menu }: Props) {
       initial={{
         kind: "task",
         title: converting.title,
-        date: todayISO(),
+        date: null, // sem data: vai para a lista A fazer (o "Dia certo" escolhe um dia)
         time: null,
         area: null,
         folderId: null,

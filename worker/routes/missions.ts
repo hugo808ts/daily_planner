@@ -161,6 +161,27 @@ missionRoutes.delete("/api/missions/:id", async (c) => {
   return c.json({ id: m.id, deleted: false });
 });
 
+/** Desfaz o arquivamento do mesmo dia (botão Desfazer do toast). Arquivada antes de hoje: 409. */
+missionRoutes.post("/api/missions/:id/restore", async (c) => {
+  const db = c.env.DB;
+  const m = await getMission(db, c.req.param("id"));
+  if (!m || !m.archivedDate) return notFound(c);
+  const today = serverToday(c);
+  if (m.archivedDate !== today) return c.json({ error: "Só dá para desfazer no mesmo dia. Crie a missão de novo." }, 409);
+  const active = await db
+    .prepare("SELECT COUNT(*) AS n, MAX(position) AS p FROM missions WHERE archived_date IS NULL")
+    .first<{ n: number; p: number | null }>();
+  if ((active?.n ?? 0) >= MISSIONS_ACTIVE_MAX) {
+    return c.json({ error: `No máximo ${MISSIONS_ACTIVE_MAX} missões ativas. Arquive uma para criar outra.` }, 409);
+  }
+  const next: MissionBase = { ...m, archivedDate: null, position: (active?.p ?? -1) + 1, updatedAt: new Date().toISOString() };
+  await db
+    .prepare("UPDATE missions SET archived_date = NULL, position = ?, updated_at = ? WHERE id = ?")
+    .bind(next.position, next.updatedAt, m.id)
+    .run();
+  return c.json({ mission: plain(missionOn(next, await loadChecks(db), today)) });
+});
+
 missionRoutes.put("/api/missions/:id/checks/:date", async (c) => {
   const date = c.req.param("date");
   if (!isRealDate(date)) return badRequest(c, "Data inválida.", invalidDate);

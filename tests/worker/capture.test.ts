@@ -43,13 +43,13 @@ describe("POST /api/capture", () => {
     expect((await j(res)).result.source).toBe("rules");
   });
 
-  it("sanitiza data passada, area e pasta inválidas", async () => {
+  it("data passada vira sem data; area e pasta inválidas saem", async () => {
     const res = await capture(
       aiReturns({ kind: "task", title: "  Estudar  ", date: "2020-01-01", time: "9:30", area: "gym", folderId: "nope" }),
       "estudar",
     );
     expect((await j(res)).result).toEqual({
-      kind: "task", title: "Estudar", date: today, time: null, area: null, folderId: null, difficulty: "medium", source: "ai",
+      kind: "task", title: "Estudar", date: null, time: null, area: null, folderId: null, difficulty: "medium", source: "ai",
     });
   });
 
@@ -66,9 +66,11 @@ describe("POST /api/capture", () => {
     expect(r).toMatchObject({ source: "rules", difficulty: "high" });
   });
 
-  it("data impossível vira hoje; ideia ignora data/hora e mantém pasta válida", async () => {
+  it("data impossível vira sem data (com hora, hoje); ideia ignora data/hora e mantém pasta válida", async () => {
     let r = (await j(await capture(aiReturns({ kind: "task", title: "x", date: "2026-02-30", time: null, area: "work", folderId: null }), "x"))).result;
-    expect(r.date).toBe(today);
+    expect(r.date).toBeNull();
+    const withTime = (await j(await capture(aiReturns({ kind: "task", title: "x", date: null, time: "15:00", area: null, folderId: null }), "x 15h"))).result;
+    expect(withTime.date).toBe(today);
     expect(r.area).toBe("work");
     r = (await j(await capture(aiReturns({ kind: "idea", title: "ideia", date: today, time: "10:00", area: null, folderId: "f1" }), "ideia"))).result;
     expect(r).toMatchObject({ kind: "idea", date: null, time: null, folderId: "f1", source: "ai" });

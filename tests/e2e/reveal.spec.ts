@@ -20,7 +20,7 @@ async function seed(request: APIRequestContext, date: string, difficulty: Diffic
     });
     expect(res.status()).toBe(201);
     const { task } = await res.json();
-    if (done) expect((await request.patch(`/api/tasks/${task.id}`, { data: { done: true } })).ok()).toBe(true);
+    if (done) expect((await request.patch(`/api/tasks/${task.id}`, { data: { done: true }, headers: { "x-test-today": date } })).ok()).toBe(true);
   }
 }
 

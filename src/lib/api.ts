@@ -20,6 +20,13 @@ import type {
   WorkoutWeekView,
 } from "../../shared/workout";
 import type { Difficulty, MedalTier } from "../../shared/xp";
+import type {
+  Mission,
+  MissionCheckResult,
+  MissionCreate,
+  MissionPatch,
+  MissionsDayView,
+} from "../../shared/hero";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -245,4 +252,22 @@ export const api = {
   /** Relatório semana × semana (week = qualquer dia da semana; sem ela, a semana atual). */
   workoutReport: (week?: string) =>
     request<WorkoutReportResponse>("GET", week ? `/api/workout/report?week=${enc(week)}` : "/api/workout/report"),
+
+  // ===== Missões diárias (worker/routes/missions.ts) =====
+  /** Missões valendo no dia, com feito/sequência, dia cumprido e os 7 pontinhos da semana. */
+  missions: (date: string) => request<MissionsDayView>("GET", `/api/missions?date=${enc(date)}`),
+  /** 409 acima de 8 ativas. */
+  createMission: async (input: MissionCreate) => (await json("POST", "/api/missions", input)).mission as Mission,
+  /** XP e atributo dão 409 depois da primeira marcação. */
+  updateMission: async (id: string, patch: MissionPatch) =>
+    (await json("PATCH", `/api/missions/${enc(id)}`, patch)).mission as Mission,
+  /** `ids` = todas as missões ativas, na nova ordem. */
+  reorderMissions: (ids: string[]) => request<MissionsDayView>("PATCH", "/api/missions/order", { ids }),
+  /** Arquiva (some a partir de hoje); sem marcações e criada hoje, apaga de verdade (`deleted`). */
+  archiveMission: (id: string) => request<{ id: string; deleted: boolean }>("DELETE", `/api/missions/${enc(id)}`),
+  /** Desfaz o arquivamento feito hoje. */
+  restoreMission: async (id: string) => (await json("POST", `/api/missions/${enc(id)}/restore`)).mission as Mission,
+  /** Marca ou desmarca a missão no dia (a interface só usa hoje). */
+  checkMission: (id: string, date: string, done: boolean) =>
+    request<MissionCheckResult>("PUT", `/api/missions/${enc(id)}/checks/${enc(date)}`, { done }),
 };

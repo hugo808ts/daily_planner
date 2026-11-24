@@ -24,6 +24,9 @@
   --danger-soft: rgb(255 77 94 / 0.1);
   --danger-line: rgb(255 77 94 / 0.35);
   --danger-ink: #ff8a95;
+  /* Compromisso do dia na lista A fazer (laranja). */
+  --warn: #ffb020;
+  --warn-soft: rgb(255 176 32 / 0.12);
   --note: rgb(136 239 27 / 0.06);
   --note-ink: #e6f5d2;
   /* Áreas: só tons da paleta. */
@@ -71,6 +74,8 @@
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
   --color-danger: var(--danger);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
   --color-danger-soft: var(--danger-soft);
   --color-danger-line: var(--danger-line);
   --color-note: var(--note);

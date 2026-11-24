@@ -17,6 +17,15 @@ export function serverToday(c: Ctx): string {
   return todayISO();
 }
 
+/**
+ * Agora (ISO UTC) para done_at. Com X-Test-Today (só DEV local), meio-dia de São Paulo desse dia, para o XP
+ * (que conta no dia de done_at) bater com o relógio falso dos testes E2E.
+ */
+export function serverNowISO(c: Ctx): string {
+  const day = serverToday(c);
+  return day === todayISO() ? new Date().toISOString() : `${day}T15:00:00.000Z`;
+}
+
 export type Ctx = Context<{ Bindings: Env }>;
 
 export type Parsed<T> = { ok: true; data: T } | { ok: false; res: Response };

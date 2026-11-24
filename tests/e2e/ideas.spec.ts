@@ -174,6 +174,8 @@ test("Virar tarefa abre a confirmação, salva no dia escolhido e mantém a idei
   const sheet = page.getByRole("dialog", { name: "Confirmar captura" });
   await expect(sheet.getByRole("radio", { name: "Tarefa" })).toBeChecked();
   await expect(sheet).toContainText("Fórmula de Bhaskara");
+  await expect(sheet.getByRole("radio", { name: "Sem data" })).toHaveAttribute("aria-checked", "true");
+  await sheet.getByRole("radio", { name: "Dia certo" }).click();
   await expect(sheet.getByRole("button", { name: /^Dia:/ })).toContainText("Hoje");
   await sheet.getByRole("button", { name: /^Dia:/ }).click();
   await sheet.getByLabel("Dia", { exact: true }).fill(OTHER);

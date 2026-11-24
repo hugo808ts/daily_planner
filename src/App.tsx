@@ -213,7 +213,7 @@ export default function App() {
         <div className="grid min-h-0 grid-cols-[380px_minmax(0,1fr)]">
           <aside data-testid="today-pane" aria-label="Dia" className="pane glass-quiet flex h-full flex-col rounded-none border-y-0 border-l-0">
             <div className="flex-1">
-              <Today key={todayKey} captured={captured} onOpenReport={openFromToday} wide />
+              <Today key={todayKey} captured={captured} onOpenReport={openFromToday} onOpenWorkout={() => setTab("workout")} wide />
             </div>
             <CaptureBar inline onTaskSaved={setCaptured} onIdeaSaved={setCapturedIdea} />
           </aside>
@@ -240,7 +240,7 @@ export default function App() {
       <SkipLink />
       <main id="conteudo" tabIndex={-1} className="focus:outline-none">
         {tab === "today" ? (
-          <Today key={todayKey} captured={captured} onOpenReport={openFromToday} menu={menuButton} />
+          <Today key={todayKey} captured={captured} onOpenReport={openFromToday} onOpenWorkout={() => setTab("workout")} menu={menuButton} />
         ) : tab === "ideas" ? (
           <Ideas captured={capturedIdea} onTaskSaved={setCaptured} menu={menuButton} />
         ) : tab === "workout" ? (
